@@ -1,0 +1,1245 @@
+<div class="container mt-4">
+    <!-- Header Administrativo -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1" style="color: #333; font-weight: 600;"><i class="fas fa-graduation-cap me-2"></i>Módulo Estágio</h3>
+                    <p class="mb-0" style="color: #666;">Painel Principal</p>
+                </div>
+                <div>
+                    <!-- Botões movidos para o menu de navegação -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mensagens de Feedback -->
+    <% if (typeof success !== 'undefined' && success) { %>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Sucesso!</strong> <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+    <% } %>
+    
+    <% if (typeof error !== 'undefined' && error) { %>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Erro!</strong> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+
+
+    <!-- Cards das Rotinas do Módulo Estágio -->
+    <div class="row mb-4">
+        <!-- Card Campo de Estágio -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-building fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">Campo de Estágio</h5>
+                            <small class="opacity-75">Gestão de campos de estágio</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <% if (camposEstagio && camposEstagio.length > 0) { %>
+                        <% if (camposEstagio.length === 1) { %>
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">Registro Único:</h6>
+                                <p class="mb-1"><strong>Estagiário:</strong> <%= camposEstagio[0].nome_estagiario || 'N/A' %></p>
+                                <p class="mb-1"><strong>Situação:</strong> 
+                                    <span class="badge <%= camposEstagio[0].situacao === 'Aprovado' ? 'bg-success' : 'bg-warning' %>">
+                                        <%= camposEstagio[0].situacao || 'N/A' %>
+                                    </span>
+                                </p>
+                                <p class="mb-1"><strong>Orientador:</strong> <%= camposEstagio[0].nome_orientador || 'N/A' %></p>
+                                <p class="mb-0"><strong>Concedente:</strong> <%= camposEstagio[0].nome_concedente || 'N/A' %></p>
+                            </div>
+                        <% } else { %>
+                            <div class="mb-3">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h4 class="text-primary mb-0"><%= camposEstagio.length %></h4>
+                                        <small class="text-muted">Total de Registros</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-success mb-0"><%= camposEstagio.filter(c => c.situacao === 'Aprovado').length %></h4>
+                                        <small class="text-muted">Aprovados</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Última atualização: Hoje</p>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <div class="text-center py-3">
+                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Nenhum campo de estágio cadastrado</p>
+                        </div>
+                    <% } %>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-success btn-sm" onclick="window.location.href='/secure/estagio/campo/novo?origem=' + encodeURIComponent(window.location.pathname)">
+                            <i class="fas fa-plus me-1"></i>Novo
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="gerenciarCampoEstagio()">
+                            <i class="fas fa-edit me-1"></i>Gerenciar
+                        </button>
+                        <% if (camposEstagio && camposEstagio.length > 0) { %>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirCampoEstagio()">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Plano de Atividade -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-tasks fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">Plano de Atividade</h5>
+                            <small class="opacity-75">Planos de atividades dos estágios</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" id="cardPlanoAtividade">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="text-muted mt-2 mb-0">Carregando dados...</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-success btn-sm" onclick="window.open('/plano/novo', '_blank')">
+                            <i class="fas fa-plus me-1"></i>Novo
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="gerenciarPlanoAtividade()">
+                            <i class="fas fa-edit me-1"></i>Gerenciar
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirPlanoAtividade()">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Relatórios -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-alt fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">Relatórios</h5>
+                            <small class="opacity-75">Relatórios de estágio</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" id="cardRelatorios">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="text-muted mt-2 mb-0">Carregando dados...</p>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-success btn-sm" onclick="window.open('/relatorio/novo', '_blank')">
+                            <i class="fas fa-plus me-1"></i>Novo
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="gerenciarRelatorios()">
+                            <i class="fas fa-edit me-1"></i>Gerenciar
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirRelatorio()">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal simples para detalhes do estagiário -->
+<div id="detalhesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 20px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; padding-bottom: 10px;">
+            <h5 style="margin: 0; color: #495057;"><i class="fas fa-user me-2"></i>Detalhes do Estagiário</h5>
+            <button onclick="fecharModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6c757d;">&times;</button>
+        </div>
+        <div id="detalhesContent">
+            <div style="text-align: center; padding: 20px;">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 15px; text-align: right; border-top: 1px solid #dee2e6; padding-top: 10px;">
+            <button onclick="fecharModal()" class="btn btn-secondary btn-sm">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Objeto principal para gerenciar o dashboard administrativo
+    const AdminDashboard = {
+        // Estado do modal
+        modalAberto: false,
+        linhaAtiva: null,
+        
+        // Inicialização
+        init() {
+            this.setupEventListeners();
+            this.setupModalEventListeners();
+            this.carregarDadosCards();
+        },
+        
+        // Carregar dados dos cards
+        async carregarDadosCards() {
+            await this.carregarPlanosAtividade();
+            await this.carregarRelatorios();
+        },
+        
+        // Carregar dados dos planos de atividade
+        async carregarPlanosAtividade() {
+            try {
+                const response = await fetch('/api/planos-atividade');
+                const data = await response.json();
+                
+                const cardBody = document.getElementById('cardPlanoAtividade');
+                
+                if (data.success && data.planos && data.planos.length > 0) {
+                    if (data.planos.length === 1) {
+                        const plano = data.planos[0];
+                        cardBody.innerHTML = `
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">Registro Único:</h6>
+                                <p class="mb-1"><strong>Campo:</strong> ${plano.campo_nome || 'N/A'}</p>
+                                <p class="mb-1"><strong>Atividades:</strong> ${plano.total_atividades || 0}</p>
+                                <p class="mb-1"><strong>Status:</strong> 
+                                    <span class="badge bg-info">${plano.status || 'Em andamento'}</span>
+                                </p>
+                                <p class="mb-0"><strong>Última atualização:</strong> ${plano.data_atualizacao || 'N/A'}</p>
+                            </div>
+                        `;
+                    } else {
+                        cardBody.innerHTML = `
+                            <div class="mb-3">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h4 class="text-success mb-0">${data.planos.length}</h4>
+                                        <small class="text-muted">Total de Planos</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-info mb-0">${data.totalAtividades || 0}</h4>
+                                        <small class="text-muted">Atividades</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Última atualização: ${data.ultimaAtualizacao || 'Hoje'}</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    cardBody.innerHTML = `
+                        <div class="text-center py-3">
+                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Nenhum plano de atividade cadastrado</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar planos de atividade:', error);
+                document.getElementById('cardPlanoAtividade').innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <p class="text-muted mb-0">Erro ao carregar dados</p>
+                    </div>
+                `;
+            }
+        },
+        
+        // Carregar dados dos relatórios
+        async carregarRelatorios() {
+            try {
+                const response = await fetch('/api/relatorios-estagio');
+                const data = await response.json();
+                
+                const cardBody = document.getElementById('cardRelatorios');
+                
+                if (data.success && data.relatorios && data.relatorios.length > 0) {
+                    if (data.relatorios.length === 1) {
+                        const relatorio = data.relatorios[0];
+                        cardBody.innerHTML = `
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">Registro Único:</h6>
+                                <p class="mb-1"><strong>Campo:</strong> ${relatorio.campo_nome || 'N/A'}</p>
+                                <p class="mb-1"><strong>Tipo:</strong> ${relatorio.tipo_relatorio || 'N/A'}</p>
+                                <p class="mb-1"><strong>Status:</strong> 
+                                    <span class="badge bg-primary">${relatorio.status || 'Pendente'}</span>
+                                </p>
+                                <p class="mb-0"><strong>Data:</strong> ${relatorio.data_relatorio || 'N/A'}</p>
+                            </div>
+                        `;
+                    } else {
+                        cardBody.innerHTML = `
+                            <div class="mb-3">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h4 class="text-info mb-0">${data.relatorios.length}</h4>
+                                        <small class="text-muted">Total de Relatórios</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-success mb-0">${data.concluidos || 0}</h4>
+                                        <small class="text-muted">Concluídos</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Última atualização: ${data.ultimaAtualizacao || 'Hoje'}</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    cardBody.innerHTML = `
+                        <div class="text-center py-3">
+                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">Nenhum relatório cadastrado</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar relatórios:', error);
+                document.getElementById('cardRelatorios').innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <p class="text-muted mb-0">Erro ao carregar dados</p>
+                    </div>
+                `;
+            }
+        },
+        
+        // Configurar event listeners
+        setupEventListeners() {
+            // Busca na tabela
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', () => this.aplicarFiltros());
+            }
+            
+            // Event listeners para filtros
+            ['filtroPlano', 'filtroRelatorios', 'filtroStatus'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', () => this.aplicarFiltros());
+                }
+            });
+            
+            // Botão excluir
+            document.getElementById('btnExcluir')?.addEventListener('click', () => this.excluirLinha());
+            
+            // Cliques na tabela
+            document.addEventListener('click', (e) => this.handleTableClick(e));
+            document.addEventListener('keydown', (e) => this.handleKeyNavigation(e));
+        },
+        
+        // Configurar event listeners do modal
+        setupModalEventListeners() {
+            // Botão salvar
+            const btnSalvar = document.getElementById('btnSalvarAdmin');
+            if (btnSalvar) {
+                btnSalvar.addEventListener('click', () => this.salvarCampoEstagio());
+            }
+            
+            // Tipo de estágio
+            const tipoEstagio = document.getElementById('admin_modal_tipo_estagio');
+            if (tipoEstagio) {
+                tipoEstagio.addEventListener('change', () => this.toggleCamposNaoObrigatorio());
+            }
+            
+            // Fechar modal clicando fora
+            const detalhesModal = document.getElementById('detalhesModal');
+            if (detalhesModal) {
+                detalhesModal.addEventListener('click', (e) => {
+                    if (e.target === detalhesModal) {
+                        this.fecharModal();
+                    }
+                });
+            }
+            
+            // Fechar modal com ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.fecharModal();
+                }
+            });
+        },
+        
+        // Utilitários
+        formatISOToBRDate(isoDate) {
+            if (!isoDate) return 'N/A';
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return 'N/A';
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        },
+        
+        // Aplicar filtros na tabela
+        aplicarFiltros() {
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const filtroPlano = document.getElementById('filtroPlano')?.value || '';
+            const filtroRelatorios = document.getElementById('filtroRelatorios')?.value || '';
+            const filtroStatus = document.getElementById('filtroStatus')?.value || '';
+            const tableRows = document.querySelectorAll('#estagiariosTable tbody tr');
+            
+            tableRows.forEach(row => {
+                // Verifica se a linha contém dados (não é a linha de "nenhum estagiário")
+                if (row.cells.length < 9) {
+                    return;
+                }
+                
+                let mostrarLinha = true;
+                
+                // Filtro de busca geral
+                if (searchTerm) {
+                    const text = row.textContent.toLowerCase();
+                    if (!text.includes(searchTerm)) {
+                        mostrarLinha = false;
+                    }
+                }
+                
+                // Filtro Plano de Trabalho (coluna 5 - índice 5)
+                if (filtroPlano && mostrarLinha) {
+                    const planoCell = row.cells[5];
+                    const planoText = planoCell.textContent.trim();
+                    if (!planoText.includes(filtroPlano)) {
+                        mostrarLinha = false;
+                    }
+                }
+                
+                // Filtro Relatórios (coluna 6 - índice 6)
+                if (filtroRelatorios && mostrarLinha) {
+                    const relatoriosCell = row.cells[6];
+                    const relatoriosText = relatoriosCell.textContent.trim();
+                    if (!relatoriosText.includes(filtroRelatorios)) {
+                        mostrarLinha = false;
+                    }
+                }
+                
+                // Filtro Status (coluna 7 - índice 7)
+                if (filtroStatus && mostrarLinha) {
+                    const statusCell = row.cells[7];
+                    const statusText = statusCell.textContent.trim();
+                    if (!statusText.includes(filtroStatus)) {
+                        mostrarLinha = false;
+                    }
+                }
+                
+                // Aplica a visibilidade
+                row.style.display = mostrarLinha ? '' : 'none';
+            });
+        },
+        
+        // Abrir modal de detalhes
+        verDetalhes(id) {
+            try {
+                const modal = document.getElementById('detalhesModal');
+                const content = document.getElementById('detalhesContent');
+                
+                if (!modal || !content) {
+                    this.mostrarAlerta('Erro: Modal não encontrado', 'error');
+                    return;
+                }
+                
+                // Mostra o modal
+                modal.style.display = 'block';
+                
+                        // Loading
+                content.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner-border spinner-border-sm"></div><br><small>Carregando...</small></div>';
+                
+                // Timeout
+                const timeout = setTimeout(() => {
+                    content.innerHTML = '<div style="color: #856404; background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px;">Tempo limite excedido. Tente novamente.</div>';
+                }, 3000);
+                
+                // Requisição
+                fetch('/admin/estagiario/' + id)
+                    .then(response => {
+                        clearTimeout(timeout);
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success && data.estagiario) {
+                            const e = data.estagiario;
+                            content.innerHTML = `
+                                <div style="line-height: 1.6;">
+                                    <div style="margin-bottom: 20px;">
+                                        <h6 style="color: #007bff; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-user me-1"></i>Dados Pessoais</h6>
+                                        <p style="margin: 5px 0;"><strong>Matrícula:</strong> ${e.matricula || 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Nome:</strong> ${e.nome || 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Email:</strong> ${e.email || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <h6 style="color: #28a745; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-building me-1"></i>Estágio</h6>
+                                        <p style="margin: 5px 0;"><strong>Concedente:</strong> ${e.concedente || 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Orientador:</strong> ${e.orientador || 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Tipo:</strong> ${e.tipo_estagio || 'N/A'}</p>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <h6 style="color: #17a2b8; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-calendar me-1"></i>Cronograma</h6>
+                                        <p style="margin: 5px 0;"><strong>CH Semanal:</strong> ${e.ch_semanal || 'N/A'}h</p>
+                                        <p style="margin: 5px 0;"><strong>CH Total:</strong> ${e.ch_total || 'N/A'}h</p>
+                                        <p style="margin: 5px 0;"><strong>Início:</strong> ${e.data_inicio ? this.formatISOToBRDate(e.data_inicio) : 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Fim:</strong> ${e.data_termino ? this.formatISOToBRDate(e.data_termino) : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <h6 style="color: #6c757d; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-info-circle me-1"></i>Status</h6>
+                                        <p style="margin: 5px 0;"><strong>Situação:</strong> ${e.situacao || 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Processo SEI:</strong> ${e.processo_sei || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            content.innerHTML = '<div style="color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px;">Dados não encontrados.</div>';
+                        }
+                    })
+                    .catch(error => {
+                        clearTimeout(timeout);
+                        console.error('Erro:', error);
+                        content.innerHTML = '<div style="color: #721c24; background: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px;">Erro ao carregar dados. Tente novamente.</div>';
+                    });
+            } catch (error) {
+                console.error('Erro ao abrir modal de detalhes:', error);
+                this.mostrarAlerta('Erro ao abrir detalhes. Tente novamente.', 'error');
+            }
+        },
+        
+        // Fechar modal de detalhes
+        fecharModal() {
+            try {
+                const modal = document.getElementById('detalhesModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Erro ao fechar modal:', error);
+            }
+        },
+        
+        // Abrir modal de cadastro
+        abrirModalCadastro() {
+            try {
+                const modalElement = document.getElementById('modalCadastroEstagioAdmin');
+                const form = document.getElementById('formCadastroEstagioAdmin');
+                
+                if (!modalElement || !form) {
+                    console.error('Modal ou formulário não encontrado');
+                    this.mostrarAlerta('Erro: Modal não encontrado.', 'error');
+                    return;
+                }
+
+                // Reset do formulário
+                form.reset();
+                
+                // Valores padrão
+                const situacao = form.querySelector('[name="situacao"]');
+                if (situacao) situacao.value = 'Em edição';
+                
+                // Abrir modal usando Bootstrap
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                
+                // Focar no primeiro campo editável após um pequeno delay
+                setTimeout(() => {
+                    const primeiroInput = form.querySelector('input:not([readonly])');
+                    if (primeiroInput) {
+                        primeiroInput.focus();
+                    }
+                }, 150);
+                
+            } catch (error) {
+                console.error('Erro ao abrir modal de cadastro:', error);
+                this.mostrarAlerta('Erro ao abrir formulário de cadastro.', 'error');
+            }
+        },
+        
+        // Gerenciamento de seleção de linhas na tabela
+        handleTableClick(e) {
+            const linha = e.target.closest('tr');
+            const tabela = document.getElementById('tabelaCadastro');
+            
+            if (linha && tabela && tabela.contains(linha) && linha.parentElement.tagName === 'TBODY') {
+                // Remove seleção anterior
+                const linhaSelecionada = tabela.querySelector('tr.table-active');
+                if (linhaSelecionada) {
+                    linhaSelecionada.classList.remove('table-active');
+                }
+                
+                // Adiciona seleção na nova linha
+                linha.classList.add('table-active');
+                this.linhaAtiva = linha;
+                
+                // Habilita botão excluir
+                const btnExcluir = document.getElementById('btnExcluir');
+                if (btnExcluir) {
+                    btnExcluir.disabled = false;
+                }
+            }
+        },
+        
+        // Navegação por teclado
+        handleKeyNavigation(e) {
+            if (e.key === 'Delete' && this.linhaAtiva) {
+                this.excluirLinha();
+            }
+        },
+        
+        // Excluir linha selecionada
+        excluirLinha() {
+            if (!this.linhaAtiva) return;
+            
+            if (confirm('Tem certeza que deseja excluir este campo de estágio?')) {
+                const id = this.linhaAtiva.getAttribute('data-id');
+                
+                if (id) {
+                    this.showLoading(true);
+                    
+                    fetch(`/secure/estagio/campo/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.linhaAtiva.remove();
+                            this.linhaAtiva = null;
+                            document.getElementById('btnExcluir').disabled = true;
+                            this.mostrarAlerta('Campo de estágio excluído com sucesso!', 'success');
+                        } else {
+                            this.mostrarAlerta('Erro: ' + data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        this.mostrarAlerta('Erro ao excluir campo de estágio.', 'error');
+                    })
+                    .finally(() => {
+                        this.showLoading(false);
+                    });
+                } else {
+                    this.linhaAtiva.remove();
+                    this.linhaAtiva = null;
+                    document.getElementById('btnExcluir').disabled = true;
+                }
+            }
+        },
+        
+        // Mostrar/ocultar loading
+        showLoading(show) {
+            // Implementação simples de loading
+            const btnExcluir = document.getElementById('btnExcluir');
+            if (btnExcluir) {
+                btnExcluir.disabled = show;
+                btnExcluir.innerHTML = show ? 
+                    '<i class="fas fa-spinner fa-spin me-2"></i>Excluindo...' : 
+                    '<i class="fas fa-trash me-2"></i>Excluir';
+            }
+        },
+        
+        // Mostrar alerta
+        mostrarAlerta(mensagem, tipo = 'info') {
+            // Mapear tipos de alerta
+            const alertClasses = {
+                'error': 'alert-danger',
+                'success': 'alert-success',
+                'warning': 'alert-warning',
+                'info': 'alert-info'
+            };
+            
+            const alertClass = alertClasses[tipo] || 'alert-info';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas ${tipo === 'success' ? 'fa-check-circle' : tipo === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle'} me-2"></i>
+                    ${mensagem}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            // Inserir no topo da página
+            const container = document.querySelector('.container');
+            if (container) {
+                // Remover alertas anteriores para evitar acúmulo
+                const existingAlerts = container.querySelectorAll('.alert');
+                existingAlerts.forEach(alert => {
+                    if (alert.classList.contains('fade')) {
+                        alert.remove();
+                    }
+                });
+                
+                container.insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Auto-remover após 5 segundos para alertas de sucesso
+                if (tipo === 'success') {
+                    setTimeout(() => {
+                        const alert = container.querySelector('.alert-success');
+                        if (alert) {
+                            alert.classList.remove('show');
+                            setTimeout(() => alert.remove(), 150);
+                        }
+                    }, 5000);
+                }
+            }
+        }
+    };
+    
+    // Função global para compatibilidade
+    function verDetalhes(id) {
+        AdminDashboard.verDetalhes(id);
+    }
+    
+    // Função global para fechar modal
+    function fecharModal() {
+        AdminDashboard.fecharModal();
+    }
+    
+    // Função para remover PDF assinado
+    function removerPDF(estagiarioId) {
+        AdminDashboard.removerPDF(estagiarioId);
+    }
+    
+    // Adicionar métodos ao AdminDashboard
+    AdminDashboard.removerPDF = function(estagiarioId) {
+        if (confirm('Tem certeza que deseja remover o PDF assinado? Esta ação não pode ser desfeita.')) {
+            fetch(`/admin/plano/${estagiarioId}/remover-pdf`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.mostrarAlerta('PDF removido com sucesso!', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    this.mostrarAlerta('Erro ao remover PDF: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                this.mostrarAlerta('Erro ao remover PDF. Tente novamente.', 'error');
+            });
+        }
+    };
+    
+    // Função para atualizar status do estagiário
+    function atualizarStatus(estagiarioId, novoStatus) {
+        AdminDashboard.atualizarStatus(estagiarioId, novoStatus);
+    }
+    
+    AdminDashboard.atualizarStatus = function(estagiarioId, novoStatus) {
+        console.log('Iniciando atualização de status:', { estagiarioId, novoStatus });
+        
+        fetch(`/admin/estagiario/${estagiarioId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ situacao: novoStatus })
+        })
+        .then(response => {
+            console.log('Resposta recebida:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                console.error('Resposta não OK:', response.status, response.statusText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.text().then(text => {
+                console.log('Texto bruto da resposta:', text);
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    console.error('Erro ao fazer parse do JSON:', e);
+                    throw new Error('Resposta não é um JSON válido');
+                }
+            });
+        })
+        .then(data => {
+            console.log('Dados da resposta:', data);
+            if (data.success) {
+                // Mostrar feedback visual de sucesso
+                const select = document.querySelector(`select[data-estagiario-id="${estagiarioId}"]`);
+                if (select) {
+                    select.style.backgroundColor = '#d4edda';
+                    select.style.borderColor = '#c3e6cb';
+                    setTimeout(() => {
+                        select.style.backgroundColor = '';
+                        select.style.borderColor = '';
+                    }, 2000);
+                }
+                this.mostrarAlerta('Status atualizado com sucesso!', 'success');
+            } else {
+                console.error('Erro retornado pelo servidor:', data.message);
+                this.mostrarAlerta('Erro ao atualizar status: ' + data.message, 'error');
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            this.mostrarAlerta('Erro ao atualizar status: ' + error.message, 'error');
+            location.reload();
+        });
+    };
+
+    // Função para abrir modal de cadastro de estágio (compatibilidade)
+    function abrirModalCadastroEstagio() {
+        AdminDashboard.abrirModalCadastroLegacy();
+    }
+    
+    AdminDashboard.abrirModalCadastroLegacy = function() {
+        try {
+            // Resetar o formulário
+            const form = document.getElementById('formCadastroEstagio');
+            if (form) {
+                form.reset();
+            }
+            
+            // Definir valores padrão
+            const situacao = document.getElementById('modal_situacao');
+            const curso = document.getElementById('modal_curso');
+            
+            if (situacao) situacao.value = 'Em edição';
+            if (curso) curso.value = 'Ciência da Computação';
+            
+            // Aplicar máscaras de data apenas uma vez
+            this.aplicarMascaraData('modal_data_inicio');
+            this.aplicarMascaraData('modal_data_termino');
+            
+            // Abrir o modal usando Bootstrap
+            const modalElement = document.getElementById('modalCadastroEstagioAdmin');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                
+                // Focar no primeiro campo após o modal abrir
+                modalElement.addEventListener('shown.bs.modal', () => {
+                    const firstInput = document.getElementById('modal_numero_matricula');
+                    if (firstInput) firstInput.focus();
+                }, { once: true });
+            }
+            
+        } catch (error) {
+            console.error('Erro ao abrir modal:', error);
+            this.mostrarAlerta('Erro ao abrir o formulário. Tente recarregar a página.', 'error');
+        }
+    };
+
+    // Adicionar funções utilitárias ao AdminDashboard
+    AdminDashboard.aplicarMascaraData = function(elementId) {
+        const element = document.getElementById(elementId);
+        if (element && !element.hasAttribute('data-mask-applied')) {
+            element.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2);
+                }
+                if (value.length >= 5) {
+                    value = value.substring(0, 5) + '/' + value.substring(5, 9);
+                }
+                e.target.value = value;
+            });
+            element.setAttribute('data-mask-applied', 'true');
+        }
+    };
+
+    AdminDashboard.validarDataBrasileira = function(data) {
+        if (!data) return true; // Campo opcional
+        const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        const match = data.match(regex);
+        if (!match) return false;
+        
+        const dia = parseInt(match[1], 10);
+        const mes = parseInt(match[2], 10);
+        const ano = parseInt(match[3], 10);
+        
+        if (mes < 1 || mes > 12) return false;
+        if (dia < 1 || dia > 31) return false;
+        if (ano < 1900 || ano > 2100) return false;
+        
+        const dataObj = new Date(ano, mes - 1, dia);
+        return dataObj.getFullYear() === ano && 
+               dataObj.getMonth() === mes - 1 && 
+               dataObj.getDate() === dia;
+    };
+
+    AdminDashboard.toggleCamposNaoObrigatorio = function() {
+        const tipoEstagio = document.getElementById('modal_tipo_estagio');
+        const camposNaoObrigatorio = document.getElementById('camposNaoObrigatorio');
+        
+        if (tipoEstagio && camposNaoObrigatorio) {
+            if (tipoEstagio.value === 'Não obrigatório') {
+                camposNaoObrigatorio.style.display = 'block';
+            } else {
+                camposNaoObrigatorio.style.display = 'none';
+                // Limpar valores dos campos ocultos
+                const valorBolsa = document.getElementById('modal_valor_bolsa');
+                const auxilioTransporte = document.getElementById('modal_auxilio_transporte');
+                if (valorBolsa) valorBolsa.value = '';
+                if (auxilioTransporte) auxilioTransporte.value = '';
+            }
+        }
+    };
+
+    AdminDashboard.salvarCampoEstagio = function() {
+        const form = document.getElementById('formCadastroEstagio');
+        if (!form) {
+            this.mostrarAlerta('Formulário não encontrado', 'error');
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        // Validar campos obrigatórios
+        const camposObrigatorios = ['numero_matricula', 'nome', 'email', 'curso', 'situacao'];
+        for (let campo of camposObrigatorios) {
+            const valor = formData.get(campo);
+            if (!valor || valor.trim() === '') {
+                this.mostrarAlerta(`O campo ${campo.replace('_', ' ')} é obrigatório.`, 'error');
+                const element = document.getElementById('modal_' + campo);
+                if (element) element.focus();
+                return;
+            }
+        }
+        
+        // Validar datas
+        const dataInicio = formData.get('data_inicio');
+        const dataTermino = formData.get('data_termino');
+        
+        if (dataInicio && !this.validarDataBrasileira(dataInicio)) {
+            this.mostrarAlerta('Data de início inválida. Use o formato dd/mm/aaaa.', 'error');
+            const element = document.getElementById('modal_data_inicio');
+            if (element) element.focus();
+            return;
+        }
+        
+        if (dataTermino && !this.validarDataBrasileira(dataTermino)) {
+            this.mostrarAlerta('Data de término inválida. Use o formato dd/mm/aaaa.', 'error');
+            const element = document.getElementById('modal_data_termino');
+            if (element) element.focus();
+            return;
+        }
+        
+        // Converter FormData para objeto
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+        
+        // Enviar dados para o servidor
+        fetch('/secure/estagio/campo/criar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                this.mostrarAlerta('Campo de estágio cadastrado com sucesso!', 'success');
+                // Fechar modal
+                const modalElement = document.getElementById('modalCadastroEstagioAdmin');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) modal.hide();
+                }
+                // Recarregar página para mostrar o novo registro
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                this.mostrarAlerta('Erro ao cadastrar campo de estágio: ' + result.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            this.mostrarAlerta('Erro ao cadastrar campo de estágio. Tente novamente.', 'error');
+        });
+    };
+    
+    // Funções globais para compatibilidade
+    function aplicarMascaraData(elementId) {
+        AdminDashboard.aplicarMascaraData(elementId);
+    }
+    
+    function validarDataBrasileira(data) {
+        return AdminDashboard.validarDataBrasileira(data);
+    }
+    
+    function toggleCamposNaoObrigatorio() {
+        AdminDashboard.toggleCamposNaoObrigatorio();
+    }
+    
+    function salvarCampoEstagio() {
+        AdminDashboard.salvarCampoEstagio();
+    }
+    
+    // Inicializar event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        AdminDashboard.init();
+        
+        // Event listener para fechar modal com ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                AdminDashboard.fecharModal();
+            }
+        });
+        
+        // Event listener para fechar modal clicando fora
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('detalhesModal');
+            if (event.target === modal) {
+                AdminDashboard.fecharModal();
+            }
+        });
+    });
+
+    // Objeto AdminRotinas para compatibilidade com o modal
+    const AdminRotinas = {
+        modalAberto: false,
+
+        // Inicialização
+        init() {
+            // Método de inicialização para compatibilidade
+            console.log('AdminRotinas inicializado');
+        },
+
+        // Gerenciamento de modal
+        abrirModal() {
+            try {
+                // Prevenir múltiplas aberturas
+                if (this.modalAberto) {
+                    console.log('Modal já está aberto');
+                    return;
+                }
+
+                const modal = document.getElementById('modalCadastroEstagio');
+                const form = document.getElementById('formCadastroEstagio');
+                
+                if (!modal || !form) {
+                    console.error('Modal ou formulário não encontrado');
+                    return;
+                }
+
+                // Marcar como aberto
+                this.modalAberto = true;
+
+                // Reset do formulário
+                form.reset();
+                
+                // Valores padrão
+                const situacao = form.querySelector('[name="situacao"]');
+                if (situacao) situacao.value = 'Em edição';
+                
+                // Mostrar modal usando CSS
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevenir scroll do body
+                
+                // Focar no primeiro campo editável após um pequeno delay
+                setTimeout(() => {
+                    const primeiroInput = form.querySelector('input:not([readonly])');
+                    if (primeiroInput) {
+                        primeiroInput.focus();
+                    }
+                }, 150);
+                
+            } catch (error) {
+                console.error('Erro ao abrir modal:', error);
+                this.modalAberto = false; // Reset em caso de erro
+                mostrarAlerta('Erro ao abrir o formulário. Tente recarregar a página.', 'error');
+            }
+        },
+
+        fecharModal() {
+            try {
+                const modal = document.getElementById('modalCadastroEstagio');
+                if (modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = ''; // Restaurar scroll do body
+                }
+                
+                // Resetar controle de abertura
+                this.modalAberto = false;
+                
+            } catch (error) {
+                console.error('Erro ao fechar modal:', error);
+                this.modalAberto = false; // Reset mesmo em caso de erro
+            }
+        }
+    };
+    
+    // Inicializar quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        AdminDashboard.init();
+        AdminRotinas.init();
+    });
+    
+    // Funções para gerenciar os cards
+    function gerenciarCampoEstagio() {
+        // Recarrega a página atual para atualizar os dados
+        window.location.reload();
+    }
+    
+    function excluirCampoEstagio() {
+        if (confirm('Tem certeza que deseja excluir o(s) campo(s) de estágio selecionado(s)?')) {
+            // Implementar lógica de exclusão
+            alert('Funcionalidade de exclusão será implementada');
+        }
+    }
+    
+    function gerenciarPlanoAtividade() {
+        window.location.href = '/plano';
+    }
+    
+    function excluirPlanoAtividade() {
+        if (confirm('Tem certeza que deseja excluir o(s) plano(s) de atividade selecionado(s)?')) {
+            // Implementar lógica de exclusão
+            alert('Funcionalidade de exclusão será implementada');
+        }
+    }
+    
+    function gerenciarRelatorios() {
+        window.location.href = '/relatorio';
+    }
+    
+    function excluirRelatorio() {
+        if (confirm('Tem certeza que deseja excluir o(s) relatório(s) selecionado(s)?')) {
+            // Implementar lógica de exclusão
+            alert('Funcionalidade de exclusão será implementada');
+        }
+    }
+</script>
+
+<style>
+    /* Diminuir fonte dos combobox de status */
+    .form-select {
+        font-size: 0.8rem !important;
+    }
+
+    /* Estilos para o modal overlay */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 2% auto;
+        padding: 0;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 1200px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h5 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .btn-close-white {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-close-white:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .form-section {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        border-left: 4px solid #007bff;
+    }
+
+    .form-section h6 {
+        color: #007bff;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-control-sm {
+        font-size: 0.85rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>

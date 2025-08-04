@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Plano de Atividades</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-size: 14px; }
+        .card { border: 1px solid #dee2e6; box-shadow: none; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #dee2e6; padding: 1rem; }
+        .card-body { padding: 1.5rem; }
+        .section-title { font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 0.75rem; }
+        .info-item { margin-bottom: 0.5rem; font-size: 13px; }
+        .content-box { background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 0.75rem; border-radius: 4px; font-size: 13px; }
+        .btn { font-size: 13px; padding: 0.5rem 1rem; }
+        .card-footer { background-color: #fff; border-top: 1px solid #dee2e6; padding: 1rem; }
+        
+        /* Estilos de impressão para corresponder ao PDF */
+        @media print {
+            body { 
+                background-color: white !important; 
+                font-family: Arial, sans-serif; 
+                margin: 25px; 
+                line-height: 1.4; 
+                font-size: 12px; 
+                -webkit-print-color-adjust: exact;
+            }
+            .container, .row, .col-lg-10 { 
+                width: 100% !important; 
+                max-width: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+            }
+            .card { 
+                border: none !important; 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+            }
+            .card-header { 
+                background: none !important; 
+                border: none !important; 
+                padding: 0 !important; 
+                text-align: center; 
+                margin-bottom: 20px; 
+            }
+            .card-header h5 { 
+                font-size: 14px !important; 
+                font-weight: bold !important; 
+                margin-bottom: 5px !important; 
+            }
+            .card-header small { 
+                font-size: 12px !important; 
+                color: #333 !important; 
+            }
+            .card-body { 
+                padding: 0 !important; 
+            }
+            .card-footer { 
+                display: none !important; 
+            }
+            .section-title { 
+                font-size: 12px !important; 
+                font-weight: bold !important; 
+                color: #333 !important; 
+                border-bottom: 1px solid #ddd !important; 
+                padding-bottom: 3px !important; 
+                margin-bottom: 8px !important; 
+                text-transform: uppercase;
+            }
+            .info-item { 
+                margin-bottom: 6px !important; 
+                font-size: 11px !important; 
+            }
+            .info-item strong { 
+                font-weight: bold !important; 
+                display: inline-block; 
+                width: 120px; 
+                font-size: 11px !important; 
+            }
+            .content-box { 
+                background: none !important; 
+                border: 1px solid #ddd !important; 
+                padding: 8px !important; 
+                border-radius: 0 !important; 
+                font-size: 11px !important; 
+                min-height: 60px; 
+                margin-top: 8px; 
+            }
+            .mb-3 { 
+                margin-bottom: 15px !important; 
+            }
+            .text-muted { 
+                color: #999 !important; 
+                font-size: 10px !important; 
+                text-align: center; 
+                margin-top: 20px; 
+            }
+            
+            /* Cabeçalho da universidade para impressão */
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .print-header .title {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .print-header .subtitle {
+                font-size: 12px;
+                color: #333;
+            }
+            
+            /* Seção de assinaturas para impressão */
+            .print-signatures {
+                display: block !important;
+                margin-top: 30px;
+                page-break-inside: avoid;
+            }
+            .signature-section {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 25px;
+            }
+            .signature-box {
+                text-align: center;
+                width: 30%;
+            }
+            .signature-line {
+                border-bottom: 1px solid #333;
+                margin-bottom: 4px;
+                height: 35px;
+            }
+            .signature-info {
+                font-size: 10px;
+                margin-top: 3px;
+                text-align: center;
+            }
+            .signature-label {
+                font-size: 8px;
+                color: #666;
+            }
+            .print-footer {
+                display: block !important;
+                margin-top: 20px;
+                text-align: center;
+                font-size: 9px;
+                color: #666;
+            }
+        }
+        
+        /* Ocultar elementos específicos na tela */
+        .print-header, .print-signatures, .print-footer {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho da universidade (apenas na impressão) -->
+    <div class="print-header">
+        <div class="title">UNIVERSIDADE FEDERAL DE JATAÍ</div>
+        <div class="title">CURSO DE CIÊNCIA DA COMPUTAÇÃO</div>
+        <div class="subtitle">PLANO DE ATIVIDADES DE ESTÁGIO</div>
+    </div>
+    
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h5 class="mb-1">Plano de Atividades</h5>
+                        <small class="text-muted">Visualização do plano de <%= plano.nome %></small>
+                    </div>
+                    <div class="card-body">
+                        <!-- Dados do Estagiário -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="section-title">Dados do Estagiário</div>
+                                <div class="info-item"><strong>Nome:</strong> <%= plano.nome %></div>
+                                <div class="info-item"><strong>Matrícula:</strong> <%= plano.matricula %></div>
+                                <div class="info-item"><strong>E-mail:</strong> <%= plano.email %></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="section-title">Dados da Empresa</div>
+                                <div class="info-item"><strong>Empresa:</strong> <%= plano.empresa %></div>
+                                <div class="info-item"><strong>Supervisor:</strong> <%= plano.supervisor_empresa %></div>
+                                <div class="info-item"><strong>Contato:</strong> <%= plano.telefone_supervisor || 'Não informado' %></div>
+                            </div>
+                        </div>
+
+                        <!-- Período e Carga Horária -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="section-title">Período</div>
+                                <div class="info-item"><strong>Início:</strong> <%= (function(isoDate) { const parts = isoDate.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : ''; })(plano.periodo_inicio) %></div>
+                                <div class="info-item"><strong>Fim:</strong> <%= (function(isoDate) { const parts = isoDate.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : ''; })(plano.periodo_fim) %></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="section-title">Carga Horária</div>
+                                <div class="info-item"><strong>Semanal:</strong> <%= plano.carga_horaria_semanal %> horas</div>
+                            </div>
+                        </div>
+
+                        <!-- Atividades -->
+                        <div class="mb-3">
+                            <div class="section-title">Atividades a serem desenvolvidas</div>
+                            <div class="content-box">
+                                <%= plano.atividades_desenvolvidas %>
+                            </div>
+                        </div>
+
+                        <!-- Objetivos -->
+                        <div class="mb-3">
+                            <div class="section-title">Objetivos do estágio</div>
+                            <div class="content-box">
+                                <%= plano.objetivos %>
+                            </div>
+                        </div>
+
+                        <% if (plano.cronograma) { %>
+                        <!-- Cronograma -->
+                        <div class="mb-3">
+                            <div class="section-title">Cronograma</div>
+                            <div class="content-box">
+                                <%= plano.cronograma %>
+                            </div>
+                        </div>
+                        <% } %>
+
+                        <% if (plano.recursos_necessarios) { %>
+                        <!-- Recursos -->
+                        <div class="mb-3">
+                            <div class="section-title">Recursos necessários</div>
+                            <div class="content-box">
+                                <%= plano.recursos_necessarios %>
+                            </div>
+                        </div>
+                        <% } %>
+
+                        <!-- Informações do Sistema -->
+                        <div class="row text-muted mt-3" style="font-size: 12px;">
+                            <div class="col-md-6">
+                                <div><strong>Criado em:</strong> <%= new Date(plano.created_at).toLocaleString('pt-BR') %></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div><strong>Última atualização:</strong> <%= new Date(plano.updated_at).toLocaleString('pt-BR') %></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Seção de Assinaturas (apenas na impressão) -->
+                        <div class="print-signatures">
+                            <div class="signature-section">
+                                <div class="signature-box">
+                                    <div class="signature-line"></div>
+                                    <div class="signature-info">
+                                        <strong><%= plano.nome %></strong><br>
+                                        <span class="signature-label">Estagiário(a) - Mat.: <%= plano.matricula %></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="signature-box">
+                                    <div class="signature-line"></div>
+                                    <div class="signature-info">
+                                        <strong><%= plano.supervisor_empresa || 'Nome do Supervisor' %></strong><br>
+                                        <span class="signature-label">Supervisor da Empresa - <%= plano.empresa || 'Nome da Empresa' %></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="signature-box">
+                                    <div class="signature-line"></div>
+                                    <div class="signature-info">
+                                        <strong>Prof. [Nome do Orientador]</strong><br>
+                                        <span class="signature-label">Orientador Acadêmico - UFJ</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="print-footer">
+                                <p>
+                                    Este documento deve ser assinado por todas as partes envolvidas no estágio.<br>
+                                    Após assinado, anexar o PDF no Sistema de Gestão de Estágio.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Rodapé com data de geração (apenas na impressão) -->
+                        <div class="print-footer" style="margin-top: 20px; font-size: 10px; color: #999;">
+                            <% 
+    function formatCurrentDateToBR() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+%>
+Documento gerado em <%= formatCurrentDateToBR() %> às <%= new Date().toLocaleTimeString('pt-BR') %>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                            Voltar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="window.print()">
+                            Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

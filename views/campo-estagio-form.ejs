@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .form-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin: 15px auto;
+            max-width: 800px;
+        }
+        .form-section {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+        }
+        .form-section h5 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.3rem;
+        }
+        .mb-3 {
+            margin-bottom: 0.8rem !important;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="page-title"><i class="fas fa-plus-circle me-2"></i><%= title %></h2>
+                <a href="<%= origem %>" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+
+            <form id="formCadastroEstagio" action="/secure/estagio/campo/criar" method="POST">
+                <!-- Informações Básicas -->
+                <div class="form-section">
+                    <h5><i class="fas fa-info-circle me-2"></i>Informações Básicas</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="situacao" class="form-label">Situação</label>
+                            <select class="form-select" id="situacao" name="situacao" disabled>
+                                <% enumValues.situacao.forEach(function(situacao) { %>
+                                    <option value="<%= situacao %>" <%= situacao === 'Em edição' ? 'selected' : '' %>><%= situacao %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="semestre_ano" class="form-label">Semestre/Ano</label>
+                            <input type="text" class="form-control" id="semestre_ano" name="semestre_ano" required placeholder="Ex: 2/2025" pattern="[1-2]/[0-9]{4}" title="Formato: x/aaaa (ex: 2/2025)">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="processo_sei" class="form-label">Processo SEI</label>
+                            <input type="text" class="form-control" id="processo_sei" name="processo_sei">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="curso" class="form-label">Curso</label>
+                            <div class="d-flex align-items-center">
+                                <input type="hidden" id="id_pessoa_curso" name="id_pessoa_curso">
+                                <input type="text" class="form-control" id="curso_nome" name="curso" required readonly placeholder="Clique em 'Buscar' para selecionar o curso">
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-action="buscar-pessoa" data-target="id_pessoa_curso" data-callback="preencherCurso">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <!-- Espaço vazio para manter layout -->
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="numero_apolice" class="form-label">Número da Apólice</label>
+                            <input type="text" class="form-control" id="numero_apolice" name="numero_apolice" disabled>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="nome_seguradora" class="form-label">Nome da Seguradora</label>
+                            <input type="text" class="form-control" id="nome_seguradora" name="nome_seguradora" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados do Estagiário -->
+                <div class="form-section">
+                    <h5><i class="fas fa-user me-2"></i>Dados do Estagiário</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome_estagiario" class="form-label">Nome do Estagiário</label>
+                            <div class="d-flex align-items-center">
+                                <input type="hidden" id="id_pessoa_estagiario" name="id_pessoa_estagiario">
+                                <input type="text" class="form-control" id="nome_estagiario_nome" name="nome_estagiario" required readonly placeholder="Clique em 'Buscar' para selecionar o estagiário">
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-action="buscar-pessoa" data-target="id_pessoa_estagiario" data-callback="preencherEstagiario">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="numero_matricula" class="form-label">Matrícula</label>
+                            <input type="text" class="form-control" id="numero_matricula" name="numero_matricula" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email_estagiario" class="form-label">E-mail</label>
+                            <input type="email" class="form-control" id="email_estagiario" name="email_estagiario" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="orientador" class="form-label">Orientador</label>
+                            <div class="d-flex align-items-center">
+                                <input type="hidden" id="id_pessoa_orientador" name="id_pessoa_orientador">
+                                <input type="text" class="form-control" id="orientador_nome" name="orientador" required readonly placeholder="Clique em 'Buscar' para selecionar o orientador">
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-action="buscar-pessoa" data-target="id_pessoa_orientador" data-callback="preencherOrientador">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dados da Concedente -->
+                <div class="form-section">
+                    <h5><i class="fas fa-building me-2"></i>Dados da Concedente</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome_empresa" class="form-label">Nome da Empresa</label>
+                            <div class="d-flex align-items-center">
+                                <input type="hidden" id="id_pessoa_concedente" name="id_pessoa_concedente">
+                                <input type="text" class="form-control" id="nome_empresa_nome" name="nome_empresa" required readonly placeholder="Clique em 'Buscar' para selecionar a empresa">
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-action="buscar-pessoa" data-target="id_pessoa_concedente" data-callback="preencherConcedente">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="numero_convenio" class="form-label">Número do Convênio</label>
+                            <input type="text" class="form-control" id="numero_convenio" name="numero_convenio">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="nome_supervisor" class="form-label">Nome do Supervisor</label>
+                            <div class="d-flex align-items-center">
+                                <input type="hidden" id="id_pessoa_supervisor" name="id_pessoa_supervisor">
+                                <input type="text" class="form-control" id="nome_supervisor_nome" name="nome_supervisor" required readonly placeholder="Clique em 'Buscar' para selecionar o supervisor">
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-action="buscar-pessoa" data-target="id_pessoa_supervisor" data-callback="preencherSupervisor">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="telefone_supervisor" class="form-label">Telefone do Supervisor</label>
+                            <input type="text" class="form-control" id="telefone_supervisor" name="telefone_supervisor" readonly>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="email_supervisor" class="form-label">E-mail do Supervisor</label>
+                            <input type="email" class="form-control" id="email_supervisor" name="email_supervisor" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="area_atuacao_supervisor" class="form-label">Área de Atuação do Supervisor</label>
+                        <input type="text" class="form-control" id="area_atuacao_supervisor" name="area_atuacao_supervisor">
+                    </div>
+                </div>
+
+                <!-- Dados do Estágio -->
+                <div class="form-section">
+                    <h5><i class="fas fa-briefcase me-2"></i>Dados do Estágio</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo_estagio" class="form-label">Tipo de Estágio</label>
+                            <select class="form-select" id="tipo_estagio" name="tipo_estagio" required>
+                                <option value="">Selecione...</option>
+                                <% enumValues.tipo_estagio.forEach(function(tipo) { %>
+                                    <option value="<%= tipo %>"><%= tipo %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="cargahoraria" class="form-label">Carga Horária Semanal</label>
+                            <input type="number" class="form-control" id="cargahoraria" name="cargahoraria" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="carga_horaria_total" class="form-label">Carga Horária Total</label>
+                            <input type="number" class="form-control" id="carga_horaria_total" name="carga_horaria_total">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="data_inicio" class="form-label">Data de Início</label>
+                            <input type="date" class="form-control" id="data_inicio" name="data_inicio" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="data_fim" class="form-label">Data de Fim</label>
+                            <input type="date" class="form-control" id="data_fim" name="data_fim" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Campos específicos para estágio não obrigatório -->
+                    <div id="camposNaoObrigatorio" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="valor_bolsa" class="form-label">Valor da Bolsa (R$)</label>
+                                <input type="number" step="0.01" class="form-control" id="valor_bolsa" name="valor_bolsa">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="valor_vale_transporte" class="form-label">Valor do Vale Transporte (R$)</label>
+                                <input type="number" step="0.01" class="form-control" id="valor_vale_transporte" name="valor_vale_transporte">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="atividades" class="form-label">Atividades a serem desenvolvidas</label>
+                        <textarea class="form-control" id="atividades" name="atividades" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="observacoes" class="form-label">Observações</label>
+                        <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="/admin/rotinas" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/pessoa-manager.js"></script>
+    <script>
+        'use strict';
+        
+        // Configurações
+        const CONFIG = {
+            API_ENDPOINTS: {
+                PESSOAS: '/api/pessoas',
+                PARAMETROS: '/api/parametros/buscar',
+                ESTAGIO_CRIAR: '/secure/estagio/campo/criar'
+            },
+            ALERT_TIMEOUT: 5000,
+            FEEDBACK_TIMEOUT: 2000
+        };
+
+        // Utilitários
+        function showAlert(message, type = 'error') {
+            const iconMap = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-triangle',
+                warning: 'fas fa-exclamation-circle',
+                info: 'fas fa-info-circle'
+            };
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                <i class="${iconMap[type] || iconMap.info} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(alertDiv);
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, CONFIG.ALERT_TIMEOUT);
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                return await response.json();
+            } catch (error) {
+                // Log do erro para debug
+                if (typeof console !== 'undefined') {
+                    console.error('Erro na requisição:', error);
+                }
+                throw error;
+            }
+        }
+
+        function validateForm(formElement) {
+            const requiredFields = formElement.querySelectorAll('[required]');
+            for (const field of requiredFields) {
+                const value = field.value.trim();
+                if (!value) {
+                    showAlert(`O campo "${field.previousElementSibling?.textContent || field.name}" é obrigatório.`);
+                    field.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Função polimórfica para buscar dados de parceiros por categoria
+        async function buscarParceiroPorCategoria(idPessoa, categoria) {
+            try {
+                const result = await makeRequest(`${CONFIG.API_ENDPOINTS.PESSOAS}/${idPessoa}`);
+                
+                if (result.success && result.pessoa) {
+                    // Mapear campos baseado na categoria
+                    const camposMapeamento = {
+                        'supervisor': {
+                            telefone: 'telefone_supervisor',
+                            email: 'email_supervisor'
+                        },
+                        'orientador': {
+                            telefone: 'telefone_orientador',
+                            email: 'email_orientador'
+                        },
+                        'coordenador': {
+                            telefone: 'telefone_coordenador',
+                            email: 'email_coordenador'
+                        },
+                        'concedente': {
+                            telefone: 'telefone_concedente',
+                            email: 'email_concedente'
+                        },
+                        'curso': {
+                            telefone: 'telefone_curso',
+                            email: 'email_curso'
+                        }
+                    };
+                    
+                    const campos = camposMapeamento[categoria];
+                    if (campos) {
+                        // Preencher campos de telefone e email se existirem
+                        const telefoneElement = document.getElementById(campos.telefone);
+                        const emailElement = document.getElementById(campos.email);
+                        
+                        if (telefoneElement) {
+                            telefoneElement.value = result.pessoa.telefone || '';
+                        }
+                        if (emailElement) {
+                            emailElement.value = result.pessoa.email || '';
+                        }
+                    }
+                } else {
+                    if (typeof console !== 'undefined') {
+                        console.error(`Erro ao buscar dados do ${categoria}:`, result.message);
+                    }
+                }
+            } catch (error) {
+                if (typeof console !== 'undefined') {
+                    console.error(`Erro ao buscar dados do ${categoria}:`, error);
+                }
+                showAlert(`Erro ao buscar dados do ${categoria}.`);
+            }
+        }
+
+        // Função para buscar email do usuário via API
+        async function buscarEmailUsuario(idPessoa) {
+            try {
+                const result = await makeRequest(`${CONFIG.API_ENDPOINTS.PESSOAS}/${idPessoa}`);
+                if (result.success && result.pessoa && result.pessoa.email) {
+                    document.getElementById('email_estagiario').value = result.pessoa.email;
+                }
+            } catch (error) {
+                if (typeof console !== 'undefined') {
+                    console.error('Erro ao buscar email do usuário:', error);
+                }
+                showAlert('Erro ao buscar email do usuário.');
+            }
+        }
+        // Função para carregar parâmetros de apólice e seguradora
+        async function carregarParametrosApoliceSeguradora() {
+            try {
+                // Aguardar um pouco para garantir que o DOM esteja completamente carregado
+                setTimeout(async () => {
+                    const numeroApoliceField = document.getElementById('numero_apolice');
+                    const nomeSeguradoraField = document.getElementById('nome_seguradora');
+                    
+                    if (!numeroApoliceField || !nomeSeguradoraField) {
+                        if (typeof console !== 'undefined') {
+                            console.error('ERRO: Campos não encontrados no DOM!');
+                        }
+                        return;
+                    }
+                    
+                    const identificador = 'Apólice de Seguro';
+                    
+                    try {
+                        const data = await makeRequest(`${CONFIG.API_ENDPOINTS.PARAMETROS}?identificador=${encodeURIComponent(identificador)}`);
+                        
+                        if (data.success && data.parametro && data.parametro.valores) {
+                            const valores = data.parametro.valores;
+                            
+                            // Atribuir valor ao campo número da apólice
+                            if (valores['Número da Apólice']) {
+                                numeroApoliceField.removeAttribute('disabled');
+                                numeroApoliceField.value = valores['Número da Apólice'];
+                                numeroApoliceField.setAttribute('readonly', 'true');
+                                numeroApoliceField.style.backgroundColor = '#f8f9fa';
+                                numeroApoliceField.style.color = '#6c757d';
+                            }
+                            
+                            // Atribuir valor ao campo nome da seguradora
+                            if (valores['Nome da Seguradora']) {
+                                nomeSeguradoraField.removeAttribute('disabled');
+                                nomeSeguradoraField.value = valores['Nome da Seguradora'];
+                                nomeSeguradoraField.setAttribute('readonly', 'true');
+                                nomeSeguradoraField.style.backgroundColor = '#f8f9fa';
+                                nomeSeguradoraField.style.color = '#6c757d';
+                            }
+                        } else {
+                            showAlert('Atenção: Os parâmetros da Apólice de Seguro não estão configurados. Por favor, configure os seguintes valores na área administrativa: Número da Apólice e Nome da Seguradora.', 'warning');
+                        }
+                    } catch (error) {
+                        if (typeof console !== 'undefined') {
+                            console.error('Erro ao carregar parâmetros da apólice:', error);
+                        }
+                        showAlert('Erro ao carregar os parâmetros da Apólice de Seguro. Verifique a configuração no sistema.');
+                    }
+                }, 500); // Aguarda 500ms para garantir que o DOM esteja pronto
+            } catch (error) {
+                if (typeof console !== 'undefined') {
+                    console.error('Erro geral na função carregarParametrosApoliceSeguradora:', error);
+                }
+                showAlert('Erro ao inicializar parâmetros da apólice.');
+            }
+        }
+    
+
+    
+        // Funções de callback para preenchimento de pessoas
+        function preencherEstagiario(pessoa) {
+            document.getElementById('id_pessoa_estagiario').value = pessoa.id_pessoa;
+            document.getElementById('nome_estagiario_nome').value = pessoa.nome;
+            if (pessoa.email) {
+                document.getElementById('email_estagiario').value = pessoa.email;
+            }
+        }
+
+        function preencherOrientador(pessoa) {
+            document.getElementById('id_pessoa_orientador').value = pessoa.id_pessoa;
+            document.getElementById('orientador_nome').value = pessoa.nome;
+        }
+
+        function preencherCurso(pessoa) {
+            document.getElementById('id_pessoa_curso').value = pessoa.id_pessoa;
+            document.getElementById('curso_nome').value = pessoa.nome;
+        }
+
+        function preencherConcedente(pessoa) {
+            document.getElementById('id_pessoa_concedente').value = pessoa.id_pessoa;
+            document.getElementById('nome_empresa_nome').value = pessoa.nome;
+        }
+
+        function preencherSupervisor(pessoa) {
+            document.getElementById('id_pessoa_supervisor').value = pessoa.id_pessoa;
+            document.getElementById('nome_supervisor_nome').value = pessoa.nome;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar o gerenciador de pessoas
+            window.pessoaManager = new PessoaManager();
+            
+            // Event delegation para botões de busca de pessoas
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('[data-action="buscar-pessoa"]')) {
+                    const button = e.target.closest('[data-action="buscar-pessoa"]');
+                    const target = button.dataset.target;
+                    const callbackName = button.dataset.callback;
+                    
+                    if (target && callbackName && window[callbackName]) {
+                        pessoaManager.abrirModal(target, window[callbackName]);
+                    } else {
+                        showAlert('Erro na configuração do botão de busca.');
+                    }
+                }
+            });
+            
+            // Carregar parâmetros de apólice e seguradora automaticamente
+            carregarParametrosApoliceSeguradora();
+        
+        // Preencher dados do estagiário automaticamente para usuários da categoria 3 (Aluno/Estagiário)
+        <% if (user) { %>
+            <% if (user.categoria === '3' || user.categoria === 3) { %>
+                // Para usuários estagiários, preencher com seus próprios dados
+                document.getElementById('id_pessoa_estagiario').value = '<%= user.id_pessoa %>';
+                document.getElementById('nome_estagiario_nome').value = '<%= user.nome %>';
+                <% if (user.email) { %>
+                document.getElementById('email_estagiario').value = '<%= user.email %>';
+                <% } else { %>
+                // Buscar email do usuário via API se não estiver na sessão
+                buscarEmailUsuario('<%= user.id_pessoa %>');
+                <% } %>
+                
+                // Para usuários não administradores, tornar campos readonly e ocultar botão de busca
+                <% if (user.tipoacesso !== 'Administrador') { %>
+                    document.getElementById('nome_estagiario_nome').setAttribute('readonly', true);
+                    document.getElementById('email_estagiario').setAttribute('readonly', true);
+                    // Ocultar botão de busca para estagiário
+                    const btnBuscarEstagiario = document.querySelector('button[onclick*="id_pessoa_estagiario"]');
+                    if (btnBuscarEstagiario) {
+                        btnBuscarEstagiario.style.display = 'none';
+                    }
+                <% } %>
+            <% } %>
+        <% } %>
+            
+            // Função para mostrar/ocultar campos específicos do estágio não obrigatório
+            function toggleCamposNaoObrigatorio() {
+                const tipoEstagioElement = document.getElementById('tipo_estagio');
+                const camposNaoObrigatorioElement = document.getElementById('camposNaoObrigatorio');
+                
+                if (!tipoEstagioElement || !camposNaoObrigatorioElement) {
+                    // Elementos não encontrados para toggle de campos não obrigatórios
+                    return;
+                }
+                
+                if (tipoEstagioElement.value === 'Não Obrigatório') {
+                    camposNaoObrigatorioElement.style.display = 'block';
+                } else {
+                    camposNaoObrigatorioElement.style.display = 'none';
+                    // Limpar valores dos campos quando ocultos
+                    const inputs = camposNaoObrigatorioElement.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        if (input.type !== 'hidden') {
+                            input.value = '';
+                        }
+                    });
+                }
+            }
+            
+            // Event listener para mudança no tipo de estágio
+            const tipoEstagioSelect = document.getElementById('tipo_estagio');
+            if (tipoEstagioSelect) {
+                tipoEstagioSelect.addEventListener('change', toggleCamposNaoObrigatorio);
+            }
+            
+            // Verificar estado inicial
+            toggleCamposNaoObrigatorio();
+            
+            // Processar envio do formulário
+            document.getElementById('formCadastroEstagio').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const form = e.target;
+                const submitButton = form.querySelector('button[type="submit"]');
+                
+                // Validar formulário básico
+                if (!validateForm(form)) {
+                    return;
+                }
+                
+                // Validar se todas as pessoas obrigatórias foram selecionadas
+                const pessoasObrigatorias = [
+                    { id: 'id_pessoa_estagiario', nome: 'o estagiário' },
+                    { id: 'id_pessoa_orientador', nome: 'o orientador' },
+                    { id: 'id_pessoa_curso', nome: 'o curso' },
+                    { id: 'id_pessoa_concedente', nome: 'a empresa concedente' },
+                    { id: 'id_pessoa_supervisor', nome: 'o supervisor' }
+                ];
+                
+                for (const pessoa of pessoasObrigatorias) {
+                    const element = document.getElementById(pessoa.id);
+                    if (!element || !element.value.trim()) {
+                        showAlert(`Por favor, selecione ${pessoa.nome}`);
+                        return;
+                    }
+                }
+                
+                // Validar datas
+                const dataInicio = document.getElementById('data_inicio')?.value;
+                const dataFim = document.getElementById('data_fim')?.value;
+                
+                if (dataInicio && dataFim && new Date(dataInicio) >= new Date(dataFim)) {
+                    showAlert('A data de início deve ser anterior à data de fim.');
+                    return;
+                }
+                
+                // Validar carga horária
+                const cargaHoraria = document.getElementById('cargahoraria')?.value;
+                if (cargaHoraria && (parseInt(cargaHoraria) <= 0 || parseInt(cargaHoraria) > 40)) {
+                    showAlert('A carga horária semanal deve ser entre 1 e 40 horas.');
+                    return;
+                }
+                
+                // Validar formato do semestre/ano
+                const semestreAno = document.getElementById('semestre_ano')?.value;
+                if (semestreAno && !/^[1-2]\/[0-9]{4}$/.test(semestreAno)) {
+                    showAlert('O formato do semestre/ano deve ser x/aaaa (ex: 2/2025).');
+                    return;
+                }
+                
+                // Coletar dados do formulário
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Manter o campo semestre_ano como está - será processado no servidor se necessário
+                
+                // Garantir que situação seja sempre "Em edição"
+                data.situacao = 'Em edição';
+                
+                // Desabilitar botão de envio para evitar duplo clique
+                const originalText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
+                
+                try {
+                    const result = await makeRequest(CONFIG.API_ENDPOINTS.ESTAGIO_CRIAR, {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (result.success) {
+                        // Mostrar mensagem de sucesso
+                        showAlert(result.message || 'Campo de estágio cadastrado com sucesso!', 'success');
+                        
+                        // Redirecionar para o dashboard de estágio
+                        setTimeout(() => {
+                            window.location.href = '/estagio/dashboard';
+                        }, CONFIG.FEEDBACK_TIMEOUT);
+                    } else {
+                        showAlert('Erro: ' + result.message);
+                        // Reabilitar botão em caso de erro
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    }
+                } catch (error) {
+                    if (typeof console !== 'undefined') {
+                        console.error('Erro ao enviar formulário:', error);
+                    }
+                    showAlert('Erro ao enviar formulário. Tente novamente.');
+                    // Reabilitar botão em caso de erro
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

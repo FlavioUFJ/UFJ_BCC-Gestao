@@ -1,0 +1,91 @@
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card fade-in-up">
+                <div class="card-header text-center">
+                    <div class="icon-wrapper mx-auto mb-2">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h4 class="mb-1" style="color: #ffffff !important; font-weight: 600;">Recuperar Senha</h4>
+                    <p class="mb-0 small" style="color: #e0e0e0 !important;">Redefinir senha do coordenador</p>
+                </div>
+                <div class="card-body p-3">
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                        </div>
+                        
+                        <% if (typeof parametro_info !== 'undefined' && parametro_info) { %>
+                            <div class="alert alert-info mt-3">
+                                <h6><i class="fas fa-info-circle me-2"></i>Informações do Parâmetro</h6>
+                                <p class="mb-2"><strong>Nome:</strong> <%= parametro_info.nome %></p>
+                                <p class="mb-2"><strong>Valores necessários:</strong></p>
+                                <ul class="mb-0">
+                                    <% parametro_info.valores_necessarios.forEach(valor => { %>
+                                        <li><code><%= valor %></code></li>
+                                    <% }); %>
+                                </ul>
+                                <hr>
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Acesse <strong>Área Administrativa → Parâmetros</strong> para configurar estes valores.
+                                </small>
+                            </div>
+                        <% } %>
+                    <% } %>
+                    
+                    <% if (typeof success !== 'undefined' && success) { %>
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i><%= success %>
+                        </div>
+                    <% } %>
+                    
+
+                    
+                    <form method="POST" action="/recuperar-senha">
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-medium">
+                                <i class="fas fa-envelope me-2 text-gradient"></i>Digite seu e-mail
+                            </label>
+                            <div class="position-relative">
+                                <input type="email" class="form-control ps-4" id="email" name="email" required>
+                                <i class="fas fa-envelope position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 0.9rem;"></i>
+                            </div>
+                        </div>
+                        
+
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-paper-plane me-2"></i>Gerar Nova Senha
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="/login" class="text-decoration-none" style="color: #667eea; font-size: 0.9rem;">
+                                <i class="fas fa-arrow-left me-1"></i>Voltar ao Login
+                            </a>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <div class="rounded p-2" style="background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <h6 class="mb-1" style="font-size: 0.9rem; color: #ffffff !important; font-weight: 600;">
+                                <i class="fas fa-graduation-cap me-1"></i>Universidade Federal de Jataí
+                            </h6>
+                            <small style="font-size: 0.75rem; color: #e0e0e0 !important;">Curso de Ciência da Computação</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.position-relative input:focus + i {
+    color: #764ba2 !important;
+    transform: translateY(-50%) scale(1.1);
+    transition: all 0.3s ease;
+}
+</style>

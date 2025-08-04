@@ -1,0 +1,70 @@
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card fade-in-up">
+                <div class="card-header text-center">
+                    <h4 class="mb-1" style="color: #333; font-weight: 600;">Coordenação da Ciência da Computação - UFJ</h4>
+                </div>
+                <div class="card-body p-3">
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                        </div>
+                    <% } %>
+                    
+                    <form method="POST" action="/login">
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-medium">
+                                <i class="fas fa-envelope me-2 text-gradient"></i>Login
+                            </label>
+                            <div class="position-relative">
+                                <input type="email" class="form-control ps-4" id="email" name="email" required placeholder="Digite seu e-mail">
+                                <i class="fas fa-envelope position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 0.9rem;"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="senha" class="form-label fw-medium">
+                                <i class="fas fa-lock me-2 text-gradient"></i>Senha
+                            </label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control ps-4" id="senha" name="senha" required placeholder="Digite sua senha">
+                                <i class="fas fa-key position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 0.9rem;"></i>
+                            </div>
+
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar no Sistema
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="/recuperar-senha" class="text-decoration-none" style="color: #667eea; font-size: 0.9rem;">
+                                <i class="fas fa-question-circle me-1"></i>Esqueci minha senha
+                            </a>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <div class="rounded p-2" style="background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <h6 class="mb-1" style="font-size: 0.9rem; color: #ffffff !important; font-weight: 600;">
+                                <i class="fas fa-graduation-cap me-1"></i>Universidade Federal de Jataí
+                            </h6>
+                            <small style="font-size: 0.75rem; color: #e0e0e0 !important;">Curso de Ciência da Computação</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.position-relative input:focus + i {
+    color: #764ba2 !important;
+    transform: translateY(-50%) scale(1.1);
+    transition: all 0.3s ease;
+}
+</style>

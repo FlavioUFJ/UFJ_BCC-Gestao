@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotinas Administrativas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-tabs .nav-link {
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background-color: #e9ecef;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            border-top: none;
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        .table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .table tbody tr.active {
+            background-color: #e3f2fd;
+        }
+
+        .btn-group-cadastro {
+            margin-bottom: 20px;
+        }
+
+        .btn-group-cadastro .btn {
+            margin-right: 10px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            width: 95%;
+            max-width: 1200px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section h6 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-control-sm {
+            font-size: 13px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .card-header {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            border-bottom: none;
+        }
+
+        .card-header h5 {
+            color: white !important;
+            margin-bottom: 0;
+        }
+        
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        .hover-bg-light:hover {
+            background-color: #f8f9fa !important;
+        }
+        
+        #resultadosBuscaPessoa {
+            border: 1px solid #dee2e6;
+        }
+        
+        #resultadosBuscaPessoa .border-bottom:last-child {
+            border-bottom: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>Sistema de Gestão de Estágios
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="<%= origem %>">
+                    <i class="fas fa-arrow-left me-1"></i>Voltar ao Dashboard
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>Sair
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Container Principal -->
+    <div class="container-fluid mt-4">
+        <!-- Mensagens de Feedback -->
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i><%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+        
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i><%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <% } %>
+
+        <!-- Tabs de Navegação -->
+        <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pessoas-tab" data-bs-toggle="tab" data-bs-target="#pessoas" type="button" role="tab">
+                    <i class="fas fa-users me-2"></i>Pessoas
+                </button>
+            </li>
+
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="gerenciar-tab" data-bs-toggle="tab" data-bs-target="#gerenciar" type="button" role="tab">
+                    <i class="fas fa-users-cog me-2"></i>Usuários
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="importar-tab" data-bs-toggle="tab" data-bs-target="#importar" type="button" role="tab">
+                    <i class="fas fa-upload me-2"></i>Gestão dos Dados
+                </button>
+            </li>
+
+        </ul>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="tab-content" id="adminTabContent">
+            <!-- Tab Pessoas -->
+            <div class="tab-pane fade show active" id="pessoas" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4><i class="fas fa-users me-2"></i>Pessoas</h4>
+                        <p class="text-muted mb-0">Gerencie o cadastro de pessoas do sistema.</p>
+                    </div>
+                </div>
+                
+                <!-- Linha de busca -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="buscaPessoa" placeholder="Buscar por nome ou email...">
+                            <select class="form-select" id="categoriaPessoa" style="max-width: 200px;">
+                                <option value="todos">Todas as categorias</option>
+                                <option value="estagiario">Estagiário</option>
+                                <option value="orientador">Orientador</option>
+                                <option value="supervisor">Supervisor</option>
+                                <option value="concedente">Concedente</option>
+                            </select>
+                            <button class="btn btn-primary" type="button" id="btnBuscarPessoa">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="#" class="text-decoration-none me-3" id="linkImportarPlanilha">
+                            <i class="fas fa-file-excel me-1"></i>Importar Planilha
+                        </a>
+                        <button type="button" class="btn btn-success" id="btnNovaPessoa">
+                            <i class="fas fa-plus me-2"></i>Nova Pessoa
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabela de pessoas -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tabelaPessoas">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Telefone</th>
+                                    <th>Categoria</th>
+                                    <th>CPF/CNPJ</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaPessoas">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-search fa-2x mb-2"></i><br>
+                                        Digite um termo para buscar pessoas
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    <nav aria-label="Paginação de pessoas" id="paginacaoPessoas" style="display: none;">
+                        <ul class="pagination justify-content-center">
+                            <!-- Paginação será inserida via JavaScript -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+
+
+            <!-- Tab Usuários -->
+            <div class="tab-pane fade" id="gerenciar" role="tabpanel">
+                <div class="mb-4">
+                    <h4><i class="fas fa-users-cog me-2"></i>Usuários e Módulos</h4>
+                    <p class="text-muted">Gerencie usuários, módulos e suas permissões de acesso.</p>
+                </div>
+                
+                <!-- Sub-tabs para Usuários -->
+                <ul class="nav nav-pills mb-4" id="usuarioSubTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="logins-subtab" data-bs-toggle="pill" data-bs-target="#logins" type="button" role="tab">
+                            <i class="fas fa-key me-2"></i>Gerenciar Logins
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="modulos-subtab" data-bs-toggle="pill" data-bs-target="#modulos" type="button" role="tab">
+                            <i class="fas fa-th-large me-2"></i>Gerenciar Módulos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="vinculos-subtab" data-bs-toggle="pill" data-bs-target="#vinculos" type="button" role="tab">
+                            <i class="fas fa-link me-2"></i>Vincular Módulos
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Conteúdo das Sub-tabs -->
+                <div class="tab-content" id="usuarioSubTabContent">
+                    <!-- Sub-tab Gerenciar Logins -->
+                    <div class="tab-pane fade show active" id="logins" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-key me-2"></i>Alterar Senha</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="alterarSenhaForm">
+                                            <div class="mb-3">
+                                                <label for="emailAlterarSenha" class="form-label">E-mail:</label>
+                                                <input type="email" class="form-control" id="emailAlterarSenha" name="email" required placeholder="Digite o e-mail do usuário">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="novaSenha" class="form-label">Nova Senha:</label>
+                                                <input type="password" class="form-control" id="novaSenha" name="novaSenha" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-100">
+                                                <i class="fas fa-key me-2"></i>Alterar Senha
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Criar Login</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="criarLoginForm">
+                                            <div class="mb-3">
+                                                <label for="buscaPessoaLogin" class="form-label">Buscar Pessoa:</label>
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control" id="buscaPessoaLogin" placeholder="Digite o nome da pessoa..." autocomplete="off" value="">
+                                                    <input type="hidden" id="pessoaLoginId" name="id_pessoa" required>
+                                                    <div id="resultadosBuscaPessoa" class="position-absolute w-100 bg-white border rounded shadow-sm" style="top: 100%; z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
+                                                </div>
+                                                <small class="text-muted">Digite pelo menos 2 caracteres para buscar</small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="senhaLogin" class="form-label">Senha:</label>
+                                                <input type="password" class="form-control" id="senhaLogin" name="senha" required autocomplete="new-password" value="">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="tipoAcessoLogin" class="form-label">Tipo de Acesso:</label>
+                                                <select class="form-select" id="tipoAcessoLogin" name="tipoacesso" required>
+                                                    <option value="">Selecione o nível de acesso...</option>
+                                                    <option value="Visitante">Visitante (acesso restrito, apenas consultas)</option>
+                                                    <option value="Operacional">Operacional (acesso médio, não pode acessar rotinas administrativas)</option>
+                                                    <option value="Administrador">Administrador (acesso total)</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-success w-100">
+                                                <i class="fas fa-user-plus me-2"></i>Criar Login
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista de Usuários com Login -->
+                        <div class="card mt-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Usuários Cadastrados</h5>
+                                <button type="button" class="btn btn-outline-light btn-sm" onclick="GerenciadorModulos.carregarUsuarios()">
+                                    <i class="fas fa-sync-alt me-1"></i>Atualizar Lista
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <!-- Filtro de busca -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            <input type="text" class="form-control" id="filtroUsuarios" placeholder="Buscar por nome..." onkeyup="GerenciadorModulos.filtrarUsuarios()">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="tabelaUsuarios">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Email</th>
+                                                <th>Status</th>
+                                                <th>Tipo de Acesso</th>
+                                                <th>Última Atualização</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="corpoTabelaUsuarios">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">
+                                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                                    Carregando usuários...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sub-tab Gerenciar Módulos -->
+                    <div class="tab-pane fade" id="modulos" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Novo Módulo</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="novoModuloForm">
+                                            <div class="mb-3">
+                                                <label for="nomeModulo" class="form-label">Nome do Módulo:</label>
+                                                <input type="text" class="form-control" id="nomeModulo" name="nome" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="descricaoModulo" class="form-label">Descrição:</label>
+                                                <textarea class="form-control" id="descricaoModulo" name="descricao" rows="3"></textarea>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="iconeModulo" class="form-label">Ícone (FontAwesome):</label>
+                                                    <input type="text" class="form-control" id="iconeModulo" name="icone" placeholder="fas fa-briefcase">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="corModulo" class="form-label">Cor:</label>
+                                                    <input type="color" class="form-control" id="corModulo" name="cor" value="#007bff">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 mt-3">
+                                                <label for="urlModulo" class="form-label">URL:</label>
+                                                <input type="text" class="form-control" id="urlModulo" name="url" placeholder="/modulo">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="ordemModulo" class="form-label">Ordem:</label>
+                                                <input type="number" class="form-control" id="ordemModulo" name="ordem" value="1">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-plus me-2"></i>Criar Módulo
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-th-large me-2"></i>Módulos Existentes</h5>
+                                    </div>
+                                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                        <div id="listaModulos">
+                                            <div class="text-center text-muted py-4">
+                                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                                Carregando módulos...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sub-tab Vincular Módulos -->
+                    <div class="tab-pane fade" id="vinculos" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-link me-2"></i>Vincular Módulos aos Usuários</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Seção de Busca e Seleção de Usuários -->
+                                <div class="row mb-4">
+                                    <div class="col-md-8">
+                                        <label for="buscaUsuarioVinculo" class="form-label">Buscar Usuários:</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="buscaUsuarioVinculo" placeholder="Digite o nome do usuário..." autocomplete="off">
+                                            <button class="btn btn-outline-secondary" type="button" id="btnLimparBuscaUsuario">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <div id="resultadosBuscaUsuario" class="position-relative" style="display: none;">
+                                            <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                                <!-- Resultados da busca serão inseridos aqui -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Ações:</label><br>
+                                        <button type="button" class="btn btn-success me-2" id="btnSalvarVinculosLote">
+                                            <i class="fas fa-save me-2"></i>Salvar Vínculos
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" id="btnLimparTudo">
+                                            <i class="fas fa-eraser me-2"></i>Limpar Tudo
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de Usuários Selecionados -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0"><i class="fas fa-users me-2"></i>Usuários Selecionados</h6>
+                                                <span class="badge bg-primary" id="contadorUsuarios">0</span>
+                                            </div>
+                                            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                                <div id="listaUsuariosSelecionados">
+                                                    <div class="text-center text-muted py-3">
+                                                        <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                                                        Nenhum usuário selecionado
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Lista de Módulos Selecionados -->
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0"><i class="fas fa-th-large me-2"></i>Módulos Selecionados</h6>
+                                                <span class="badge bg-primary" id="contadorModulos">0</span>
+                                            </div>
+                                            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                                <div class="mb-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnSelecionarTodosModulos">
+                                                        <i class="fas fa-check-double me-1"></i>Selecionar Todos
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="btnLimparModulos">
+                                                        <i class="fas fa-times me-1"></i>Limpar Seleção
+                                                    </button>
+                                                </div>
+                                                <div id="listaModulosDisponiveis">
+                                                    <div class="text-center text-muted py-3">
+                                                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                                        Carregando módulos...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Seção de Desvincular Módulos -->
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-unlink me-2"></i>Desvincular Módulos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="usuarioDesvinculo" class="form-label">Selecionar Usuário:</label>
+                                                <select class="form-select" id="usuarioDesvinculo">
+                                                    <option value="">Selecione um usuário...</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Ações de Desvinculação:</label><br>
+                                                <button type="button" class="btn btn-warning me-2" id="btnDesvincularSelecionados">
+                                                    <i class="fas fa-unlink me-2"></i>Desvincular Selecionados
+                                                </button>
+                                                <button type="button" class="btn btn-danger" id="btnDesvincularTodos">
+                                                    <i class="fas fa-trash me-2"></i>Desvincular Todos
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="vinculosAtuaisDesvinculo" style="display: none;" class="mt-3">
+                                            <h6 class="mb-3">Vínculos Atuais:</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="50">
+                                                                <input type="checkbox" id="selecionarTodosVinculos" class="form-check-input">
+                                                            </th>
+                                                            <th>Módulo</th>
+                                                            <th>Status</th>
+                                                            <th>Data Cadastro</th>
+                                                            <th>Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="corpoVinculosAtuaisDesvinculo">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Gestão dos Dados -->
+            <div class="tab-pane fade" id="importar" role="tabpanel">
+                <div class="mb-4">
+                    <h4><i class="fas fa-database me-2"></i>Gestão dos Dados</h4>
+                    <p class="text-muted">Gerencie backups do sistema para proteger e restaurar os dados quando necessário.</p>
+                </div>
+                
+
+                
+                <!-- Seção de Backup/Restore -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-save me-2"></i>Backup Manual</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Crie um backup manual dos dados do sistema.</p>
+                                <button id="criarBackupBtn" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Criar Backup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-history me-2"></i>Restaurar Backup</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted">Restaure dados de um backup anterior.</p>
+                                <button id="listarBackupsBtn" class="btn btn-info me-2">
+                                    <i class="fas fa-list me-2"></i>Ver Backups
+                                </button>
+                                <button id="atualizarBackupsBtn" class="btn btn-outline-secondary">
+                                    <i class="fas fa-sync me-2"></i>Atualizar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de Backups -->
+                <div id="backupsContainer" class="mb-4" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-database me-2"></i>Backups Disponíveis</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="backupsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Namespace para organizar o código
+        const AdminRotinas = {
+            // Variáveis de controle
+            modalAberto: false, // Prevenir múltiplas aberturas
+
+            // Inicialização
+            init() {
+                this.setupEventListeners();
+                this.setupModalEventListeners();
+            },
+
+            // Configurar event listeners principais
+            setupEventListeners() {
+                // Formulários
+                document.getElementById('alterarSenhaForm')?.addEventListener('submit', (e) => this.alterarSenha(e));
+
+                // Backup
+                document.getElementById('criarBackupBtn')?.addEventListener('click', () => this.criarBackup());
+                document.getElementById('listarBackupsBtn')?.addEventListener('click', () => this.listarBackups());
+                document.getElementById('atualizarBackupsBtn')?.addEventListener('click', () => this.listarBackups());
+            },
+
+            // Configurar event listeners do modal
+            setupModalEventListeners() {
+                // Configurações específicas para outros modais podem ser adicionadas aqui
+            },
+
+
+
+            // Funcionalidades de administração
+            alterarSenha(e) {
+                e.preventDefault();
+                
+                console.log('DEBUG - Função alterarSenha chamada');
+                
+                // Capturar dados diretamente dos campos
+                const email = document.getElementById('emailAlterarSenha').value;
+                const novaSenha = document.getElementById('novaSenha').value;
+                
+                console.log('DEBUG - Dados capturados:', { email, novaSenhaLength: novaSenha?.length });
+                
+                if (!email || !novaSenha) {
+                    this.showAlert('Por favor, preencha todos os campos', 'error');
+                    return;
+                }
+                
+                this.showLoading(true);
+                
+                // Usar JSON em vez de FormData
+                fetch('/admin/alterar-senha', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, novaSenha })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        e.target.reset();
+                        this.showAlert('Senha alterada com sucesso!', 'success');
+                    } else {
+                        this.showAlert('Erro: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    this.showAlert('Erro ao alterar senha.', 'error');
+                })
+                .finally(() => {
+                    this.showLoading(false);
+                });
+            },
+
+
+
+            // Funcionalidades de backup
+            criarBackup() {
+                const btn = document.getElementById('criarBackupBtn');
+                const originalText = btn.innerHTML;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Criando...';
+                
+                fetch('/admin/criar-backup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.showAlert('Backup criado com sucesso: ' + data.fileName, 'success');
+                        this.listarBackups();
+                    } else {
+                        this.showAlert('Erro ao criar backup: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    this.showAlert('Erro ao criar backup', 'error');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            },
+
+            listarBackups() {
+                fetch('/admin/listar-backups')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const container = document.getElementById('backupsContainer');
+                        const lista = document.getElementById('backupsList');
+                        
+                        if (data.backups.length === 0) {
+                            lista.innerHTML = '<p class="text-muted">Nenhum backup encontrado.</p>';
+                        } else {
+                            let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Nome do Arquivo</th><th>Data/Hora</th><th>Tamanho</th><th>Ações</th></tr></thead><tbody>';
+                            
+                            data.backups.forEach(backup => {
+                                html += `
+                                    <tr>
+                                        <td><i class="fas fa-database me-2"></i>${backup.fileName}</td>
+                                        <td>${backup.date}</td>
+                                        <td>${backup.size}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-success me-2" onclick="AdminRotinas.restaurarBackup('${backup.fileName}')">
+                                                <i class="fas fa-history me-1"></i>Restaurar
+                                            </button>
+                                            <a href="/admin/download-backup/${backup.fileName}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download me-1"></i>Download
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            html += '</tbody></table></div>';
+                            lista.innerHTML = html;
+                        }
+                        
+                        container.style.display = 'block';
+                    } else {
+                        this.showAlert('Erro ao listar backups: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    this.showAlert('Erro ao listar backups', 'error');
+                });
+            },
+
+            restaurarBackup(fileName) {
+                if (confirm(`Tem certeza que deseja restaurar o backup "${fileName}"? Os dados atuais serão substituídos!`)) {
+                    this.showLoading(true);
+                    
+                    fetch('/admin/restaurar-backup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ backupFileName: fileName })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.showAlert('Backup restaurado com sucesso! Backup atual salvo como: ' + data.currentBackup, 'success');
+                            this.listarBackups();
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            this.showAlert('Erro ao restaurar backup: ' + data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        this.showAlert('Erro ao restaurar backup', 'error');
+                    })
+                    .finally(() => {
+                        this.showLoading(false);
+                    });
+                }
+            },
+
+            // Utilitários de UI
+            showAlert(message, type = 'info') {
+                // Remove alertas existentes
+                const existingAlerts = document.querySelectorAll('.alert-temp');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                const alertClass = {
+                    'success': 'alert-success',
+                    'error': 'alert-danger',
+                    'warning': 'alert-warning',
+                    'info': 'alert-info'
+                }[type] || 'alert-info';
+                
+                const icon = {
+                    'success': 'fas fa-check-circle',
+                    'error': 'fas fa-exclamation-circle',
+                    'warning': 'fas fa-exclamation-triangle',
+                    'info': 'fas fa-info-circle'
+                }[type] || 'fas fa-info-circle';
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert ${alertClass} alert-dismissible fade show alert-temp`;
+                alertDiv.innerHTML = `
+                    <i class="${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                const container = document.querySelector('.container-fluid');
+                const firstChild = container.firstElementChild;
+                container.insertBefore(alertDiv, firstChild);
+                
+                // Auto-remove após 5 segundos
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            },
+
+            showLoading(show) {
+                const body = document.body;
+                if (show) {
+                    body.classList.add('loading');
+                } else {
+                    body.classList.remove('loading');
+                }
+            }
+        };
+
+        // ===== FUNCIONALIDADE DA ABA PESSOAS =====
+        const GerenciadorPessoas = {
+            paginaAtual: 1,
+            totalPaginas: 1,
+            itensPorPagina: 25,
+            
+            init() {
+                this.bindEvents();
+                this.buscarPessoas(); // Carregar primeiros 25 registros
+            },
+            
+            bindEvents() {
+                // Busca por Enter
+                document.getElementById('buscaPessoa').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.buscarPessoas();
+                    }
+                });
+                
+                // Busca por botão
+                document.getElementById('btnBuscarPessoa').addEventListener('click', () => {
+                    this.buscarPessoas();
+                });
+                
+
+                
+                // Mudança de categoria
+                document.getElementById('categoriaPessoa').addEventListener('change', () => {
+                    this.buscarPessoas();
+                });
+            },
+            
+            buscarPessoas(pagina = 1) {
+                const termo = document.getElementById('buscaPessoa').value.trim();
+                const categoria = document.getElementById('categoriaPessoa').value;
+                
+                this.paginaAtual = pagina;
+                
+                const params = new URLSearchParams({
+                    termo: termo,
+                    categoria: categoria,
+                    pagina: pagina,
+                    limite: this.itensPorPagina
+                });
+                
+                fetch(`/api/pessoas/buscar?${params}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.renderizarTabela(data.pessoas);
+                            this.renderizarPaginacao(data.total);
+                        } else {
+                            this.mostrarErro('Erro ao buscar pessoas: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        this.mostrarErro('Erro ao buscar pessoas');
+                    });
+            },
+            
+            renderizarTabela(pessoas) {
+                const tbody = document.getElementById('corpoTabelaPessoas');
+                
+                if (!pessoas || pessoas.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-2"></i><br>
+                                Nenhuma pessoa encontrada
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                pessoas.forEach(pessoa => {
+                    html += `
+                        <tr>
+                            <td>${pessoa.nome || ''}</td>
+                            <td>${pessoa.email || ''}</td>
+                            <td>${pessoa.telefone || ''}</td>
+                            <td>${this.formatarCategoria(pessoa.categoria)}</td>
+                            <td>${pessoa.cnpj_cpf || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-1" onclick="GerenciadorPessoas.editarPessoa(${pessoa.id_pessoa})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="GerenciadorPessoas.excluirPessoa(${pessoa.id_pessoa}, '${pessoa.nome}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            },
+            
+            renderizarPaginacao(total) {
+                this.totalPaginas = Math.ceil(total / this.itensPorPagina);
+                const paginacao = document.getElementById('paginacaoPessoas');
+                
+                if (this.totalPaginas <= 1) {
+                    paginacao.style.display = 'none';
+                    return;
+                }
+                
+                paginacao.style.display = 'block';
+                const ul = paginacao.querySelector('ul');
+                
+                let html = '';
+                
+                // Botão anterior
+                html += `
+                    <li class="page-item ${this.paginaAtual === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="GerenciadorPessoas.buscarPessoas(${this.paginaAtual - 1})">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                `;
+                
+                // Páginas
+                for (let i = 1; i <= this.totalPaginas; i++) {
+                    if (i === 1 || i === this.totalPaginas || (i >= this.paginaAtual - 2 && i <= this.paginaAtual + 2)) {
+                        html += `
+                            <li class="page-item ${i === this.paginaAtual ? 'active' : ''}">
+                                <a class="page-link" href="#" onclick="GerenciadorPessoas.buscarPessoas(${i})">${i}</a>
+                            </li>
+                        `;
+                    } else if (i === this.paginaAtual - 3 || i === this.paginaAtual + 3) {
+                        html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                    }
+                }
+                
+                // Botão próximo
+                html += `
+                    <li class="page-item ${this.paginaAtual === this.totalPaginas ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="GerenciadorPessoas.buscarPessoas(${this.paginaAtual + 1})">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                `;
+                
+                ul.innerHTML = html;
+            },
+            
+            formatarCategoria(categoria) {
+                const categorias = {
+                    1: 'Coordenador',
+                    2: 'Professor Orientador',
+                    3: 'Aluno/Estagiário',
+                    4: 'Concedente/Local de Estágio',
+                    5: 'Supervisor',
+                    6: 'Curso/Instituição de Ensino',
+                    99: 'Usuário Geral'
+                };
+                return categorias[categoria] || 'Categoria não definida';
+            },
+            
+
+            
+            async editarPessoa(id) {
+                try {
+                    // Buscar dados da pessoa
+                    const response = await fetch(`/api/pessoas/${id}`);
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Abrir modal em modo de edição
+                        pessoaManager.abrirModal('', function(editedId, editedNome) {
+                             // Após editar, recarregar a lista de pessoas
+                             GerenciadorPessoas.buscarPessoas();
+                         }, {
+                             showBuscarTab: false,
+                             showTabs: false,
+                             submitButtonText: 'Salvar',
+                             modalTitle: 'Editar Pessoa',
+                             editMode: true,
+                             personData: result.pessoa
+                         });
+                    } else {
+                        alert('Erro ao carregar dados da pessoa: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar pessoa:', error);
+                    alert('Erro ao carregar dados da pessoa');
+                }
+            },
+            
+            excluirPessoa(id, nome) {
+                if (confirm(`Tem certeza que deseja excluir a pessoa "${nome}"?`)) {
+                    fetch(`/api/pessoas/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.buscarPessoas(this.paginaAtual);
+                            AdminRotinas.showAlert('Pessoa excluída com sucesso!', 'success');
+                        } else {
+                            this.mostrarErro('Erro ao excluir pessoa: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        this.mostrarErro('Erro ao excluir pessoa');
+                    });
+                }
+            },
+            
+            mostrarErro(mensagem) {
+                AdminRotinas.showAlert(mensagem, 'error');
+            }
+        };
+
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            AdminRotinas.init();
+            GerenciadorPessoas.init();
+        });
+    </script>
+    
+    <!-- Script do gerenciador de pessoas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="/js/pessoa-manager.js"></script>
+    <script src="/js/importar-planilha.js"></script>
+    <script>
+        // Configurar botão Nova Pessoa para usar o modal
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnNovaPessoa = document.getElementById('btnNovaPessoa');
+            if (btnNovaPessoa) {
+                btnNovaPessoa.addEventListener('click', () => {
+                    // Abrir modal para cadastrar nova pessoa
+                    pessoaManager.abrirModal('', function(id, nome) {
+                        // Após cadastrar, recarregar a lista de pessoas
+                        GerenciadorPessoas.buscarPessoas();
+                    }, {
+                        showBuscarTab: false,
+                        showTabs: false,
+                        modalTitle: 'Cadastrar Pessoa',
+                        submitButtonText: 'Salvar'
+                    });
+                });
+            }
+            
+            // Configurar link Importar Planilha
+            const linkImportarPlanilha = document.getElementById('linkImportarPlanilha');
+            if (linkImportarPlanilha) {
+                linkImportarPlanilha.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const modal = new bootstrap.Modal(document.getElementById('modalImportarPlanilha'));
+                    modal.show();
+                });
+            }
+        });
+    </script>
+
+    <!-- Modal Importar Planilha -->
+    <div class="modal fade" id="modalImportarPlanilha" tabindex="-1" aria-labelledby="modalImportarPlanilhaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalImportarPlanilhaLabel">
+                        <i class="fas fa-file-excel me-2"></i>Importar Cadastro de Pessoas
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Informações sobre a importação -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Instruções para Importação</h6>
+                        <ul class="mb-0">
+                            <li>O arquivo deve estar no formato <strong>.xlsx</strong></li>
+                            <li>A primeira linha deve conter os cabeçalhos das colunas</li>
+                            <li>As colunas obrigatórias são: <strong>Tipo</strong>, <strong>Categoria</strong>, <strong>Nome</strong> e <strong>Email</strong></li>
+                            <li>Colunas opcionais: <strong>Telefone</strong> e <strong>CPF/CNPJ</strong></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Planilha modelo -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-download me-2"></i>Planilha Modelo</h6>
+                        <p class="text-muted mb-2">Baixe a planilha modelo para facilitar a importação:</p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnBaixarModelo">
+                            <i class="fas fa-download me-2"></i>Baixar Planilha Modelo
+                        </button>
+                    </div>
+                    
+                    <!-- Formulário de upload -->
+                    <form id="formImportarPlanilha" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="arquivoPlanilha" class="form-label">
+                                <i class="fas fa-file-upload me-2"></i>Selecionar Arquivo
+                            </label>
+                            <input type="file" class="form-control" id="arquivoPlanilha" name="arquivo" accept=".xlsx" required>
+                            <div class="form-text">Apenas arquivos .xlsx são aceitos</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="substituirDuplicados">
+                                <label class="form-check-label" for="substituirDuplicados">
+                                    Substituir registros duplicados (baseado no email)
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Área de progresso -->
+                    <div id="progressoImportacao" style="display: none;">
+                        <div class="mb-2">
+                            <strong>Importando...</strong>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resultado da importação -->
+                    <div id="resultadoImportacao" style="display: none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnImportar">
+                        <i class="fas fa-upload me-2"></i>Importar Planilha
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== FUNCIONALIDADE DE MÓDULOS E USUÁRIOS =====
+        const GerenciadorModulos = {
+            init() {
+                this.bindEvents();
+                this.carregarUsuarios();
+                this.carregarModulos();
+                this.limparFormularioCriarLogin();
+            },
+            
+            bindEvents() {
+                // Formulário de criar login
+                document.getElementById('criarLoginForm')?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.criarLogin();
+                });
+                
+                // Busca dinâmica de pessoas
+                const buscaPessoa = document.getElementById('buscaPessoaLogin');
+                if (buscaPessoa) {
+                    buscaPessoa.addEventListener('input', (e) => {
+                        this.buscarPessoas(e.target.value);
+                    });
+                    
+                    buscaPessoa.addEventListener('blur', () => {
+                        setTimeout(() => {
+                            document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                        }, 200);
+                    });
+                }
+                
+                // Formulário de novo módulo
+                document.getElementById('novoModuloForm')?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.criarModulo();
+                });
+                
+                // Busca dinâmica de usuários para vínculos
+                const buscaUsuarioVinculo = document.getElementById('buscaUsuarioVinculo');
+                if (buscaUsuarioVinculo) {
+                    buscaUsuarioVinculo.addEventListener('input', (e) => {
+                        this.buscarUsuariosVinculo(e.target.value);
+                    });
+                    
+                    buscaUsuarioVinculo.addEventListener('blur', () => {
+                        setTimeout(() => {
+                            document.getElementById('resultadosBuscaUsuario').style.display = 'none';
+                        }, 200);
+                    });
+                }
+                
+                // Botões da nova interface de vínculos
+                document.getElementById('btnLimparBuscaUsuario')?.addEventListener('click', () => {
+                    this.limparBuscaUsuario();
+                });
+                
+                document.getElementById('btnSalvarVinculosLote')?.addEventListener('click', () => {
+                    this.salvarVinculosLote();
+                });
+                
+                document.getElementById('btnLimparTudo')?.addEventListener('click', () => {
+                    this.limparTudoVinculos();
+                });
+                
+                document.getElementById('btnSelecionarTodosModulos')?.addEventListener('click', () => {
+                    this.selecionarTodosModulos();
+                });
+                
+                document.getElementById('btnLimparModulos')?.addEventListener('click', () => {
+                    this.limparSelecaoModulos();
+                });
+                
+                // Seleção de usuário para desvinculação
+                document.getElementById('usuarioDesvinculo')?.addEventListener('change', (e) => {
+                    this.carregarVinculosParaDesvinculo(e.target.value);
+                });
+                
+                // Botões de desvinculação
+                document.getElementById('btnDesvincularSelecionados')?.addEventListener('click', () => {
+                    this.desvincularSelecionados();
+                });
+                
+                document.getElementById('btnDesvincularTodos')?.addEventListener('click', () => {
+                    this.desvincularTodos();
+                });
+                
+                // Checkbox para selecionar todos os vínculos
+                document.getElementById('selecionarTodosVinculos')?.addEventListener('change', (e) => {
+                    this.selecionarTodosVinculosDesvinculo(e.target.checked);
+                });
+            },
+            
+            async carregarUsuarios() {
+                try {
+                    const response = await fetch('/admin/usuarios');
+                    const usuarios = await response.json();
+                    
+                    const tbody = document.getElementById('corpoTabelaUsuarios');
+                    const selectVinculo = document.getElementById('usuarioVinculo');
+                    
+                    if (usuarios.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-users fa-2x mb-2"></i><br>
+                                    Nenhum usuário cadastrado
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    tbody.innerHTML = usuarios.map(usuario => `
+                        <tr>
+                            <td>${usuario.nome}</td>
+                            <td>${usuario.email || 'N/A'}</td>
+                            <td>
+                                <span class="badge bg-${usuario.status === 'Ativo' ? 'success' : 'secondary'}">
+                                    ${usuario.status}
+                                </span>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm" onchange="GerenciadorModulos.alterarTipoAcesso(${usuario.id_pessoa}, this.value)" style="width: auto; display: inline-block;">
+                                    <option value="Administrador" ${usuario.tipoacesso === 'Administrador' ? 'selected' : ''}>Administrador</option>
+                                    <option value="Operacional" ${usuario.tipoacesso === 'Operacional' ? 'selected' : ''}>Operacional</option>
+                                    <option value="Visitante" ${usuario.tipoacesso === 'Visitante' ? 'selected' : ''}>Visitante</option>
+                                </select>
+                            </td>
+                            <td>${new Date(usuario.dataultimaatualizacao).toLocaleDateString('pt-BR')}</td>
+                            <td>
+                                ${usuario.status === 'Ativo' ? 
+                                    `<button class="btn btn-sm btn-outline-danger" onclick="GerenciadorModulos.desativarUsuario(${usuario.id_pessoa})" title="Desativar usuário">
+                                        <i class="fas fa-user-times"></i>
+                                    </button>` :
+                                    `<button class="btn btn-sm btn-outline-success" onclick="GerenciadorModulos.ativarUsuario(${usuario.id_pessoa})" title="Ativar usuário">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>`
+                                }
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                    // Preencher select de desvinculação
+                    const selectDesvinculo = document.getElementById('usuarioDesvinculo');
+                    if (selectDesvinculo) {
+                        selectDesvinculo.innerHTML = '<option value="">Selecione um usuário...</option>' +
+                            usuarios.map(usuario => `<option value="${usuario.id_pessoa}">${usuario.nome}</option>`).join('');
+                    }
+                        
+                } catch (error) {
+                    console.error('Erro ao carregar usuários:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao carregar usuários', 'error');
+                }
+            },
+            
+            async buscarPessoas(termo) {
+                if (termo.length < 2) {
+                    document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/pessoas-sem-login?busca=${encodeURIComponent(termo)}`);
+                    const pessoas = await response.json();
+                    
+                    const resultados = document.getElementById('resultadosBuscaPessoa');
+                    
+                    if (pessoas.length === 0) {
+                        resultados.innerHTML = '<div class="p-2 text-muted">Nenhuma pessoa encontrada</div>';
+                    } else {
+                        resultados.innerHTML = pessoas.map(pessoa => 
+                            `<div class="p-2 border-bottom cursor-pointer hover-bg-light" onclick="GerenciadorModulos.selecionarPessoa(${pessoa.id_pessoa}, '${pessoa.nome.replace(/'/g, "\\'")}')">` +
+                            `<strong>${pessoa.nome}</strong><br>` +
+                            `<small class="text-muted">${pessoa.email || 'Sem email'}</small>` +
+                            `</div>`
+                        ).join('');
+                    }
+                    
+                    resultados.style.display = 'block';
+                } catch (error) {
+                    console.error('Erro ao buscar pessoas:', error);
+                }
+            },
+            
+            selecionarPessoa(id, nome) {
+                document.getElementById('buscaPessoaLogin').value = nome;
+                document.getElementById('pessoaLoginId').value = id;
+                document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+            },
+            
+            async carregarPessoasSemLogin() {
+                // Esta função não é mais necessária com a busca dinâmica
+                // Mantida para compatibilidade
+            },
+            
+            async criarLogin() {
+                const form = document.getElementById('criarLoginForm');
+                const formData = new FormData(form);
+                
+                try {
+                    const response = await fetch('/admin/criar-login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_pessoa: formData.get('id_pessoa'),
+                            senha: formData.get('senha'),
+                            tipoacesso: formData.get('tipoacesso')
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Login criado com sucesso!', 'success');
+                        
+                        // Limpar formulário completamente
+                        form.reset();
+                        document.getElementById('buscaPessoaLogin').value = '';
+                        document.getElementById('pessoaLoginId').value = '';
+                        document.getElementById('senhaLogin').value = '';
+                        document.getElementById('tipoAcessoLogin').value = '';
+                        document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                        
+                        // Atualizar tabela de usuários cadastrados
+                        this.carregarUsuarios();
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao criar login', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao criar login:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao criar login', 'error');
+                }
+            },
+            
+            async carregarModulos() {
+                try {
+                    const response = await fetch('/admin/modulos');
+                    const modulos = await response.json();
+                    
+                    const lista = document.getElementById('listaModulos');
+                    const checkboxContainer = document.getElementById('checkboxModulos');
+                    
+                    if (modulos.length === 0) {
+                        lista.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-th-large fa-2x mb-2"></i><br>
+                                Nenhum módulo cadastrado
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    lista.innerHTML = modulos.map(modulo => `
+                        <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <i class="${modulo.icone} me-2" style="color: ${modulo.cor};"></i>
+                                <div>
+                                    <strong>${modulo.nome}</strong><br>
+                                    <small class="text-muted">${modulo.descricao}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge bg-${modulo.ativo ? 'success' : 'secondary'} me-2">
+                                    ${modulo.ativo ? 'Ativo' : 'Inativo'}
+                                </span>
+                                <button class="btn btn-sm btn-outline-${modulo.ativo ? 'warning' : 'success'}" onclick="GerenciadorModulos.toggleModulo(${modulo.id_modulo}, ${!modulo.ativo})">
+                                    <i class="fas fa-${modulo.ativo ? 'pause' : 'play'}"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Preencher lista de módulos disponíveis para seleção
+                    const listaModulosDisponiveis = document.getElementById('listaModulosDisponiveis');
+                    if (listaModulosDisponiveis) {
+                        listaModulosDisponiveis.innerHTML = modulos.map(modulo => `
+                            <div class="form-check mb-2">
+                                <input class="form-check-input modulo-checkbox" type="checkbox" value="${modulo.id_modulo}" id="modulo_disp_${modulo.id_modulo}" onchange="GerenciadorModulos.atualizarContadorModulos()">
+                                <label class="form-check-label d-flex align-items-center" for="modulo_disp_${modulo.id_modulo}">
+                                    <i class="${modulo.icone} me-2" style="color: ${modulo.cor};"></i>
+                                    <div>
+                                        <div>${modulo.nome}</div>
+                                        <small class="text-muted">${modulo.descricao}</small>
+                                    </div>
+                                </label>
+                            </div>
+                        `).join('');
+                        
+                        // Atualizar contador inicial
+                        this.atualizarContadorModulos();
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar módulos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao carregar módulos', 'error');
+                }
+            },
+            
+            async criarModulo() {
+                const form = document.getElementById('novoModuloForm');
+                const formData = new FormData(form);
+                
+                try {
+                    const response = await fetch('/admin/modulos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nome: formData.get('nome'),
+                            descricao: formData.get('descricao'),
+                            icone: formData.get('icone'),
+                            cor: formData.get('cor'),
+                            url: formData.get('url'),
+                            ordem: formData.get('ordem')
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Módulo criado com sucesso!', 'success');
+                        form.reset();
+                        this.carregarModulos();
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao criar módulo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao criar módulo:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao criar módulo', 'error');
+                }
+            },
+            
+            async carregarVinculosUsuario(idPessoa) {
+                if (!idPessoa) {
+                    document.getElementById('modulosVinculo').style.display = 'none';
+                    document.getElementById('vinculosAtuais').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/usuario-modulos/${idPessoa}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const vinculos = await response.json();
+                    
+                    // Mostrar seções
+                    document.getElementById('modulosVinculo').style.display = 'block';
+                    document.getElementById('vinculosAtuais').style.display = 'block';
+                    
+                    // Limpar checkboxes
+                    document.querySelectorAll('#checkboxModulos input[type="checkbox"]').forEach(cb => {
+                        cb.checked = false;
+                    });
+                    
+                    // Marcar módulos vinculados
+                    vinculos.forEach(vinculo => {
+                        const checkbox = document.getElementById(`modulo_${vinculo.id_modulo}`);
+                        if (checkbox) {
+                            checkbox.checked = vinculo.ativo;
+                        }
+                    });
+                    
+                    // Mostrar vínculos atuais
+                    const tbody = document.getElementById('corpoVinculosAtuais');
+                    tbody.innerHTML = vinculos.map(vinculo => `
+                        <tr>
+                            <td>
+                                <i class="${vinculo.icone} me-2" style="color: ${vinculo.cor};"></i>
+                                ${vinculo.nome_modulo}
+                            </td>
+                            <td>
+                                <span class="badge bg-${vinculo.ativo ? 'success' : 'secondary'}">
+                                    ${vinculo.ativo ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+                            <td>${new Date(vinculo.dataCadastro).toLocaleDateString('pt-BR')}</td>
+                        </tr>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar vínculos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao carregar vínculos do usuário', 'error');
+                }
+            },
+            
+            async salvarVinculos() {
+                const idPessoa = document.getElementById('usuarioVinculo').value;
+                if (!idPessoa) {
+                    AdminRotinas.mostrarMensagem('Selecione um usuário', 'error');
+                    return;
+                }
+                
+                const checkboxes = document.querySelectorAll('#checkboxModulos input[type="checkbox"]');
+                const vinculos = Array.from(checkboxes).map(cb => ({
+                    id_modulo: cb.value,
+                    ativo: cb.checked
+                }));
+                
+                try {
+                    const response = await fetch('/admin/usuario-modulos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_pessoa: idPessoa,
+                            vinculos: vinculos
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Vínculos salvos com sucesso!', 'success');
+                        this.carregarVinculosUsuario(idPessoa);
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao salvar vínculos', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar vínculos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao salvar vínculos', 'error');
+                }
+            },
+            
+            // ===== NOVAS FUNCIONALIDADES DE VÍNCULOS =====
+            
+            usuariosSelecionados: new Set(),
+            
+            async buscarUsuariosVinculo(termo) {
+                if (termo.length < 2) {
+                    document.getElementById('resultadosBuscaUsuario').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/buscar-usuarios?termo=${encodeURIComponent(termo)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const usuarios = await response.json();
+                    
+                    const resultados = document.querySelector('#resultadosBuscaUsuario .list-group');
+                    
+                    if (usuarios.length === 0) {
+                        resultados.innerHTML = '<div class="list-group-item">Nenhum usuário encontrado</div>';
+                    } else {
+                        resultados.innerHTML = usuarios.map(usuario => `
+                            <div class="list-group-item list-group-item-action" onclick="GerenciadorModulos.adicionarUsuario(${usuario.id_pessoa}, '${usuario.nome.replace(/'/g, "\\'")}')"
+                                 style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${usuario.nome}</strong><br>
+                                        <small class="text-muted">${usuario.email || 'Sem email'}</small>
+                                    </div>
+                                    <span class="badge bg-${usuario.status === 'Ativo' ? 'success' : 'secondary'}">
+                                        ${usuario.status}
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    document.getElementById('resultadosBuscaUsuario').style.display = 'block';
+                } catch (error) {
+                    console.error('Erro ao buscar usuários:', error);
+                }
+            },
+            
+            adicionarUsuario(id, nome) {
+                if (this.usuariosSelecionados.has(id)) {
+                    AdminRotinas.mostrarMensagem('Usuário já foi selecionado', 'warning');
+                    return;
+                }
+                
+                this.usuariosSelecionados.add(id);
+                this.atualizarListaUsuarios();
+                this.limparBuscaUsuario();
+            },
+            
+            removerUsuario(id) {
+                this.usuariosSelecionados.delete(id);
+                this.atualizarListaUsuarios();
+            },
+            
+            async atualizarListaUsuarios() {
+                const container = document.getElementById('listaUsuariosSelecionados');
+                const contador = document.getElementById('contadorUsuarios');
+                
+                if (this.usuariosSelecionados.size === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                            Nenhum usuário selecionado
+                        </div>
+                    `;
+                    contador.textContent = '0';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/admin/todos-usuarios', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const todosUsuarios = await response.json();
+                    
+                    const usuariosSelecionadosData = todosUsuarios.filter(u => this.usuariosSelecionados.has(u.id_pessoa));
+                    
+                    container.innerHTML = usuariosSelecionadosData.map(usuario => `
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div>
+                                <strong>${usuario.nome}</strong><br>
+                                <small class="text-muted">${usuario.email || 'Sem email'}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="GerenciadorModulos.removerUsuario(${usuario.id_pessoa})" title="Remover usuário">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    contador.textContent = this.usuariosSelecionados.size;
+                } catch (error) {
+                    console.error('Erro ao atualizar lista de usuários:', error);
+                }
+            },
+            
+            limparBuscaUsuario() {
+                document.getElementById('buscaUsuarioVinculo').value = '';
+                document.getElementById('resultadosBuscaUsuario').style.display = 'none';
+            },
+            
+            atualizarContadorModulos() {
+                const checkboxes = document.querySelectorAll('.modulo-checkbox:checked');
+                document.getElementById('contadorModulos').textContent = checkboxes.length;
+            },
+            
+            selecionarTodosModulos() {
+                document.querySelectorAll('.modulo-checkbox').forEach(cb => {
+                    cb.checked = true;
+                });
+                this.atualizarContadorModulos();
+            },
+            
+            limparSelecaoModulos() {
+                document.querySelectorAll('.modulo-checkbox').forEach(cb => {
+                    cb.checked = false;
+                });
+                this.atualizarContadorModulos();
+            },
+            
+            async salvarVinculosLote() {
+                if (this.usuariosSelecionados.size === 0) {
+                    AdminRotinas.mostrarMensagem('Selecione pelo menos um usuário', 'error');
+                    return;
+                }
+                
+                const modulosSelecionados = Array.from(document.querySelectorAll('.modulo-checkbox:checked')).map(cb => cb.value);
+                
+                if (modulosSelecionados.length === 0) {
+                    AdminRotinas.mostrarMensagem('Selecione pelo menos um módulo', 'error');
+                    return;
+                }
+                
+
+                
+                try {
+                    const response = await fetch('/admin/vincular-modulos-lote', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            usuarios: Array.from(this.usuariosSelecionados),
+                            modulos: modulosSelecionados
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem(`Vínculos salvos com sucesso! ${result.vinculosCriados} vínculos criados.`, 'success');
+                        this.limparTudoVinculos();
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao salvar vínculos', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar vínculos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao salvar vínculos', 'error');
+                }
+            },
+            
+            limparTudoVinculos() {
+                this.usuariosSelecionados.clear();
+                this.atualizarListaUsuarios();
+                this.limparSelecaoModulos();
+                this.limparBuscaUsuario();
+            },
+            
+            // ===== FUNCIONALIDADES DE DESVINCULAÇÃO =====
+            
+            async carregarVinculosParaDesvinculo(idPessoa) {
+                if (!idPessoa) {
+                    document.getElementById('vinculosAtuaisDesvinculo').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/usuario-modulos/${idPessoa}`);
+                    const vinculos = await response.json();
+                    
+                    document.getElementById('vinculosAtuaisDesvinculo').style.display = 'block';
+                    
+                    const tbody = document.getElementById('corpoVinculosAtuaisDesvinculo');
+                    
+                    if (vinculos.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    <i class="fas fa-unlink fa-2x mb-2"></i><br>
+                                    Nenhum módulo vinculado
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    tbody.innerHTML = vinculos.filter(v => v.ativo).map(vinculo => `
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input vinculo-checkbox" value="${vinculo.id_modulo}">
+                            </td>
+                            <td>
+                                <i class="${vinculo.icone} me-2" style="color: ${vinculo.cor};"></i>
+                                ${vinculo.nome_modulo}
+                            </td>
+                            <td>
+                                <span class="badge bg-success">Ativo</span>
+                            </td>
+                            <td>${new Date(vinculo.dataCadastro).toLocaleDateString('pt-BR')}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-warning" onclick="GerenciadorModulos.desvincularIndividual(${idPessoa}, ${vinculo.id_modulo})" title="Desvincular este módulo">
+                                    <i class="fas fa-unlink"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar vínculos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao carregar vínculos do usuário', 'error');
+                }
+            },
+            
+            selecionarTodosVinculosDesvinculo(checked) {
+                document.querySelectorAll('.vinculo-checkbox').forEach(cb => {
+                    cb.checked = checked;
+                });
+            },
+            
+            async desvincularSelecionados() {
+                const idPessoa = document.getElementById('usuarioDesvinculo').value;
+                if (!idPessoa) {
+                    AdminRotinas.mostrarMensagem('Selecione um usuário', 'error');
+                    return;
+                }
+                
+                const modulosSelecionados = Array.from(document.querySelectorAll('.vinculo-checkbox:checked')).map(cb => cb.value);
+                
+                if (modulosSelecionados.length === 0) {
+                    AdminRotinas.mostrarMensagem('Selecione pelo menos um módulo para desvincular', 'error');
+                    return;
+                }
+                
+                if (!confirm(`Deseja desvincular ${modulosSelecionados.length} módulo(s) do usuário selecionado?`)) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/admin/desvincular-modulos', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            id_pessoa: idPessoa,
+                            modulos: modulosSelecionados
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Módulos desvinculados com sucesso!', 'success');
+                        this.carregarVinculosParaDesvinculo(idPessoa);
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao desvincular módulos', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao desvincular módulos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao desvincular módulos', 'error');
+                }
+            },
+            
+            async desvincularTodos() {
+                const idPessoa = document.getElementById('usuarioDesvinculo').value;
+                if (!idPessoa) {
+                    AdminRotinas.mostrarMensagem('Selecione um usuário', 'error');
+                    return;
+                }
+                
+                if (!confirm('Deseja desvincular TODOS os módulos do usuário selecionado?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/desvincular-todos-modulos/${idPessoa}`, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Todos os módulos foram desvinculados com sucesso!', 'success');
+                        this.carregarVinculosParaDesvinculo(idPessoa);
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao desvincular módulos', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao desvincular módulos:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao desvincular módulos', 'error');
+                }
+            },
+            
+            async desvincularIndividual(idPessoa, idModulo) {
+                if (!confirm('Deseja desvincular este módulo do usuário?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/admin/desvincular-modulos', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            id_pessoa: idPessoa,
+                            modulos: [idModulo]
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Módulo desvinculado com sucesso!', 'success');
+                        this.carregarVinculosParaDesvinculo(idPessoa);
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao desvincular módulo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao desvincular módulo:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao desvincular módulo', 'error');
+                }
+            },
+            
+            async toggleModulo(idModulo, ativo) {
+                try {
+                    const response = await fetch(`/admin/modulos/${idModulo}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ ativo })
+                    });
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem(`Módulo ${ativo ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+                        this.carregarModulos();
+                    } else {
+                        AdminRotinas.mostrarMensagem('Erro ao alterar status do módulo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao alterar módulo:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao alterar módulo', 'error');
+                }
+            },
+            
+            async desativarUsuario(idPessoa) {
+                if (!confirm('Deseja realmente desativar este usuário?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/usuarios/${idPessoa}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'Inativo' })
+                    });
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Usuário desativado com sucesso!', 'success');
+                        this.carregarUsuarios();
+                    } else {
+                        AdminRotinas.mostrarMensagem('Erro ao desativar usuário', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao desativar usuário:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao desativar usuário', 'error');
+                }
+            },
+            
+            async ativarUsuario(idPessoa) {
+                if (!confirm('Deseja realmente ativar este usuário?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/usuarios/${idPessoa}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'Ativo' })
+                    });
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Usuário ativado com sucesso!', 'success');
+                        this.carregarUsuarios();
+                    } else {
+                        AdminRotinas.mostrarMensagem('Erro ao ativar usuário', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao ativar usuário:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao ativar usuário', 'error');
+                }
+            },
+            
+            async alterarTipoAcesso(idPessoa, novoTipoAcesso) {
+                try {
+                    const response = await fetch(`/admin/usuarios/${idPessoa}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ tipoacesso: novoTipoAcesso })
+                    });
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Tipo de acesso alterado com sucesso!', 'success');
+                    } else {
+                        AdminRotinas.mostrarMensagem('Erro ao alterar tipo de acesso', 'error');
+                        // Recarregar a lista para reverter a mudança visual
+                        this.carregarUsuarios();
+                    }
+                } catch (error) {
+                    console.error('Erro ao alterar tipo de acesso:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao alterar tipo de acesso', 'error');
+                    // Recarregar a lista para reverter a mudança visual
+                    this.carregarUsuarios();
+                }
+            },
+            
+            filtrarUsuarios() {
+                const filtro = document.getElementById('filtroUsuarios').value.toLowerCase();
+                const tabela = document.getElementById('tabelaUsuarios');
+                const linhas = tabela.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                
+                for (let i = 0; i < linhas.length; i++) {
+                    const linha = linhas[i];
+                    const nome = linha.getElementsByTagName('td')[0];
+                    
+                    if (nome) {
+                        const textoNome = nome.textContent || nome.innerText;
+                        if (textoNome.toLowerCase().indexOf(filtro) > -1) {
+                            linha.style.display = '';
+                        } else {
+                            linha.style.display = 'none';
+                        }
+                    }
+                }
+            },
+            
+            limparFormularioCriarLogin() {
+                // Garantir que os campos estejam vazios na inicialização
+                const buscaPessoa = document.getElementById('buscaPessoaLogin');
+                const senhaLogin = document.getElementById('senhaLogin');
+                const pessoaId = document.getElementById('pessoaLoginId');
+                const tipoAcesso = document.getElementById('tipoAcessoLogin');
+                const resultados = document.getElementById('resultadosBuscaPessoa');
+                
+                if (buscaPessoa) buscaPessoa.value = '';
+                if (senhaLogin) senhaLogin.value = '';
+                if (pessoaId) pessoaId.value = '';
+                if (tipoAcesso) tipoAcesso.value = '';
+                if (resultados) resultados.style.display = 'none';
+            }
+        };
+
+        // Adicionar inicialização do GerenciadorModulos
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof AdminRotinas !== 'undefined') AdminRotinas.init();
+            if (typeof GerenciadorPessoas !== 'undefined') GerenciadorPessoas.init();
+            GerenciadorModulos.init();
+        });
+    </script>
+
+</body>
+</html>

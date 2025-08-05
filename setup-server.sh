@@ -217,7 +217,8 @@ log "🚀 Iniciando aplicação..."
 cd /var/www/html/gestao
 pm2 start ecosystem.config.js
 pm2 save
-pm2 startup ubuntu -u ubuntu --hp /home/ubuntu
+pm2 startup
+log "⚠️  Execute o comando mostrado pelo PM2 para configurar o startup"
 
 log "✅ Configuração inicial concluída! 🎉"
 info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

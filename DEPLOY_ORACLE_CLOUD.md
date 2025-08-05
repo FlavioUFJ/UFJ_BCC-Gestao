@@ -143,7 +143,15 @@ pm2 save
 pm2 startup
 ```
 
-### 6.3 Executar o comando gerado pelo PM2 startup (será mostrado no terminal)
+### 6.3 Configurar PM2 para iniciar automaticamente
+```bash
+# Configurar PM2 para iniciar automaticamente
+pm2 startup
+# O PM2 mostrará um comando específico para seu sistema
+# Execute o comando mostrado (exemplo):
+# sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /var/www/html/gestao
+pm2 save
+```
 
 ## 7. Configuração do Nginx (Proxy Reverso)
 

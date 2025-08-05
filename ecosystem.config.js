@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'ufj-bcc-gestao',
     script: 'server.js',
-    cwd: '/var/www/html/gestao',
+    cwd: '/opt/nodejs/gestao',
     instances: 1,
     autorestart: true,
     watch: false,
@@ -16,9 +16,9 @@ module.exports = {
       PORT: 3000
     },
     // Configurações de log
-    log_file: '/home/ubuntu/logs/ufj-bcc-gestao.log',
-    out_file: '/home/ubuntu/logs/ufj-bcc-gestao-out.log',
-    error_file: '/home/ubuntu/logs/ufj-bcc-gestao-error.log',
+    log_file: '/opt/nodejs/gestao/logs/ufj-bcc-gestao.log',
+    out_file: '/opt/nodejs/gestao/logs/ufj-bcc-gestao-out.log',
+    error_file: '/opt/nodejs/gestao/logs/ufj-bcc-gestao-error.log',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     
     // Configurações de restart

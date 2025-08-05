@@ -69,12 +69,16 @@ sudo apt install git -y
 
 ### Passo 4: Clonar e Configurar a Aplicação
 ```bash
-# Criar diretório para aplicações web
-sudo mkdir -p /var/www/html/gestao
-sudo chown -R ubuntu:www-data /var/www/html/gestao
+# Criar diretório para aplicações Node.js (mais apropriado)
+sudo mkdir -p /opt/nodejs/gestao
+sudo chown -R ubuntu:ubuntu /opt/nodejs/gestao
+
+# Alternativa: usar diretório do usuário (mais permissivo)
+# mkdir -p /home/ubuntu/apps/gestao
+# cd /home/ubuntu/apps/gestao
 
 # Clonar repositório
-cd /var/www/html/gestao
+cd /opt/nodejs/gestao
 git clone https://github.com/FlavioUFJ/UFJ_BCC-Gestao.git .
 
 # Configurar branch
@@ -296,13 +300,13 @@ sudo systemctl restart apache2
 
 ```bash
 # Backup da aplicação
-sudo tar -czf /home/ubuntu/backup-gestao-$(date +%Y%m%d).tar.gz /var/www/html/gestao
+sudo tar -czf /home/ubuntu/backup-gestao-$(date +%Y%m%d).tar.gz /opt/nodejs/gestao
 
 # Backup da configuração Apache
 sudo cp /etc/apache2/sites-available/gestao.computacaoufj.online.conf /home/ubuntu/
 
 # Atualizar aplicação
-cd /var/www/html/gestao
+cd /opt/nodejs/gestao
 git pull origin dev
 npm install
 pm2 restart ufj-bcc-gestao

@@ -3,32 +3,32 @@
         <div class="col-md-5">
             <div class="card fade-in-up">
                 <div class="card-header text-center">
-                    <h4 class="mb-1" style="color: #333; font-weight: 600;">Coordenação da Ciência da Computação - UFJ</h4>
+                    <h4 class="mb-1" style="color: #333; font-weight: 600;">Gestão BCC-UFJ</h4>
                 </div>
                 <div class="card-body p-3">
-                    <% if (typeof error !== 'undefined' && error) { %>
+                    <% if (typeof error !== 'undefined' && error && error.trim() !== '') { %>
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
                         </div>
                     <% } %>
                     
-                    <form method="POST" action="/login">
+                    <form method="POST" action="/auth/login">
                         <div class="mb-3">
                             <label for="email" class="form-label fw-medium">
-                                <i class="fas fa-envelope me-2 text-gradient"></i>Login
+                                Informe seu Email
                             </label>
                             <div class="position-relative">
-                                <input type="email" class="form-control ps-4" id="email" name="email" required placeholder="Digite seu e-mail">
+                                <input type="email" class="form-control ps-4" id="email" name="email" required>
                                 <i class="fas fa-envelope position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 0.9rem;"></i>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <label for="senha" class="form-label fw-medium">
-                                <i class="fas fa-lock me-2 text-gradient"></i>Senha
+                                Senha
                             </label>
                             <div class="position-relative">
-                                <input type="password" class="form-control ps-4" id="senha" name="senha" required placeholder="Digite sua senha">
+                                <input type="password" class="form-control ps-4" id="senha" name="senha" required>
                                 <i class="fas fa-key position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #667eea; font-size: 0.9rem;"></i>
                             </div>
 
@@ -41,7 +41,7 @@
                         </div>
                         
                         <div class="text-center mt-3">
-                            <a href="/recuperar-senha" class="text-decoration-none" style="color: #667eea; font-size: 0.9rem;">
+                            <a href="/auth/forgot-password" class="text-decoration-none" style="color: #667eea; font-size: 0.9rem;">
                                 <i class="fas fa-question-circle me-1"></i>Esqueci minha senha
                             </a>
                         </div>
@@ -68,3 +68,35 @@
     transition: all 0.3s ease;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const emailInput = document.getElementById('email');
+    const senhaInput = document.getElementById('senha');
+    
+    // Configurar mensagens customizadas em português
+    emailInput.addEventListener('invalid', function(e) {
+        if (this.validity.valueMissing) {
+            this.setCustomValidity('Por favor, informe seu e-mail.');
+        } else if (this.validity.typeMismatch) {
+            this.setCustomValidity('Por favor, informe um e-mail válido.');
+        }
+    });
+    
+    senhaInput.addEventListener('invalid', function(e) {
+        if (this.validity.valueMissing) {
+            this.setCustomValidity('Por favor, informe sua senha.');
+        }
+    });
+    
+    // Limpar mensagens customizadas quando o usuário começar a digitar
+    emailInput.addEventListener('input', function() {
+        this.setCustomValidity('');
+    });
+    
+    senhaInput.addEventListener('input', function() {
+        this.setCustomValidity('');
+    });
+});
+</script>

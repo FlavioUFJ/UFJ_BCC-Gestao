@@ -39,7 +39,7 @@ class EstagioService {
             const params = [];
 
             if (status) {
-                filters.push('ce.status_estagio = ?');
+                filters.push('ce.situacao = ?');
                 params.push(status);
             }
 
@@ -54,7 +54,7 @@ class EstagioService {
             }
 
             if (empresa) {
-                filters.push('ce.id_pessoa_empresa = ?');
+                filters.push('ce.id_pessoa_concedente = ?');
                 params.push(empresa);
             }
 
@@ -68,8 +68,7 @@ class EstagioService {
                 params.push(dataFim);
             }
 
-            // Adicionar filtro de ativo
-            filters.push('ce.ativo = 1');
+            // Removido filtro por 'ativo' - coluna não existe na tabela campo_estagio
 
             const whereClause = filters.length > 0 ? filters.join(' AND ') : '';
             const offset = (page - 1) * limit;
@@ -147,7 +146,7 @@ class EstagioService {
                 // Preparar dados do estágio
                 const dadosCompletos = {
                     ...dadosEstagio,
-                    status_estagio: dadosEstagio.status_estagio || enums.statusEstagio.ATIVO,
+                    situacao: dadosEstagio.situacao || 'Ativo',
                     data_cadastro: new Date().toISOString(),
                     ativo: 1
                 };
@@ -222,7 +221,7 @@ class EstagioService {
             await this.validarPermissaoEdicao(id, idUsuario);
 
             // Validar transição de status
-            await this.validarTransicaoStatus(estagio.status_estagio, novoStatus);
+            await this.validarTransicaoStatus(estagio.situacao, novoStatus);
 
             // Atualizar status
             const estagioAtualizado = await this.estagioModel.updateStatus(id, novoStatus);
@@ -312,11 +311,11 @@ class EstagioService {
             const baseQuery = `
                 SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN status_estagio = '${enums.statusEstagio.ATIVO}' THEN 1 ELSE 0 END) as ativos,
-                    SUM(CASE WHEN status_estagio = '${enums.statusEstagio.CONCLUIDO}' THEN 1 ELSE 0 END) as concluidos,
-                    SUM(CASE WHEN status_estagio = '${enums.statusEstagio.CANCELADO}' THEN 1 ELSE 0 END) as cancelados
+                    SUM(CASE WHEN situacao = 'Ativo' THEN 1 ELSE 0 END) as ativos,
+                    SUM(CASE WHEN situacao = 'Concluído' THEN 1 ELSE 0 END) as concluidos,
+                    SUM(CASE WHEN situacao = 'Cancelado' THEN 1 ELSE 0 END) as cancelados
                 FROM campo_estagio 
-                WHERE ativo = 1
+                WHERE 1 = 1
             `;
 
             let query = baseQuery;
@@ -329,7 +328,7 @@ class EstagioService {
                 query += ' AND id_pessoa_estagiario = ?';
                 params.push(idUsuario);
             } else if (tipoAcesso === enums.tipoAcesso.EMPRESA) {
-                query += ' AND id_pessoa_empresa = ?';
+                query += ' AND id_pessoa_concedente = ?';
                 params.push(idUsuario);
             }
 
@@ -385,7 +384,7 @@ class EstagioService {
             const temPermissao = 
                 (usuario.tipoacesso === enums.tipoAcesso.ORIENTADOR && estagio.id_pessoa_orientador === idUsuario) ||
                 (usuario.tipoacesso === enums.tipoAcesso.ESTAGIARIO && estagio.id_pessoa_estagiario === idUsuario) ||
-                (usuario.tipoacesso === enums.tipoAcesso.EMPRESA && estagio.id_pessoa_empresa === idUsuario);
+                (usuario.tipoacesso === enums.tipoAcesso.EMPRESA && estagio.id_pessoa_concedente === idUsuario);
 
             if (!temPermissao) {
                 throw new Error(messages.error.forbidden);

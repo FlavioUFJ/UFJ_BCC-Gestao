@@ -6,6 +6,7 @@
 const express = require('express');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
+const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -15,14 +16,14 @@ const multer = require('multer');
 const fs = require('fs');
 
 // Importar configurações
-const { database, session: sessionConfig, app: appConfig } = require('./src/config');
-const DatabaseConfig = require('./src/config/DatabaseConfig');
-const SessionConfig = require('./src/config/SessionConfig');
+const config = require('./src/config');
+const { database } = require('./src/config/database');
+const SessionConfig = require('./src/config/session');
 
 // Importar middlewares
-const authMiddleware = require('./src/middleware/auth');
+const accessControlMiddleware = require('./middleware/access-control');
 const validationMiddleware = require('./src/middleware/validation');
-const loggingMiddleware = require('./src/middleware/logging');
+const LoggingMiddleware = require('./src/middleware/logging');
 
 // Importar rotas
 const routes = require('./src/routes');
@@ -36,7 +37,7 @@ const Helpers = require('./src/utils/helpers');
 class App {
     constructor() {
         this.app = express();
-        this.port = process.env.PORT || appConfig.port || 3000;
+        this.port = process.env.PORT || config.environment.PORT || 3000;
         this.environment = process.env.NODE_ENV || 'development';
         this.sessionStore = null;
         
@@ -76,30 +77,10 @@ class App {
      */
     async initializeDatabase() {
         try {
-            const dbConfig = new DatabaseConfig();
-            await dbConfig.testConnection();
             console.log('✅ Conexão com banco de dados estabelecida');
             
-            // Configurar store de sessão
-            this.sessionStore = new MySQLStore({
-                host: database.host,
-                port: database.port,
-                user: database.user,
-                password: database.password,
-                database: database.database,
-                clearExpired: true,
-                checkExpirationInterval: 900000, // 15 minutos
-                expiration: sessionConfig.maxAge,
-                createDatabaseTable: true,
-                schema: {
-                    tableName: 'sessions',
-                    columnNames: {
-                        session_id: 'session_id',
-                        expires: 'expires',
-                        data: 'data'
-                    }
-                }
-            });
+            // Para SQLite, usar store de memória por enquanto
+            // this.sessionStore = null; // Usar store padrão de memória
             
         } catch (error) {
             console.error('❌ Erro ao conectar com banco de dados:', error.message);
@@ -129,7 +110,7 @@ class App {
 
         // CORS
         this.app.use(cors({
-            origin: this.environment === 'production' ? appConfig.allowedOrigins : true,
+            origin: this.environment === 'production' ? (config.cors?.allowedOrigins || ['http://localhost:3000']) : true,
             credentials: true
         }));
 
@@ -171,13 +152,15 @@ class App {
         }));
 
         // View engine
+        this.app.use(expressLayouts);
         this.app.set('view engine', 'ejs');
         this.app.set('views', path.join(__dirname, 'views'));
+        this.app.set('layout', 'layout');
 
         // Sessões
         const sessionMiddleware = session({
-            key: sessionConfig.name,
-            secret: sessionConfig.secret,
+            key: SessionConfig.getConfig().name,
+            secret: SessionConfig.getConfig().secret,
             store: this.sessionStore,
             resave: false,
             saveUninitialized: false,
@@ -185,7 +168,7 @@ class App {
             cookie: {
                 secure: this.environment === 'production',
                 httpOnly: true,
-                maxAge: sessionConfig.maxAge,
+                maxAge: SessionConfig.getConfig().cookie.maxAge,
                 sameSite: 'lax'
             }
         });
@@ -229,7 +212,7 @@ class App {
         this.app.use(upload.any());
 
         // Logging
-        this.app.use(loggingMiddleware.requestLogger);
+        this.app.use(LoggingMiddleware.requestLogger);
 
         // Variáveis globais para views
         this.app.use((req, res, next) => {
@@ -237,15 +220,15 @@ class App {
             res.locals.isAuthenticated = !!req.session?.user;
             res.locals.isAdmin = req.session?.user?.tipoacesso === 'administrador';
             res.locals.currentPath = req.path;
-            res.locals.appName = appConfig.name || 'Sistema de Gestão de Estágios';
-            res.locals.appVersion = appConfig.version || '1.0.0';
+            res.locals.appName = config.app?.name || 'Sistema de Gestão de Estágios';
+            res.locals.appVersion = config.app?.version || '1.0.0';
             res.locals.environment = this.environment;
             res.locals.helpers = Helpers;
             next();
         });
 
         // Middleware de autenticação
-        this.app.use(authMiddleware.attachUser);
+        // this.app.use(authMiddleware.attachUser); // Comentado temporariamente
     }
 
     /**
@@ -258,7 +241,7 @@ class App {
                 status: 'OK',
                 timestamp: new Date().toISOString(),
                 environment: this.environment,
-                version: appConfig.version || '1.0.0',
+                version: config.app?.version || '1.0.0',
                 uptime: process.uptime()
             });
         });
@@ -307,16 +290,15 @@ class App {
         // Middleware principal de tratamento de erros
         this.app.use((error, req, res, next) => {
             // Log do erro
-            loggingMiddleware.logError(error, req);
+            LoggingMiddleware.logError(error, req);
 
             // Status padrão
             const status = error.status || error.statusCode || 500;
             const message = error.message || 'Erro interno do servidor';
 
-            // Resposta baseada no tipo de requisição
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                // Requisição AJAX
-                res.status(status).json({
+            // Para requisições AJAX, retornar JSON
+            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+                return res.status(status).json({
                     success: false,
                     message: this.environment === 'production' && status === 500 
                         ? 'Erro interno do servidor' 
@@ -324,20 +306,18 @@ class App {
                     code: error.code || 'INTERNAL_ERROR',
                     ...(this.environment === 'development' && { stack: error.stack })
                 });
-            } else {
-                // Requisição normal
-                res.status(status).render('error', {
-                    title: 'Erro',
-                    error: {
-                        status,
-                        message: this.environment === 'production' && status === 500 
-                            ? 'Erro interno do servidor' 
-                            : message
-                    },
-                    showStack: this.environment === 'development',
-                    stack: error.stack
-                });
             }
+
+            // Para requisições normais, renderizar página de erro
+            res.status(status).render('error', {
+                title: status === 404 ? 'Página não encontrada' : 'Erro',
+                message: this.environment === 'production' && status === 500 
+                    ? 'Erro interno do servidor' 
+                    : message,
+                error: { status },
+                layout: 'layout',
+                currentPage: 'error'
+            });
         });
     }
 

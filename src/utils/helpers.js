@@ -490,6 +490,40 @@ class Helpers {
         if (typeof obj === 'object') return Object.keys(obj).length === 0;
         return false;
     }
+    
+    /**
+     * Converte código de categoria em texto
+     * @param {string|number} categoria - Código da categoria
+     * @returns {string} Texto da categoria
+     */
+    static getCategoriaTexto(categoria) {
+        const categorias = {
+            '1': 'Coordenador',
+            '2': 'Professor Orientador',
+            '3': 'Aluno/Estagiário',
+            '4': 'Concedente/Local de Estágio',
+            '5': 'Supervisor',
+            '6': 'Curso/Instituição de Ensino',
+            '99': 'Usuário Geral'
+        };
+        
+        return categorias[String(categoria)] || 'Não informado';
+    }
+
+    /**
+     * Converte código de tipo em texto
+     * @param {string} tipo - Código do tipo (F, J, N)
+     * @returns {string} Texto do tipo
+     */
+    static getTipoTexto(tipo) {
+        const tipos = {
+            'F': 'Física',
+            'J': 'Jurídica',
+            'N': 'Não informado'
+        };
+        
+        return tipos[String(tipo)] || 'Não informado';
+    }
 }
 
 module.exports = Helpers;

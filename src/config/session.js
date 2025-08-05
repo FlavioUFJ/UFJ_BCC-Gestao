@@ -37,16 +37,35 @@ class SessionConfig {
      */
     static requireAuth(req, res, next) {
         if (!req.session || !req.session.user) {
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            // Verificar se é uma requisição AJAX/JSON específica
+            const isAjax = req.xhr || 
+                          req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                          req.headers.accept === 'application/json' ||
+                          req.headers['content-type'] === 'application/json';
+            
+            if (isAjax) {
                 // Para requisições AJAX
                 return res.status(401).json({ 
                     error: 'Não autenticado', 
-                    redirect: '/login' 
+                    redirect: '/auth/login' 
                 });
             } else {
                 // Para requisições normais
-                return res.redirect('/login');
+                return res.redirect('/auth/login');
             }
+        }
+        next();
+    }
+
+    /**
+     * Middleware para verificar se o usuário NÃO está autenticado (guest)
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     * @param {Function} next - Next function
+     */
+    static requireGuest(req, res, next) {
+        if (req.session && req.session.user) {
+            return res.redirect('/');
         }
         next();
     }
@@ -59,28 +78,27 @@ class SessionConfig {
      */
     static requireAdmin(req, res, next) {
         if (!req.session || !req.session.user) {
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            // Verificar se é uma requisição AJAX/JSON específica
+            const isAjax = req.xhr || 
+                          req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                          req.headers.accept === 'application/json' ||
+                          req.headers['content-type'] === 'application/json';
+            
+            if (isAjax) {
                 return res.status(401).json({ 
                     error: 'Não autenticado', 
-                    redirect: '/login' 
+                    redirect: '/auth/login' 
                 });
             } else {
-                return res.redirect('/login');
+                return res.redirect('/auth/login');
             }
         }
 
         if (req.session.user.tipoacesso !== 'Administrador') {
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
-                return res.status(403).json({ 
-                    error: 'Acesso negado. Apenas administradores podem acessar este recurso.' 
-                });
-            } else {
-                return res.status(403).render('error', {
-                    title: 'Acesso Negado',
-                    message: 'Apenas administradores podem acessar este recurso.',
-                    error: { status: 403 }
-                });
-            }
+            return res.status(403).json({ 
+                success: false,
+                message: 'Acesso negado. Apenas administradores podem acessar este recurso.' 
+            });
         }
         next();
     }
@@ -95,13 +113,19 @@ class SessionConfig {
         
         return (req, res, next) => {
             if (!req.session || !req.session.user) {
-                if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+                // Verificar se é uma requisição AJAX/JSON específica
+                const isAjax = req.xhr || 
+                              req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                              req.headers.accept === 'application/json' ||
+                              req.headers['content-type'] === 'application/json';
+                
+                if (isAjax) {
                     return res.status(401).json({ 
                         error: 'Não autenticado', 
-                        redirect: '/login' 
+                        redirect: '/auth/login' 
                     });
                 } else {
-                    return res.redirect('/login');
+                    return res.redirect('/auth/login');
                 }
             }
 
@@ -112,17 +136,10 @@ class SessionConfig {
             );
 
             if (!hasPermission) {
-                if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
-                    return res.status(403).json({ 
-                        error: 'Permissões insuficientes' 
-                    });
-                } else {
-                    return res.status(403).render('error', {
-                        title: 'Acesso Negado',
-                        message: 'Você não tem permissão para acessar este recurso.',
-                        error: { status: 403 }
-                    });
-                }
+                return res.status(403).json({ 
+                    success: false,
+                    message: 'Permissões insuficientes' 
+                });
             }
             next();
         };
@@ -177,3 +194,7 @@ class SessionConfig {
 }
 
 module.exports = SessionConfig;
+module.exports.requireAuth = SessionConfig.requireAuth;
+module.exports.requireGuest = SessionConfig.requireGuest;
+module.exports.requireAdmin = SessionConfig.requireAdmin;
+module.exports.requirePermissions = SessionConfig.requirePermissions;

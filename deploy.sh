@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Script de Deploy Automatizado para Oracle Cloud Ubuntu
-# UFJ BCC-Gestão
+# Script de Deploy Automatizado para UFJ BCC-Gestão
+# Oracle Cloud - Ubuntu
 
-set -e  # Parar execução em caso de erro
+set -e  # Parar em caso de erro
+
+# Configurações
+APP_DIR="/var/www/html/gestao"
+APP_NAME="ufj-bcc-gestao"
+BACKUP_DIR="$APP_DIR/backups"
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+LOG_FILE="$APP_DIR/deploy_$DATE.log"
 
 # Cores para output
 RED='\033[0;31m'
@@ -35,9 +42,7 @@ if [ "$USER" != "ubuntu" ]; then
     error "Este script deve ser executado como usuário ubuntu"
 fi
 
-# Diretório da aplicação
-APP_DIR="/home/ubuntu/UFJ_BCC-Gestao"
-APP_NAME="ufj-bcc-gestao"
+
 
 log "Iniciando deploy da aplicação UFJ BCC-Gestão..."
 
@@ -48,9 +53,7 @@ git pull origin dev || error "Falha ao atualizar código do repositório"
 
 # 2. Fazer backup do banco de dados
 log "Criando backup do banco de dados..."
-BACKUP_DIR="/home/ubuntu/backups"
 mkdir -p $BACKUP_DIR
-DATE=$(date +"%Y%m%d_%H%M%S")
 if [ -f "$APP_DIR/database.db" ]; then
     cp $APP_DIR/database.db $BACKUP_DIR/database_backup_$DATE.db
     log "Backup criado: database_backup_$DATE.db"
@@ -125,12 +128,12 @@ log "Limpando backups antigos..."
 find $BACKUP_DIR -name "database_backup_*.db" -type f -mtime +7 -delete 2>/dev/null || true
 
 # 12. Mostrar informações finais
-log "Deploy concluído com sucesso! 🎉"
-info "Aplicação: $APP_NAME"
-info "Status: $(pm2 describe $APP_NAME | grep 'status' | head -1)"
-info "URL: http://$(curl -s ifconfig.me):3000 (se não estiver usando Nginx)"
-info "Logs: pm2 logs $APP_NAME"
-info "Monitoramento: pm2 monit"
+echo "✅ Deploy concluído com sucesso!"
+echo "🌐 Aplicação: https://gestao.computacaoufj.online/"
+echo "📱 Local: http://localhost:3000"
+echo "📊 Monitoramento: pm2 monit"
+echo "📋 Logs: pm2 logs $APP_NAME"
+echo "🔄 Status: pm2 status"
 
 log "Para verificar se tudo está funcionando, acesse a aplicação no navegador."
 log "Em caso de problemas, verifique os logs com: pm2 logs $APP_NAME"

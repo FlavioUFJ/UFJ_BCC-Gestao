@@ -4,6 +4,10 @@
 
 Este guia te ajudará a publicar a aplicação UFJ BCC-Gestão em um servidor Ubuntu na Oracle Cloud.
 
+**Configuração do Servidor:**
+- Diretório: `/var/www/html/gestao/`
+- URL: `https://gestao.computacaoufj.online/`
+
 ## 🎯 Pré-requisitos
 
 - ✅ Servidor Ubuntu na Oracle Cloud configurado
@@ -27,7 +31,7 @@ chmod +x setup-server.sh
 
 ### 3. Configurar variáveis de ambiente
 ```bash
-nano /home/ubuntu/UFJ_BCC-Gestao/.env
+nano /var/www/html/gestao/.env
 ```
 
 ### 4. Executar comando do PM2 startup (será mostrado no terminal)
@@ -56,7 +60,7 @@ Para atualizar a aplicação após mudanças no código:
 
 ```bash
 ssh ubuntu@SEU_IP_PUBLICO
-cd /home/ubuntu/UFJ_BCC-Gestao
+cd /var/www/html/gestao
 ./deploy.sh
 ```
 
@@ -112,8 +116,8 @@ Para configurar SSL gratuito com Let's Encrypt:
 # Instalar Certbot
 sudo apt install -y certbot python3-certbot-nginx
 
-# Obter certificado (substitua SEU_DOMINIO)
-sudo certbot --nginx -d SEU_DOMINIO
+# Obter certificado
+sudo certbot --nginx -d gestao.computacaoufj.online
 ```
 
 ## 🆘 Solução de Problemas
@@ -167,9 +171,12 @@ pm2 restart ufj-bcc-gestao
 
 ## 🌐 URLs Importantes
 
-- **Aplicação**: `http://SEU_IP_PUBLICO`
-- **Login**: `http://SEU_IP_PUBLICO/auth/login`
+- **Aplicação**: `https://gestao.computacaoufj.online/`
+- **Local**: `http://localhost:3000`
+- **Login**: `https://gestao.computacaoufj.online/auth/login`
 - **Repositório**: https://github.com/FlavioUFJ/UFJ_BCC-Gestao
+- **Logs PM2**: `pm2 logs ufj-bcc-gestao`
+- **Monitoramento**: `pm2 monit`
 
 ## 📞 Suporte
 

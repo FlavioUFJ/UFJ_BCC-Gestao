@@ -33,6 +33,9 @@
                 <% } %>
                 
                 <form method="POST" action="/alterar-senha" id="alterarSenhaForm">
+                    <!-- Campo hidden para preservar o returnUrl -->
+                    <input type="hidden" name="returnUrl" value="<%= returnUrl %>">
+                    
                     <div class="mb-3">
                         <label for="senhaAtual" class="form-label">
                             <% if (primeiroLogin) { %>
@@ -53,8 +56,8 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="confirmarSenha" class="form-label">Confirmar Nova Senha *</label>
-                        <input type="password" class="form-control" id="confirmarSenha" name="confirmarSenha" required minlength="6" 
+                        <label for="confirmarNovaSenha" class="form-label">Confirmar Nova Senha *</label>
+                        <input type="password" class="form-control" id="confirmarNovaSenha" name="confirmarNovaSenha" required minlength="6" 
                                placeholder="Confirme sua nova senha">
                         <div id="senhaMatch" class="form-text"></div>
                     </div>
@@ -62,7 +65,7 @@
 
                     
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="/dashboard" class="btn btn-outline-secondary">
+                        <a href="<%= returnUrl %>" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Voltar
                         </a>
                         <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
@@ -143,7 +146,7 @@
 // Validação simples
 document.addEventListener('DOMContentLoaded', function() {
     const novaSenha = document.getElementById('novaSenha');
-    const confirmarSenha = document.getElementById('confirmarSenha');
+    const confirmarSenha = document.getElementById('confirmarNovaSenha');
     const senhaMatch = document.getElementById('senhaMatch');
     const submitBtn = document.getElementById('submitBtn');
     

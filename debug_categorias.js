@@ -4,7 +4,7 @@ const db = new sqlite3.Database('./database.db');
 console.log('Investigando as categorias de pessoa...');
 
 // Verificar se existe tabela de parâmetros com categorias
-db.all("SELECT * FROM parametros WHERE chave LIKE '%categoria%'", (err, params) => {
+db.all("SELECT * FROM parametro WHERE chave LIKE '%categoria%'", (err, params) => {
     if (err) {
         console.error('Erro ao buscar parâmetros de categoria:', err);
     } else {

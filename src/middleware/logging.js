@@ -224,6 +224,33 @@ class LoggingMiddleware {
     }
 
     /**
+     * Método para logging de erros (usado no middleware de erro)
+     * @param {Error} error - Erro ocorrido
+     * @param {Object} req - Request object
+     */
+    static logError(error, req) {
+        const errorLog = {
+            timestamp: new Date().toISOString(),
+            error: {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            },
+            request: {
+                method: req.method,
+                url: req.originalUrl,
+                ip: req.ip || req.connection.remoteAddress,
+                userAgent: req.get('User-Agent'),
+                userId: req.session?.user?.id_pessoa || null,
+                body: LoggingMiddleware.sanitizeBody(req.body),
+                query: req.query
+            }
+        };
+
+        LoggingMiddleware.saveErrorLog(errorLog);
+    }
+
+    /**
      * Sanitiza dados do body removendo informações sensíveis
      * @param {Object} body - Body da requisição
      * @returns {Object} Body sanitizado

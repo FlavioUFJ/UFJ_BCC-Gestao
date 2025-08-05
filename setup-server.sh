@@ -90,26 +90,28 @@ log "✅ Diretórios criados"
 
 # 8. Clonar repositório
 log "📥 Clonando repositório..."
-if [ ! -d "/home/ubuntu/UFJ_BCC-Gestao" ]; then
-    cd /home/ubuntu
-    git clone https://github.com/FlavioUFJ/UFJ_BCC-Gestao.git
-    cd UFJ_BCC-Gestao
+sudo mkdir -p /var/www/html/gestao
+sudo chown ubuntu:ubuntu /var/www/html/gestao
+if [ ! -d "/var/www/html/gestao/.git" ]; then
+    git clone https://github.com/FlavioUFJ/UFJ_BCC-Gestao.git /var/www/html/gestao
+    cd /var/www/html/gestao
     git checkout dev
     log "✅ Repositório clonado"
 else
     log "✅ Repositório já existe"
-    cd /home/ubuntu/UFJ_BCC-Gestao
+    cd /var/www/html/gestao
     git pull origin dev
 fi
 
 # 9. Instalar dependências da aplicação
 log "📦 Instalando dependências da aplicação..."
+cd /var/www/html/gestao
 npm install --production
 log "✅ Dependências instaladas"
 
 # 10. Configurar arquivo .env
 log "⚙️  Configurando arquivo .env..."
-if [ ! -f "/home/ubuntu/UFJ_BCC-Gestao/.env" ]; then
+if [ ! -f "/var/www/html/gestao/.env" ]; then
     cp .env.example .env
     
     # Gerar chave secreta aleatória
@@ -118,27 +120,26 @@ if [ ! -f "/home/ubuntu/UFJ_BCC-Gestao/.env" ]; then
     
     warn "Arquivo .env criado com chave secreta gerada automaticamente."
     warn "Por favor, edite o arquivo .env e configure as outras variáveis:"
-    warn "nano /home/ubuntu/UFJ_BCC-Gestao/.env"
+    warn "nano /var/www/html/gestao/.env"
 else
     log "✅ Arquivo .env já existe"
 fi
 
 # 11. Configurar permissões do banco de dados
-if [ -f "/home/ubuntu/UFJ_BCC-Gestao/database.db" ]; then
+if [ -f "/var/www/html/gestao/database.db" ]; then
     log "🗄️  Configurando permissões do banco de dados..."
-    chown ubuntu:ubuntu /home/ubuntu/UFJ_BCC-Gestao/database.db
-    chmod 664 /home/ubuntu/UFJ_BCC-Gestao/database.db
+    chown ubuntu:ubuntu /var/www/html/gestao/database.db
+    chmod 664 /var/www/html/gestao/database.db
     log "✅ Permissões do banco configuradas"
 fi
 
 # 12. Configurar Nginx
 log "🌐 Configurando Nginx..."
-SERVER_IP=$(curl -s ifconfig.me)
 
-cat > /tmp/ufj-bcc-gestao << EOF
+cat > /tmp/gestao-computacaoufj << EOF
 server {
     listen 80;
-    server_name $SERVER_IP;
+    server_name gestao.computacaoufj.online;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -154,27 +155,27 @@ server {
 
     # Servir arquivos estáticos diretamente
     location /css {
-        alias /home/ubuntu/UFJ_BCC-Gestao/public/css;
+        alias /var/www/html/gestao/public/css;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     location /js {
-        alias /home/ubuntu/UFJ_BCC-Gestao/public/js;
+        alias /var/www/html/gestao/public/js;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     location /images {
-        alias /home/ubuntu/UFJ_BCC-Gestao/public/images;
+        alias /var/www/html/gestao/public/images;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 }
 EOF
 
-sudo mv /tmp/ufj-bcc-gestao /etc/nginx/sites-available/
-sudo ln -sf /etc/nginx/sites-available/ufj-bcc-gestao /etc/nginx/sites-enabled/
+sudo mv /tmp/gestao-computacaoufj /etc/nginx/sites-available/
+sudo ln -sf /etc/nginx/sites-available/gestao-computacaoufj /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 log "✅ Nginx configurado"
@@ -186,7 +187,7 @@ cat > /home/ubuntu/backup_db.sh << 'EOF'
 DATE=$(date +"%Y%m%d_%H%M%S")
 BACKUP_DIR="/home/ubuntu/backups"
 mkdir -p $BACKUP_DIR
-cp /home/ubuntu/UFJ_BCC-Gestao/database.db $BACKUP_DIR/database_backup_$DATE.db
+cp /var/www/html/gestao/database.db $BACKUP_DIR/database_backup_$DATE.db
 echo "Backup criado: database_backup_$DATE.db"
 
 # Manter apenas os últimos 7 backups
@@ -209,11 +210,11 @@ pm2 install pm2-logrotate
 log "✅ Rotação de logs configurada"
 
 # 15. Tornar script de deploy executável
-chmod +x /home/ubuntu/UFJ_BCC-Gestao/deploy.sh
+chmod +x /var/www/html/gestao/deploy.sh
 
 # 16. Iniciar aplicação
 log "🚀 Iniciando aplicação..."
-cd /home/ubuntu/UFJ_BCC-Gestao
+cd /var/www/html/gestao
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup ubuntu -u ubuntu --hp /home/ubuntu
@@ -223,18 +224,22 @@ info "━━━━━━━━━━━━━━━━━━━━━━━━�
 info "📋 PRÓXIMOS PASSOS:"
 info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 info "1. Configure as variáveis de ambiente:"
-info "   nano /home/ubuntu/UFJ_BCC-Gestao/.env"
+info "   nano /var/www/html/gestao/.env"
 info ""
 info "2. Execute o comando gerado pelo PM2 startup (mostrado acima)"
 info ""
 info "3. Reinicie a aplicação:"
 info "   pm2 restart ufj-bcc-gestao"
 info ""
-info "4. Acesse a aplicação:"
-info "   http://$SERVER_IP"
+info "4. Configure seu domínio gestao.computacaoufj.online para apontar para este servidor"
 info ""
-info "5. Para atualizações futuras, use:"
-info "   /home/ubuntu/UFJ_BCC-Gestao/deploy.sh"
+info "5. Execute: sudo certbot --nginx -d gestao.computacaoufj.online"
+info ""
+info "6. Acesse a aplicação:"
+info "   https://gestao.computacaoufj.online/"
+info ""
+info "7. Para atualizações futuras, use:"
+info "   /var/www/html/gestao/deploy.sh"
 info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 info "📊 COMANDOS ÚTEIS:"
 info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

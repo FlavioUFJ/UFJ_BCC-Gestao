@@ -1,4 +1,10 @@
-# Deploy da Aplicação UFJ BCC-Gestão na Oracle Cloud
+# Deploy da Aplicação UFJ BCC-Gestão na Oracle Cloud (Ubuntu)
+
+Este guia detalha como fazer o deploy da aplicação Node.js na Oracle Cloud usando Ubuntu.
+
+**Configuração do Servidor:**
+- Diretório da aplicação: `/var/www/html/gestao/`
+- URL de acesso: `https://gestao.computacaoufj.online/`
 
 ## Pré-requisitos
 
@@ -54,9 +60,11 @@ sudo apt install -y sqlite3
 
 ### 5.1 Clonar o repositório
 ```bash
-cd /home/ubuntu
-git clone https://github.com/FlavioUFJ/UFJ_BCC-Gestao.git
-cd UFJ_BCC-Gestao
+# Clone o repositório no diretório correto
+sudo mkdir -p /var/www/html/gestao
+sudo chown $USER:$USER /var/www/html/gestao
+git clone https://github.com/FlavioUFJ/UFJ_BCC-Gestao.git /var/www/html/gestao
+cd /var/www/html/gestao
 ```
 
 ### 5.2 Instalar dependências
@@ -66,8 +74,14 @@ npm install
 
 ### 5.3 Criar arquivo de ambiente
 ```bash
+# Configurar variáveis de ambiente
 cp .env.example .env
 nano .env
+
+# Configurações específicas para o servidor:
+# NODE_ENV=production
+# PORT=3000
+# BASE_URL=https://gestao.computacaoufj.online
 ```
 
 **Configurar as variáveis de ambiente:**
@@ -140,14 +154,14 @@ sudo apt install -y nginx
 
 ### 7.2 Criar configuração do site
 ```bash
-sudo nano /etc/nginx/sites-available/ufj-bcc-gestao
+sudo nano /etc/nginx/sites-available/gestao-computacaoufj
 ```
 
 **Conteúdo do arquivo:**
 ```nginx
 server {
     listen 80;
-    server_name SEU_DOMINIO_OU_IP;
+    server_name gestao.computacaoufj.online;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -163,19 +177,19 @@ server {
 
     # Servir arquivos estáticos diretamente
     location /css {
-        alias /home/ubuntu/UFJ_BCC-Gestao/public/css;
+        alias /var/www/html/gestao/public/css;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     location /js {
-        alias /home/ubuntu/UFJ_BCC-Gestao/public/js;
+        alias /var/www/html/gestao/public/js;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     location /images {
-        alias /home/ubuntu/UFJ_BCC-Gestao/public/images;
+        alias /var/www/html/gestao/public/images;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
@@ -184,7 +198,7 @@ server {
 
 ### 7.3 Ativar o site
 ```bash
-sudo ln -s /etc/nginx/sites-available/ufj-bcc-gestao /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/gestao-computacaoufj /etc/nginx/sites-enabled/
 sudo rm /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl restart nginx
@@ -213,7 +227,7 @@ sudo apt install -y certbot python3-certbot-nginx
 
 ### 9.2 Obter certificado SSL
 ```bash
-sudo certbot --nginx -d SEU_DOMINIO
+sudo certbot --nginx -d gestao.computacaoufj.online
 ```
 
 ## 10. Comandos Úteis para Manutenção

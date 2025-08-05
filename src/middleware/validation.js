@@ -138,12 +138,14 @@ class ValidationMiddleware {
      * @param {Function} next - Next middleware
      */
     static validateLogin(req, res, next) {
-        const { usuario, senha } = req.body;
+        const { email, senha } = req.body;
         const errors = [];
 
-        // Validar usuário
-        if (!usuario || usuario.trim().length < 3) {
-            errors.push('Usuário deve ter pelo menos 3 caracteres');
+        // Validar email
+        if (!email) {
+            errors.push('Email é obrigatório');
+        } else if (!ValidationMiddleware.isValidEmail(email)) {
+            errors.push('Email deve ter um formato válido');
         }
 
         // Validar senha

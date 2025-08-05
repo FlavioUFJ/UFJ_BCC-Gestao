@@ -6,6 +6,7 @@
 const EstagioService = require('../services/EstagioService');
 const Pessoa = require('../models/Pessoa');
 const { messages, enums, pagination } = require('../config');
+const databaseConfig = require('../config/database');
 
 class EstagioController {
     constructor() {
@@ -107,7 +108,8 @@ class EstagioController {
             res.status(500).render('error', {
                 title: 'Erro',
                 message: 'Erro ao carregar estágios',
-                error: { status: 500 }
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }
@@ -141,7 +143,8 @@ class EstagioController {
             res.status(500).render('error', {
                 title: 'Erro',
                 message: 'Erro ao carregar formulário',
-                error: { status: 500 }
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }
@@ -226,7 +229,8 @@ class EstagioController {
             res.status(404).render('error', {
                 title: 'Estágio não encontrado',
                 message: error.message || 'O estágio solicitado não foi encontrado',
-                error: { status: 404 }
+                error: { status: 404 },
+                currentPage: 'error'
             });
         }
     }
@@ -272,7 +276,8 @@ class EstagioController {
             res.status(status).render('error', {
                 title: 'Erro',
                 message: error.message || 'Erro ao carregar formulário de edição',
-                error: { status }
+                error: { status },
+                currentPage: 'error'
             });
         }
     }
@@ -412,17 +417,61 @@ class EstagioController {
         try {
             const user = req.session.user;
             
-            // Buscar estatísticas
-            const estatisticas = await this.estagioService.buscarEstatisticas(
-                user.id_pessoa, 
-                user.tipoacesso
-            );
+            let estatisticas = {
+                total: 0,
+                ativos: 0,
+                concluidos: 0,
+                cancelados: 0
+            };
+            let estagiosRecentes = [];
+            let modulos = [];
 
-            // Buscar estágios recentes do usuário
-            const estagiosRecentes = await this.estagioService.buscarEstagiosPorUsuario(
-                user.id_pessoa, 
-                user.tipoacesso
-            );
+            // PRIMEIRO: Buscar módulos (independente de outros erros)
+            try {
+                console.log('=== INICIANDO BUSCA DE MÓDULOS ===');
+                console.log('ID do usuário:', user.id_pessoa);
+                
+                // Buscar todos os módulos
+                modulos = await this.buscarModulos();
+                console.log('=== MÓDULOS RETORNADOS ===', modulos);
+                
+                // Buscar módulos ativos para o usuário
+                const modulosAtivosUsuario = await this.buscaModuloAtivoPessoa(user.id_pessoa);
+                console.log('=== MÓDULOS ATIVOS DO USUÁRIO ===', modulosAtivosUsuario);
+                
+                // Marcar quais módulos o usuário tem acesso
+                modulos = modulos.map(modulo => ({
+                    ...modulo,
+                    tem_acesso: modulosAtivosUsuario.includes(modulo.id_modulo)
+                }));
+                
+                console.log('=== MÓDULOS COM ACESSO MARCADO ===', modulos);
+            } catch (error) {
+                console.error('=== ERRO AO BUSCAR MÓDULOS ===', error);
+                // Usar array vazio em caso de erro
+            }
+
+            try {
+                // Buscar estatísticas
+                estatisticas = await this.estagioService.buscarEstatisticas(
+                    user.id_pessoa, 
+                    user.tipoacesso
+                );
+            } catch (error) {
+                console.error('Erro ao buscar estatísticas:', error);
+                // Usar valores padrão em caso de erro
+            }
+
+            try {
+                // Buscar estágios recentes do usuário
+                estagiosRecentes = await this.estagioService.buscarEstagiosPorUsuario(
+                    user.id_pessoa, 
+                    user.tipoacesso
+                );
+            } catch (error) {
+                console.error('Erro ao buscar estágios recentes:', error);
+                // Usar array vazio em caso de erro
+            }
 
             // Para requisições AJAX
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
@@ -435,12 +484,14 @@ class EstagioController {
                 });
             }
 
-            res.render('dashboard', {
+            res.render('modulos-paginaprincipal', {
                 title: 'Dashboard',
                 user,
                 estatisticas,
                 estagiosRecentes: estagiosRecentes.slice(0, 5),
-                currentPage: 'dashboard'
+                modulos: modulos,
+                currentPage: 'dashboard',
+                currentUrl: req.originalUrl
             });
         } catch (error) {
             console.error('Erro ao carregar dashboard:', error);
@@ -455,7 +506,8 @@ class EstagioController {
             res.status(500).render('error', {
                 title: 'Erro',
                 message: 'Erro ao carregar dashboard',
-                error: { status: 500 }
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }
@@ -492,6 +544,123 @@ class EstagioController {
             res.status(500).json({
                 success: false,
                 message: error.message || 'Erro ao buscar estágios'
+            });
+        }
+    }
+
+    /**
+     * Busca todos os módulos do sistema
+     * @returns {Promise<Array>}
+     */
+    async buscarModulos() {
+        try {
+            console.log('Iniciando busca de módulos...');
+            // Buscar todos os módulos cadastrados
+            
+            const queryModulos = `
+                SELECT 
+                    m.id_modulo,
+                    m.nome,
+                    m.descricao,
+                    m.icone,
+                    m.cor,
+                    m.url,
+                    m.ordem
+                FROM modulos m
+                ORDER BY m.ordem
+            `;
+
+            const modulos = await databaseConfig.all(queryModulos, []);
+            console.log('Módulos encontrados:', modulos.length, modulos);
+            return modulos;
+        } catch (error) {
+            console.error('Erro ao buscar módulos com acesso:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Busca módulos ativos para uma pessoa específica
+     * @param {number} id_pessoa - ID da pessoa
+     * @returns {Promise<Array>} Array com os IDs dos módulos ativos
+     */
+    async buscaModuloAtivoPessoa(id_pessoa) {
+        try {
+            console.log('Iniciando busca de módulos ativos para pessoa:', id_pessoa);
+            
+            const queryModulosAtivos = `
+                SELECT 
+                    m.id_modulo 
+                FROM 
+                    pessoa AS p 
+                INNER JOIN usuario_modulos AS pm ON pm.id_pessoa = p.id_pessoa 
+                INNER JOIN modulos AS m ON pm.id_modulo = m.id_modulo 
+                WHERE 
+                    p.id_pessoa = ? AND pm.ativo = 1
+            `;
+
+            const modulosAtivos = await databaseConfig.all(queryModulosAtivos, [id_pessoa]);
+            console.log('Módulos ativos encontrados para pessoa', id_pessoa, ':', modulosAtivos);
+            
+            // Retornar apenas os IDs dos módulos
+            return modulosAtivos.map(modulo => modulo.id_modulo);
+        } catch (error) {
+            console.error('Erro ao buscar módulos ativos da pessoa:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Dashboard específico do módulo Estágio
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async estagioModuleDashboard(req, res) {
+        try {
+            const user = req.session.user;
+            
+            // Buscar dados específicos do módulo Estágio
+            let camposEstagio = [];
+            let estatisticas = {
+                total: 0,
+                ativos: 0,
+                concluidos: 0,
+                cancelados: 0
+            };
+
+            try {
+                // Buscar campos de estágio baseado no tipo de usuário
+                camposEstagio = await this.estagioService.buscarEstagiosPorUsuario(
+                    user.id_pessoa, 
+                    user.tipoacesso
+                );
+                
+                // Buscar estatísticas
+                estatisticas = await this.estagioService.buscarEstatisticas(
+                    user.id_pessoa, 
+                    user.tipoacesso
+                );
+            } catch (error) {
+                console.error('Erro ao buscar dados do módulo Estágio:', error);
+                // Continuar com valores padrão
+            }
+
+            res.render('dashboard-estagio', {
+                title: 'Módulo Estágio',
+                user,
+                camposEstagio,
+                estatisticas,
+                currentPage: 'estagio',
+                currentUrl: req.originalUrl
+            });
+        } catch (error) {
+            console.error('Erro ao carregar dashboard do módulo Estágio:', error);
+            
+            res.status(500).render('error', {
+                title: 'Erro',
+                message: 'Erro ao carregar módulo Estágio',
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }

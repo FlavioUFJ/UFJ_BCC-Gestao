@@ -22,13 +22,48 @@ class EmailConfig {
         }
 
         try {
-            const params = await databaseConfig.all(
-                'SELECT chave, valor FROM parametros WHERE chave LIKE "email_%"'
-            );
+            // Buscar o parâmetro "Conta e-mail" e seus valores
+            const query = `
+                SELECT pv.identificadorvalor, pv.valor 
+                FROM parametro p
+                INNER JOIN parametrovalor pv ON p.id_parametro = pv.id_parametro
+                WHERE p.identificador = 'Conta e-mail'
+            `;
+            
+            const params = await databaseConfig.all(query);
             
             this.config = {};
+            
+            // Mapear os valores para as chaves esperadas
             params.forEach(param => {
-                this.config[param.chave] = param.valor;
+                const identificador = param.identificadorvalor;
+                const valor = param.valor;
+                
+                // Mapear identificadores para as chaves esperadas
+                switch(identificador) {
+                    case 'Servidor SMTP':
+                        this.config.email_host = valor;
+                        break;
+                    case 'Porta SMTP':
+                        this.config.email_port = valor;
+                        break;
+                    case 'Usuário do E-mail':
+                        this.config.email_user = valor;
+                        break;
+                    case 'Senha':
+                        this.config.email_password = valor;
+                        break;
+                    case 'E-mail Remetente':
+                        this.config.email_from = valor;
+                        break;
+                }
+            });
+            
+            console.log('Configurações carregadas:', {
+                host: this.config.email_host,
+                port: this.config.email_port,
+                user: this.config.email_user ? this.config.email_user.substring(0, 3) + '***' : 'não definido',
+                from: this.config.email_from
             });
             
             return this.config;
@@ -56,7 +91,7 @@ class EmailConfig {
 
         const port = parseInt(config.email_port) || 587;
         
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
             host: config.email_host,
             port: port,
             secure: port === 465, // true para porta 465, false para outras portas
@@ -86,13 +121,27 @@ class EmailConfig {
             const transporter = await this.createTransporter();
             const config = await this.loadConfig();
             
+            // Configurar remetente com nome personalizado
+            let fromAddress;
+            if (opcoes.remetente) {
+                fromAddress = opcoes.remetente;
+            } else if (config.email_from && config.email_user) {
+                // Usar formato "Nome <email>" se ambos estão disponíveis
+                fromAddress = `${config.email_from} <${config.email_user}>`;
+            } else {
+                // Fallback para apenas o email
+                fromAddress = config.email_from || config.email_user;
+            }
+            
             const mailOptions = {
-                from: opcoes.remetente || config.email_from || config.email_user,
+                from: fromAddress,
                 to: destinatario,
                 subject: assunto,
                 html: conteudo,
                 ...opcoes // Permite sobrescrever opções
             };
+            
+            console.log('Enviando email com remetente:', fromAddress);
             
             const info = await transporter.sendMail(mailOptions);
             console.log('Email enviado com sucesso:', info.response);

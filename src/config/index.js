@@ -167,6 +167,16 @@ const security = {
 };
 
 /**
+ * Configurações da aplicação
+ */
+const app = {
+    name: 'Sistema de Gestão de Estágios',
+    version: '1.0.0',
+    description: 'Sistema para gerenciamento de estágios acadêmicos',
+    author: 'UFJ - Universidade Federal de Jataí'
+};
+
+/**
  * Configurações de backup
  */
 const backup = {
@@ -209,9 +219,10 @@ const messages = {
 };
 
 /**
- * Configuração completa do sistema
+ * Configuração consolidada
  */
 const config = {
+    app,
     environment,
     paths,
     upload,

@@ -26,7 +26,7 @@ function getUserFromSession(req) {
 // Middleware de autenticação
 function requireAuth(req, res, next) {
     if (!req.session.user) {
-        return res.redirect('/login');
+        return res.redirect('/auth/login');
     }
     next();
 }
@@ -39,7 +39,7 @@ router.get('/rotinas-seguras', requireAuth, async (req, res) => {
     try {
         const user = getUserFromSession(req);
         if (!user) {
-            return res.redirect('/login');
+            return res.redirect('/auth/login');
         }
 
         // Query que será filtrada automaticamente pelo controle de acesso
@@ -98,6 +98,7 @@ router.get('/rotinas-seguras', requireAuth, async (req, res) => {
             user: user,
             isAdmin: isAdmin,
             totalRegistros: camposFormatados.length,
+            currentPage: 'rotinas-seguras',
             success: req.query.success,
             error: req.query.error
         });
@@ -107,7 +108,8 @@ router.get('/rotinas-seguras', requireAuth, async (req, res) => {
         res.status(500).render('error', {
             title: 'Erro',
             message: 'Erro interno do servidor',
-            error: error.message
+            error: error.message,
+            currentPage: 'error'
         });
     }
 });
@@ -122,7 +124,7 @@ router.get('/pessoa/:id', requireAuth, async (req, res) => {
         const pessoaId = parseInt(req.params.id);
         
         if (!user) {
-            return res.redirect('/login');
+            return res.redirect('/auth/login');
         }
 
         // Query para buscar dados da pessoa
@@ -145,7 +147,8 @@ router.get('/pessoa/:id', requireAuth, async (req, res) => {
         if (!pessoa) {
             return res.status(404).render('error', {
                 title: 'Não encontrado',
-                message: 'Pessoa não encontrada ou você não tem acesso a este registro'
+                message: 'Pessoa não encontrada ou você não tem acesso a este registro',
+                currentPage: 'error'
             });
         }
 
@@ -196,7 +199,7 @@ router.get('/estagio/campo/novo', requireAuth, (req, res) => {
         user: req.session.user,
         origem: origem,
         pessoaSelecionada: pessoaSelecionada,
-        layout: false
+        currentPage: 'campo-estagio'
     });
 });
 
@@ -211,7 +214,7 @@ router.post('/estagio/campo/criar', requireAuth, async (req, res) => {
         const user = getUserFromSession(req);
         
         if (!user) {
-            return res.redirect('/login');
+            return res.redirect('/auth/login');
         }
 
         const dadosEstagio = {
@@ -491,7 +494,7 @@ router.get('/relatorio-completo', requireAuth, async (req, res) => {
         const user = getUserFromSession(req);
         
         if (!user) {
-            return res.redirect('/login');
+            return res.redirect('/auth/login');
         }
 
         // Gera condições de acesso para JOINs complexos
@@ -507,18 +510,13 @@ router.get('/relatorio-completo', requireAuth, async (req, res) => {
                 ce.tipo_estagio,
                 ce.situacao,
                 ce.data_inicio,
-                ce.data_fim,
-                COUNT(pa.id_plano) as total_planos,
-                COUNT(re.id_relatorio) as total_relatorios
+                ce.data_fim
             FROM campo_estagio ce
             LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
             LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
             LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
             LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-            LEFT JOIN planos_atividade pa ON ce.id_campo_estagio = pa.campo_estagio_id
-            LEFT JOIN relatorios_estagio re ON ce.id_campo_estagio = re.campo_estagio_id
             WHERE ${accessConditions}
-            GROUP BY ce.id_campo_estagio
             ORDER BY pe.nome
         `;
 
@@ -528,7 +526,8 @@ router.get('/relatorio-completo', requireAuth, async (req, res) => {
             title: 'Relatório Completo com Controle de Acesso',
             dados: relatorio,
             user: user,
-            isAdmin: await dbHelper.isAdmin(user)
+            isAdmin: await dbHelper.isAdmin(user),
+            currentPage: 'relatorio-completo'
         });
 
     } catch (error) {
@@ -536,7 +535,8 @@ router.get('/relatorio-completo', requireAuth, async (req, res) => {
         res.status(500).render('error', {
             title: 'Erro',
             message: 'Erro ao gerar relatório',
-            error: error.message
+            error: error.message,
+            currentPage: 'error'
         });
     }
 });

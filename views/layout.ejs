@@ -349,7 +349,7 @@
     </style>
 </head>
 <body>
-    <% if (typeof user !== 'undefined' && user) { %>
+    <% if (typeof user !== 'undefined' && user && currentPage === 'estagio') { %>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
@@ -377,7 +377,7 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="/admin/parametros?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagio/dashboard')) %>">
+                            <a class="dropdown-item" href="/admin/parametro?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagio/dashboard')) %>">
                                 <i class="fas fa-sliders-h me-2"></i>
                                 Parâmetros
                             </a>
@@ -385,7 +385,7 @@
                         <li><hr class="dropdown-divider"></li>
                         <% } %>
                         <li>
-                            <a class="dropdown-item" href="/alterar-senha">
+                            <a class="dropdown-item" href="/pessoas/profile?returnUrl=<%= encodeURIComponent(typeof currentUrl !== 'undefined' ? currentUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/dashboard')) %>">
                                 <i class="fas fa-user-cog me-2"></i>
                                 Meu Perfil
                             </a>
@@ -423,6 +423,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 </body>
 </html>

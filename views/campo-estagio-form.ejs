@@ -274,7 +274,7 @@
         const CONFIG = {
             API_ENDPOINTS: {
                 PESSOAS: '/api/pessoas',
-                PARAMETROS: '/api/parametros/buscar',
+                PARAMETROS: '/api/parametro/buscar',
                 ESTAGIO_CRIAR: '/secure/estagio/campo/criar'
             },
             ALERT_TIMEOUT: 5000,
@@ -519,32 +519,32 @@
             
             // Carregar parâmetros de apólice e seguradora automaticamente
             carregarParametrosApoliceSeguradora();
-        
-        // Preencher dados do estagiário automaticamente para usuários da categoria 3 (Aluno/Estagiário)
-        <% if (user) { %>
-            <% if (user.categoria === '3' || user.categoria === 3) { %>
-                // Para usuários estagiários, preencher com seus próprios dados
-                document.getElementById('id_pessoa_estagiario').value = '<%= user.id_pessoa %>';
-                document.getElementById('nome_estagiario_nome').value = '<%= user.nome %>';
-                <% if (user.email) { %>
-                document.getElementById('email_estagiario').value = '<%= user.email %>';
-                <% } else { %>
-                // Buscar email do usuário via API se não estiver na sessão
-                buscarEmailUsuario('<%= user.id_pessoa %>');
-                <% } %>
-                
-                // Para usuários não administradores, tornar campos readonly e ocultar botão de busca
-                <% if (user.tipoacesso !== 'Administrador') { %>
-                    document.getElementById('nome_estagiario_nome').setAttribute('readonly', true);
-                    document.getElementById('email_estagiario').setAttribute('readonly', true);
-                    // Ocultar botão de busca para estagiário
-                    const btnBuscarEstagiario = document.querySelector('button[onclick*="id_pessoa_estagiario"]');
-                    if (btnBuscarEstagiario) {
-                        btnBuscarEstagiario.style.display = 'none';
-                    }
+            
+            // Preencher dados do estagiário automaticamente para usuários da categoria 3 (Aluno/Estagiário)
+            <% if (user) { %>
+                <% if (user.categoria === '3' || user.categoria === 3) { %>
+                    // Para usuários estagiários, preencher com seus próprios dados
+                    document.getElementById('id_pessoa_estagiario').value = '<%= user.id_pessoa %>';
+                    document.getElementById('nome_estagiario_nome').value = '<%= user.nome %>';
+                    <% if (user.email) { %>
+                    document.getElementById('email_estagiario').value = '<%= user.email %>';
+                    <% } else { %>
+                    // Buscar email do usuário via API se não estiver na sessão
+                    buscarEmailUsuario('<%= user.id_pessoa %>');
+                    <% } %>
+                    
+                    // Para usuários não administradores, tornar campos readonly e ocultar botão de busca
+                    <% if (user.tipoacesso !== 'Administrador') { %>
+                        document.getElementById('nome_estagiario_nome').setAttribute('readonly', true);
+                        document.getElementById('email_estagiario').setAttribute('readonly', true);
+                        // Ocultar botão de busca para estagiário
+                        const btnBuscarEstagiario = document.querySelector('button[onclick*="id_pessoa_estagiario"]');
+                        if (btnBuscarEstagiario) {
+                            btnBuscarEstagiario.style.display = 'none';
+                        }
+                    <% } %>
                 <% } %>
             <% } %>
-        <% } %>
             
             // Função para mostrar/ocultar campos específicos do estágio não obrigatório
             function toggleCamposNaoObrigatorio() {

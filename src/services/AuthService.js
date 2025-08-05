@@ -16,18 +16,18 @@ class AuthService {
 
     /**
      * Autentica um usuário
-     * @param {string} usuario - Nome de usuário ou email
+     * @param {string} email - Email do usuário
      * @param {string} senha - Senha do usuário
      * @returns {Promise<Object>}
      */
-    async login(usuario, senha) {
+    async login(email, senha) {
         try {
-            if (!usuario || !senha) {
-                throw new Error('Usuário e senha são obrigatórios');
+            if (!email || !senha) {
+                throw new Error('Email e senha são obrigatórios');
             }
 
             // Buscar usuário
-            const user = await this.pessoaModel.authenticate(usuario, senha);
+            const user = await this.pessoaModel.authenticate(email, senha);
             
             if (!user) {
                 throw new Error(messages.error.invalidCredentials);
@@ -59,8 +59,8 @@ class AuthService {
             console.error('Erro no login:', error);
             
             // Registrar tentativa de login falhada
-            if (usuario) {
-                await this.logFailedLogin(usuario, error.message);
+            if (email) {
+                await this.logFailedLogin(email, error.message);
             }
             
             throw new Error(error.message || 'Erro interno no sistema de autenticação');
@@ -105,8 +105,8 @@ class AuthService {
                 throw new Error('Nome e email são obrigatórios');
             }
 
-            if (!loginData.usuario || !loginData.senha) {
-                throw new Error('Usuário e senha são obrigatórios');
+            if (!loginData.senha) {
+                throw new Error('Senha é obrigatória');
             }
 
             // Verificar se email já existe
@@ -115,11 +115,7 @@ class AuthService {
                 throw new Error('Este email já está cadastrado');
             }
 
-            // Verificar se usuário já existe
-            const existingLogin = await this.pessoaModel.findByUsuario(loginData.usuario);
-            if (existingLogin) {
-                throw new Error('Este nome de usuário já existe');
-            }
+            // Não é mais necessário verificar usuário duplicado
 
             // Iniciar transação
             await databaseConfig.beginTransaction();
@@ -172,7 +168,7 @@ class AuthService {
                 throw new Error('Senha atual e nova senha são obrigatórias');
             }
 
-            if (novaSenha.length < security.password?.minLength || 6) {
+            if (novaSenha.length < (security.password?.minLength || 6)) {
                 throw new Error(`Nova senha deve ter pelo menos ${security.password?.minLength || 6} caracteres`);
             }
 
@@ -221,7 +217,7 @@ class AuthService {
                 throw new Error('Nova senha é obrigatória');
             }
 
-            if (novaSenha.length < security.password?.minLength || 6) {
+            if (novaSenha.length < (security.password?.minLength || 6)) {
                 throw new Error(`Nova senha deve ter pelo menos ${security.password?.minLength || 6} caracteres`);
             }
 
@@ -324,13 +320,13 @@ class AuthService {
 
     /**
      * Registra tentativa de login falhada
-     * @param {string} usuario - Nome de usuário
+     * @param {string} email - Email do usuário
      * @param {string} erro - Erro ocorrido
      * @returns {Promise<void>}
      */
-    async logFailedLogin(usuario, erro) {
+    async logFailedLogin(email, erro) {
         try {
-            console.log(`[${new Date().toISOString()}] Failed login attempt: ${usuario} - ${erro}`);
+            console.log(`[${new Date().toISOString()}] Failed login attempt: ${email} - ${erro}`);
         } catch (error) {
             console.error('Erro ao registrar tentativa de login falhada:', error);
             // Não falhar por erro de log

@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'ufj-bcc-gestao',
     script: 'server.js',
-    cwd: '/home/ubuntu/UFJ_BCC-Gestao',
+    cwd: '/var/www/html/gestao',
     instances: 1,
     autorestart: true,
     watch: false,

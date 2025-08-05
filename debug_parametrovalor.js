@@ -25,7 +25,7 @@ db.all("PRAGMA table_info(parametrovalor)", (err, columns) => {
             });
             
             // Buscar parâmetros relacionados
-            db.all("SELECT * FROM parametros WHERE id IN (SELECT DISTINCT id_parametro FROM parametrovalor)", (err, params) => {
+            db.all("SELECT * FROM parametro WHERE id IN (SELECT DISTINCT id_parametro FROM parametrovalor)", (err, params) => {
                 if (err) {
                     console.error('Erro ao buscar parâmetros:', err);
                 } else {

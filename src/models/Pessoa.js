@@ -65,7 +65,7 @@ class Pessoa extends BaseModel {
     async findWithLogin(id) {
         try {
             const query = `
-                SELECT p.*, pl.usuario, pl.tipoacesso, pl.ativo as login_ativo
+                SELECT p.*, pl.tipoacesso, pl.status as login_ativo
                 FROM pessoa p
                 LEFT JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
                 WHERE p.id_pessoa = ?
@@ -95,44 +95,24 @@ class Pessoa extends BaseModel {
         }
     }
 
-    /**
-     * Busca pessoa por usuário de login
-     * @param {string} usuario - Nome de usuário
-     * @returns {Promise<Object|null>}
-     */
-    async findByUsuario(usuario) {
-        try {
-            const query = `
-                SELECT p.*, pl.usuario, pl.tipoacesso, pl.ativo as login_ativo
-                FROM pessoa p
-                INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
-                WHERE pl.usuario = ? AND pl.ativo = 1
-            `;
-            
-            const result = await databaseConfig.get(query, [usuario]);
-            return result ? this.hideFields(result) : null;
-        } catch (error) {
-            console.error('Erro ao buscar pessoa por usuário:', error);
-            throw new Error('Erro ao buscar usuário');
-        }
-    }
+    // Método findByUsuario removido - login apenas por email
 
     /**
      * Autentica usuário
-     * @param {string} usuario - Nome de usuário ou email
+     * @param {string} email - Email do usuário
      * @param {string} senha - Senha
      * @returns {Promise<Object|null>}
      */
-    async authenticate(usuario, senha) {
+    async authenticate(email, senha) {
         try {
             const query = `
-                SELECT p.*, pl.usuario, pl.senha, pl.tipoacesso, pl.ativo as login_ativo
+                SELECT p.*, pl.senha, pl.tipoacesso, pl.status as login_ativo
                 FROM pessoa p
                 INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
-                WHERE (pl.usuario = ? OR p.email = ?) AND pl.ativo = 1 AND p.ativo = 1
+                WHERE p.email = ? AND pl.status = 'Ativo'
             `;
             
-            const result = await databaseConfig.get(query, [usuario, usuario]);
+            const result = await databaseConfig.get(query, [email]);
             
             if (!result) {
                 return null;
@@ -162,7 +142,7 @@ class Pessoa extends BaseModel {
      */
     async createLogin(idPessoa, loginData) {
         try {
-            const { usuario, senha, tipoacesso = enums.tipoAcesso.ESTAGIARIO } = loginData;
+            const { senha, tipoacesso = enums.tipoAcesso.ESTAGIARIO } = loginData;
             
             // Verificar se a pessoa existe
             const pessoa = await this.findById(idPessoa);
@@ -180,26 +160,18 @@ class Pessoa extends BaseModel {
                 throw new Error('Já existe um login para esta pessoa');
             }
             
-            // Verificar se o usuário já existe
-            const existingUser = await databaseConfig.get(
-                'SELECT usuario FROM pessoa_login WHERE usuario = ?',
-                [usuario]
-            );
-            
-            if (existingUser) {
-                throw new Error('Nome de usuário já existe');
-            }
+            // Não é mais necessário verificar usuário duplicado pois usamos apenas email
             
             // Criptografar senha
             const senhaHash = await bcrypt.hash(senha, security.bcrypt.saltRounds);
             
             // Inserir login
             const query = `
-                INSERT INTO pessoa_login (id_pessoa, usuario, senha, tipoacesso, ativo)
-                VALUES (?, ?, ?, ?, 1)
+                INSERT INTO pessoa_login (id_pessoa, senha, tipoacesso, status)
+                VALUES (?, ?, ?, 'Ativo')
             `;
             
-            await databaseConfig.run(query, [idPessoa, usuario, senhaHash, tipoacesso]);
+            await databaseConfig.run(query, [idPessoa, senhaHash, tipoacesso]);
             
             return true;
         } catch (error) {

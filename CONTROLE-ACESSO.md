@@ -31,14 +31,10 @@ Este sistema implementa um controle de acesso automático baseado no `id_pessoa`
 | `campo_estagio` | `id_pessoa_curso`, `id_pessoa_estagiario`, `id_pessoa_orientador`, `id_pessoa_concedente`, `id_pessoa_supervisor` |
 | `pessoa_login` | `id_pessoa` |
 | `usuario_modulos` | `id_pessoa` |
-| `planos_atividade` | Indireta via `campo_estagio_id` |
-| `relatorios_estagio` | Indireta via `campo_estagio_id` |
 
 ### Relações Indiretas
 
-Algumas tabelas se relacionam com `Pessoa` indiretamente através de `campo_estagio`:
-- `planos_atividade` → `campo_estagio` → `pessoa`
-- `relatorios_estagio` → `campo_estagio` → `pessoa`
+Algumas tabelas se relacionam com `Pessoa` indiretamente através de `campo_estagio` (atualmente não há tabelas com essa configuração ativa).
 
 ## Regras de Acesso
 

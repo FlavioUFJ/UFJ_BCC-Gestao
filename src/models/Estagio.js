@@ -14,7 +14,7 @@ class Estagio extends BaseModel {
         this.fillable = [
             'id_pessoa_estagiario',
             'id_pessoa_orientador',
-            'id_pessoa_empresa',
+            'id_pessoa_concedente',
             'id_pessoa_supervisor',
             'nome_empresa',
             'endereco_empresa',
@@ -32,10 +32,9 @@ class Estagio extends BaseModel {
             'carga_horaria_semanal',
             'valor_bolsa',
             'tipo_estagio',
-            'status_estagio',
+            'situacao',
             'observacoes',
-            'data_cadastro',
-            'ativo'
+            'data_cadastro'
         ];
         
         this.hidden = [];
@@ -97,7 +96,7 @@ class Estagio extends BaseModel {
             tipo_estagio: {
                 required: true
             },
-            status_estagio: {
+            situacao: {
                 required: true
             }
         };
@@ -111,12 +110,12 @@ class Estagio extends BaseModel {
     async findWithDetails(options = {}) {
         try {
             const {
-                where = '',
-                orderBy = 'ce.data_cadastro DESC',
-                limit = null,
-                offset = null,
-                params = []
-            } = options;
+            where = '',
+            orderBy = 'ce.id_campo_estagio DESC',
+            limit = null,
+            offset = null,
+            params = []
+        } = options;
 
             let query = `
                 SELECT 
@@ -130,7 +129,7 @@ class Estagio extends BaseModel {
                 FROM campo_estagio ce
                 INNER JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
                 INNER JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa pem ON ce.id_pessoa_empresa = pem.id_pessoa
+                LEFT JOIN pessoa pem ON ce.id_pessoa_concedente = pem.id_pessoa
                 LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
             `;
             
@@ -221,7 +220,7 @@ class Estagio extends BaseModel {
     async findByEmpresa(idEmpresa) {
         try {
             return await this.findWithDetails({
-                where: 'ce.id_pessoa_empresa = ?',
+                where: 'ce.id_pessoa_concedente = ?',
                 params: [idEmpresa],
                 orderBy: 'ce.data_inicio DESC'
             });
@@ -239,7 +238,7 @@ class Estagio extends BaseModel {
     async findByStatus(status) {
         try {
             return await this.findWithDetails({
-                where: 'ce.status_estagio = ?',
+                where: 'ce.situacao = ?',
                 params: [status],
                 orderBy: 'ce.data_inicio DESC'
             });
@@ -293,12 +292,12 @@ class Estagio extends BaseModel {
     async updateStatus(id, novoStatus) {
         try {
             // Verificar se o status é válido
-            const statusValidos = Object.values(enums.statusEstagio);
+            const statusValidos = ['Ativo', 'Concluído', 'Cancelado', 'Em edição', 'Aprovado'];
             if (!statusValidos.includes(novoStatus)) {
                 throw new Error('Status inválido');
             }
             
-            return await this.update(id, { status_estagio: novoStatus });
+            return await this.update(id, { situacao: novoStatus });
         } catch (error) {
             console.error('Erro ao atualizar status do estágio:', error);
             throw error;
@@ -312,13 +311,13 @@ class Estagio extends BaseModel {
     async getEstatisticas() {
         try {
             const queries = {
-                total: 'SELECT COUNT(*) as count FROM campo_estagio WHERE ativo = 1',
-                ativos: `SELECT COUNT(*) as count FROM campo_estagio WHERE status_estagio = '${enums.statusEstagio.ATIVO}' AND ativo = 1`,
-                concluidos: `SELECT COUNT(*) as count FROM campo_estagio WHERE status_estagio = '${enums.statusEstagio.CONCLUIDO}' AND ativo = 1`,
-                cancelados: `SELECT COUNT(*) as count FROM campo_estagio WHERE status_estagio = '${enums.statusEstagio.CANCELADO}' AND ativo = 1`,
-                obrigatorios: `SELECT COUNT(*) as count FROM campo_estagio WHERE tipo_estagio = '${enums.tipoEstagio.OBRIGATORIO}' AND ativo = 1`,
-                naoObrigatorios: `SELECT COUNT(*) as count FROM campo_estagio WHERE tipo_estagio = '${enums.tipoEstagio.NAO_OBRIGATORIO}' AND ativo = 1`
-            };
+            total: 'SELECT COUNT(*) as count FROM campo_estagio',
+            ativos: `SELECT COUNT(*) as count FROM campo_estagio WHERE situacao = 'Ativo'`,
+            concluidos: `SELECT COUNT(*) as count FROM campo_estagio WHERE situacao = 'Concluído'`,
+            cancelados: `SELECT COUNT(*) as count FROM campo_estagio WHERE situacao = 'Cancelado'`,
+            obrigatorios: `SELECT COUNT(*) as count FROM campo_estagio WHERE tipo_estagio = 'Obrigatório'`,
+            naoObrigatorios: `SELECT COUNT(*) as count FROM campo_estagio WHERE tipo_estagio = 'Não Obrigatório'`
+        };
             
             const estatisticas = {};
             
@@ -374,7 +373,7 @@ class Estagio extends BaseModel {
             throw new Error('Tipo de estágio inválido');
         }
         
-        if (data.status_estagio && !Object.values(enums.statusEstagio).includes(data.status_estagio)) {
+        if (data.situacao && !['Ativo', 'Concluído', 'Cancelado', 'Em edição', 'Aprovado'].includes(data.situacao)) {
             throw new Error('Status de estágio inválido');
         }
         

@@ -14,16 +14,12 @@ const PESSOA_RELATIONS = {
     'campo_estagio': ['id_pessoa_curso', 'id_pessoa_estagiario', 'id_pessoa_orientador', 'id_pessoa_concedente', 'id_pessoa_supervisor'],
     'pessoa_login': ['id_pessoa'],
     'usuario_modulos': ['id_pessoa'],
-    'planos_atividade': [], // Relaciona indiretamente via campo_estagio
-    'relatorios_estagio': [], // Relaciona indiretamente via campo_estagio
     'campo_estagio_relatorio': [], // Relaciona indiretamente via campo_estagio
     'campo_estagio_planoatividade': [] // Relaciona indiretamente via campo_estagio
 };
 
 // Tabelas que se relacionam indiretamente com Pessoa via campo_estagio
 const INDIRECT_RELATIONS = {
-    'planos_atividade': 'campo_estagio_id',
-    'relatorios_estagio': 'campo_estagio_id',
     'campo_estagio_relatorio': 'id_campo_estagio',
     'campo_estagio_planoatividade': 'id_campo_estagio'
 };

@@ -6,6 +6,7 @@
 const Pessoa = require('../models/Pessoa');
 const { messages, enums, pagination } = require('../config');
 const bcrypt = require('bcrypt');
+const Helpers = require('../utils/helpers');
 
 class PessoaController {
     constructor() {
@@ -82,7 +83,8 @@ class PessoaController {
             res.status(500).render('error', {
                 title: 'Erro',
                 message: 'Erro ao carregar pessoas',
-                error: { status: 500 }
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }
@@ -105,7 +107,8 @@ class PessoaController {
             res.status(500).render('error', {
                 title: 'Erro',
                 message: 'Erro ao carregar formulário',
-                error: { status: 500 }
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }
@@ -217,7 +220,8 @@ class PessoaController {
             res.status(404).render('error', {
                 title: 'Pessoa não encontrada',
                 message: error.message || 'A pessoa solicitada não foi encontrada',
-                error: { status: 404 }
+                error: { status: 404 },
+                currentPage: 'error'
             });
         }
     }
@@ -260,7 +264,8 @@ class PessoaController {
             res.status(status).render('error', {
                 title: 'Erro',
                 message: error.message || 'Erro ao carregar formulário de edição',
-                error: { status }
+                error: { status },
+                currentPage: 'error'
             });
         }
     }
@@ -403,10 +408,10 @@ class PessoaController {
 
             switch (action) {
                 case 'create':
-                    if (!usuario || !senha) {
-                        throw new Error('Usuário e senha são obrigatórios');
+                    if (!senha) {
+                        throw new Error('Senha é obrigatória');
                     }
-                    await this.pessoaModel.createLogin(id, usuario, senha);
+                    await this.pessoaModel.createLogin(id, { senha });
                     message = 'Login criado com sucesso';
                     break;
 
@@ -575,13 +580,22 @@ class PessoaController {
                 });
             }
 
+            // Formatar dados para exibição
+            const pessoaFormatada = {
+                ...pessoa,
+                categoriaTexto: Helpers.getCategoriaTexto(pessoa.categoria),
+                tipoTexto: Helpers.getTipoTexto(pessoa.tipo)
+            };
+
             res.render('profile', {
                 title: 'Meu Perfil',
                 user: req.session.user,
-                pessoa,
+                pessoa: pessoaFormatada,
                 success: req.query.success || null,
                 error: req.query.error || null,
-                currentPage: 'profile'
+                currentPage: 'profile',
+                currentUrl: req.originalUrl,
+                returnUrl: req.query.returnUrl || req.get('referer') || '/dashboard'
             });
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
@@ -596,7 +610,8 @@ class PessoaController {
             res.status(500).render('error', {
                 title: 'Erro',
                 message: 'Erro ao carregar perfil',
-                error: { status: 500 }
+                error: { status: 500 },
+                currentPage: 'error'
             });
         }
     }

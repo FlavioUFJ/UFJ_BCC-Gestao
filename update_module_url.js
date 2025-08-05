@@ -14,8 +14,8 @@ db.get("SELECT nome, url FROM modulos WHERE nome = 'Estágio'", (err, row) => {
     if (row) {
         console.log(`URL atual: ${row.url}`);
         
-        // Atualizar a URL para /estagio/dashboard
-db.run("UPDATE modulos SET url = '/estagio/dashboard' WHERE nome = 'Estágio'", (err) => {
+        // Atualizar a URL para /estagios/dashboard
+db.run("UPDATE modulos SET url = '/estagios/dashboard' WHERE nome = 'Estágio'", (err) => {
             if (err) {
                 console.error('Erro ao atualizar URL:', err);
             } else {

@@ -220,7 +220,7 @@
                 <i class="fas fa-graduation-cap me-2"></i>Sistema de Gestão de Estágios
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="<%= origem %>">
+                <a class="nav-link" href="/dashboard">
                     <i class="fas fa-arrow-left me-1"></i>Voltar ao Dashboard
                 </a>
                 <a class="nav-link" href="/logout">
@@ -966,6 +966,11 @@
                 } else {
                     body.classList.remove('loading');
                 }
+            },
+
+            // Alias para compatibilidade
+            mostrarMensagem(message, type = 'info') {
+                this.showAlert(message, type);
             }
         };
 
@@ -1195,8 +1200,8 @@
     
     <!-- Script do gerenciador de pessoas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="/js/pessoa-manager.js"></script>
-    <script src="/js/importar-planilha.js"></script>
+    <script src="/public/js/pessoa-manager.js"></script>
+<script src="/public/js/importar-planilha.js"></script>
     <script>
         // Configurar botão Nova Pessoa para usar o modal
         document.addEventListener('DOMContentLoaded', () => {
@@ -1397,7 +1402,20 @@
             async carregarUsuarios() {
                 try {
                     const response = await fetch('/admin/usuarios');
-                    const usuarios = await response.json();
+                    const data = await response.json();
+                    
+                    // Verificar se houve erro de autenticação
+                    if (data.error || data.redirect) {
+                        console.error('Erro de autenticação:', data.error);
+                        AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        }
+                        return;
+                    }
+                    
+                    // Verificar se a resposta é um array
+                    const usuarios = Array.isArray(data) ? data : [];
                     
                     const tbody = document.getElementById('corpoTabelaUsuarios');
                     const selectVinculo = document.getElementById('usuarioVinculo');
@@ -1465,7 +1483,20 @@
                 
                 try {
                     const response = await fetch(`/admin/pessoas-sem-login?busca=${encodeURIComponent(termo)}`);
-                    const pessoas = await response.json();
+                    const data = await response.json();
+                    
+                    // Verificar se houve erro de autenticação
+                    if (data.error || data.redirect) {
+                        console.error('Erro de autenticação:', data.error);
+                        AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        }
+                        return;
+                    }
+                    
+                    // Verificar se a resposta é um array
+                    const pessoas = Array.isArray(data) ? data : [];
                     
                     const resultados = document.getElementById('resultadosBuscaPessoa');
                     
@@ -1545,7 +1576,20 @@
             async carregarModulos() {
                 try {
                     const response = await fetch('/admin/modulos');
-                    const modulos = await response.json();
+                    const data = await response.json();
+                    
+                    // Verificar se houve erro de autenticação
+                    if (data.error || data.redirect) {
+                        console.error('Erro de autenticação:', data.error);
+                        AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        }
+                        return;
+                    }
+                    
+                    // Verificar se a resposta é um array
+                    const modulos = Array.isArray(data) ? data : [];
                     
                     const lista = document.getElementById('listaModulos');
                     const checkboxContainer = document.getElementById('checkboxModulos');
@@ -1841,7 +1885,20 @@
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     
-                    const todosUsuarios = await response.json();
+                    const data = await response.json();
+                    
+                    // Verificar se houve erro de autenticação
+                    if (data.error || data.redirect) {
+                        console.error('Erro de autenticação:', data.error);
+                        AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                        }
+                        return;
+                    }
+                    
+                    // Verificar se a resposta é um array
+                    const todosUsuarios = Array.isArray(data) ? data : [];
                     
                     const usuariosSelecionadosData = todosUsuarios.filter(u => this.usuariosSelecionados.has(u.id_pessoa));
                     

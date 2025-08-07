@@ -8,7 +8,10 @@
                     <p class="mb-0" style="color: #666;">Painel Principal</p>
                 </div>
                 <div>
-                    <!-- Botões movidos para o menu de navegação -->
+                    <!-- Link do WhatsApp -->
+                    <a href="#" id="whatsappLink" class="btn btn-success btn-sm" style="display: none;" target="_blank">
+                        <i class="fab fa-whatsapp me-2"></i>Entre no Grupo do WhatsApp
+                    </a>
                 </div>
             </div>
         </div>
@@ -47,44 +50,48 @@
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-primary text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-building fa-2x me-3"></i>
-                        <div>
-                            <h5 class="mb-0">Campo de Estágio</h5>
-                            <small class="opacity-75">Gestão de campos de estágio</small>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-building fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Campo de Estágio</h5>
+                                <small class="opacity-75">Gestão de campos de estágio</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <% if (camposEstagio && camposEstagio.length > 1) { %>
+                                <small class="opacity-75" id="contadorHeader">1 de <%= camposEstagio.length %></small>
+                            <% } else if (camposEstagio && camposEstagio.length === 0) { %>
+                                <small class="opacity-75">0 registros</small>
+                            <% } %>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <% if (camposEstagio && camposEstagio.length > 0) { %>
-                        <% if (camposEstagio.length === 1) { %>
-                            <div class="mb-3">
-                                <h6 class="text-muted mb-2">Registro Único:</h6>
-                                <p class="mb-1"><strong>Estagiário:</strong> <%= camposEstagio[0].nome_estagiario || 'N/A' %></p>
-                                <p class="mb-1"><strong>Situação:</strong> 
-                                    <span class="badge <%= camposEstagio[0].situacao === 'Aprovado' ? 'bg-success' : 'bg-warning' %>">
+                        <div class="mb-3" id="campoEstagioContent">
+                            <!-- Primeira linha: Concedente em negrito -->
+                            <p class="mb-2"><strong id="concedenteAtual"><%= camposEstagio[0].nome_concedente || 'N/A' %></strong></p>
+                            
+                            <div class="row mb-2">
+                                <div class="col-4">
+                                    <strong>Início:</strong> <span id="inicioAtual"><%= camposEstagio[0].data_inicio ? new Date(camposEstagio[0].data_inicio).toLocaleDateString('pt-BR') : 'N/A' %></span>
+                                </div>
+                                <div class="col-4">
+                                    <strong>Fim:</strong> <span id="fimAtual"><%= camposEstagio[0].data_fim ? new Date(camposEstagio[0].data_fim).toLocaleDateString('pt-BR') : 'N/A' %></span>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <span style="color: #ffc107; font-weight: bold;" id="situacaoAtual">
                                         <%= camposEstagio[0].situacao || 'N/A' %>
                                     </span>
-                                </p>
-                                <p class="mb-1"><strong>Orientador:</strong> <%= camposEstagio[0].nome_orientador || 'N/A' %></p>
-                                <p class="mb-0"><strong>Concedente:</strong> <%= camposEstagio[0].nome_concedente || 'N/A' %></p>
-                            </div>
-                        <% } else { %>
-                            <div class="mb-3">
-                                <div class="row text-center">
-                                    <div class="col-6">
-                                        <h4 class="text-primary mb-0"><%= camposEstagio.length %></h4>
-                                        <small class="text-muted">Total de Registros</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <h4 class="text-success mb-0"><%= camposEstagio.filter(c => c.situacao === 'Aprovado').length %></h4>
-                                        <small class="text-muted">Aprovados</small>
-                                    </div>
                                 </div>
-                                <hr>
-                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Última atualização: Hoje</p>
                             </div>
-                        <% } %>
+                            <p class="mb-1"><strong>Estagiário:</strong> <span id="estagiarioAtual"><%= camposEstagio[0].nome_estagiario || 'N/A' %></span></p>
+                            <p class="mb-1"><strong>Orientador:</strong> <span id="orientadorAtual"><%= camposEstagio[0].nome_orientador || 'N/A' %></span></p>
+                            <p class="mb-0"><strong>Supervisor:</strong> <span id="supervisorAtual"><%= camposEstagio[0].nome_supervisor || 'N/A' %></span></p>
+                        </div>
+                        
+
                     <% } else { %>
                         <div class="text-center py-3">
                             <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
@@ -93,19 +100,41 @@
                     <% } %>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-success btn-sm" onclick="window.location.href='/secure/estagio/campo/novo?origem=' + encodeURIComponent(window.location.pathname)">
-                            <i class="fas fa-plus me-1"></i>Novo
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="gerenciarCampoEstagio()">
-                            <i class="fas fa-edit me-1"></i>Gerenciar
-                        </button>
-                        <% if (camposEstagio && camposEstagio.length > 0) { %>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirCampoEstagio()">
-                            <i class="fas fa-trash me-1"></i>Excluir
-                        </button>
-                        <% } %>
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success btn-sm" id="btnNovoCampoEstagio" onclick="window.location.href='/secure/estagios/campo/novo?origem=' + encodeURIComponent(window.location.pathname)">
+                                <i class="fas fa-plus me-1"></i>Novo
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnEditarCampo" onclick="gerenciarCampoEstagio()">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="btnGerarPDF" onclick="gerarPDFCampoEstagio()">
+                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="btnAnexarPlano" onclick="anexarPlanoAssinado()">
+                                <i class="fas fa-paperclip me-1"></i>Anexar Plano Assinado
+                            </button>
+                        </div>
                     </div>
+                    
+                    <% if (camposEstagio && camposEstagio.length > 1) { %>
+                        <!-- Barra de navegação -->
+                        <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnAnterior" onclick="navegarRegistro(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            
+                            <div class="flex-grow-1 mx-2">
+                                <input type="text" class="form-control form-control-sm" id="campoBusca" placeholder="Buscar por estagiário, orientador..." onkeyup="filtrarRegistros()">
+                            </div>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnProximo" onclick="navegarRegistro(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -132,13 +161,48 @@
                 </div>
                 <div class="card-footer bg-transparent">
                     <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-success btn-sm" onclick="window.open('/plano/novo', '_blank')">
+                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
                             <i class="fas fa-plus me-1"></i>Novo
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="gerenciarPlanoAtividade()">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
                             <i class="fas fa-edit me-1"></i>Gerenciar
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirPlanoAtividade()">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Frequência -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-warning text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-calendar-check fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">Frequência</h5>
+                            <small class="opacity-75">Controle de frequência dos estágios</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" id="cardFrequencia">
+                    <div class="text-center py-3">
+                        <i class="fas fa-info-circle fa-3x text-warning mb-2"></i>
+                        <p class="text-muted mb-0">Funcionalidade de Frequência temporariamente indisponível</p>
+                        <small class="text-muted">Em processo de refatoração</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
+                            <i class="fas fa-plus me-1"></i>Novo
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
+                            <i class="fas fa-edit me-1"></i>Gerenciar
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Funcionalidade temporariamente indisponível">
                             <i class="fas fa-trash me-1"></i>Excluir
                         </button>
                     </div>
@@ -154,33 +218,33 @@
                         <i class="fas fa-file-alt fa-2x me-3"></i>
                         <div>
                             <h5 class="mb-0">Relatórios</h5>
-                            <small class="opacity-75">Relatórios de estágio</small>
+                            <small class="opacity-75">Relatórios dos estágios</small>
                         </div>
                     </div>
                 </div>
                 <div class="card-body" id="cardRelatorios">
                     <div class="text-center py-3">
-                        <div class="spinner-border text-info" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                        <p class="text-muted mt-2 mb-0">Carregando dados...</p>
+                        <i class="fas fa-info-circle fa-3x text-info mb-2"></i>
+                        <p class="text-muted mb-0">Funcionalidade de Relatórios temporariamente indisponível</p>
+                        <small class="text-muted">Em processo de refatoração</small>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
                     <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-success btn-sm" onclick="window.open('/relatorio/novo', '_blank')">
+                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
                             <i class="fas fa-plus me-1"></i>Novo
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="gerenciarRelatorios()">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
                             <i class="fas fa-edit me-1"></i>Gerenciar
                         </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirRelatorio()">
+                        <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Funcionalidade temporariamente indisponível">
                             <i class="fas fa-trash me-1"></i>Excluir
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -222,127 +286,23 @@
         
         // Carregar dados dos cards
         async carregarDadosCards() {
-            await this.carregarPlanosAtividade();
-            await this.carregarRelatorios();
+            // Função carregarPlanosAtividade removida - tabela campo_estagio_planoatividade não existe mais
+            this.inicializarCardPlanoAtividade();
         },
         
-        // Carregar dados dos planos de atividade
-        async carregarPlanosAtividade() {
-            try {
-                const response = await fetch('/api/planos-atividade');
-                const data = await response.json();
-                
-                const cardBody = document.getElementById('cardPlanoAtividade');
-                
-                if (data.success && data.planos && data.planos.length > 0) {
-                    if (data.planos.length === 1) {
-                        const plano = data.planos[0];
-                        cardBody.innerHTML = `
-                            <div class="mb-3">
-                                <h6 class="text-muted mb-2">Registro Único:</h6>
-                                <p class="mb-1"><strong>Campo:</strong> ${plano.campo_nome || 'N/A'}</p>
-                                <p class="mb-1"><strong>Atividades:</strong> ${plano.total_atividades || 0}</p>
-                                <p class="mb-1"><strong>Status:</strong> 
-                                    <span class="badge bg-info">${plano.status || 'Em andamento'}</span>
-                                </p>
-                                <p class="mb-0"><strong>Última atualização:</strong> ${plano.data_atualizacao || 'N/A'}</p>
-                            </div>
-                        `;
-                    } else {
-                        cardBody.innerHTML = `
-                            <div class="mb-3">
-                                <div class="row text-center">
-                                    <div class="col-6">
-                                        <h4 class="text-success mb-0">${data.planos.length}</h4>
-                                        <small class="text-muted">Total de Planos</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <h4 class="text-info mb-0">${data.totalAtividades || 0}</h4>
-                                        <small class="text-muted">Atividades</small>
-                                    </div>
-                                </div>
-                                <hr>
-                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Última atualização: ${data.ultimaAtualizacao || 'Hoje'}</p>
-                            </div>
-                        `;
-                    }
-                } else {
-                    cardBody.innerHTML = `
-                        <div class="text-center py-3">
-                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">Nenhum plano de atividade cadastrado</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Erro ao carregar planos de atividade:', error);
-                document.getElementById('cardPlanoAtividade').innerHTML = `
-                    <div class="text-center py-3">
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
-                        <p class="text-muted mb-0">Erro ao carregar dados</p>
-                    </div>
-                `;
-            }
+        // Inicializar card de plano de atividade com mensagem informativa
+        inicializarCardPlanoAtividade() {
+            const cardBody = document.getElementById('cardPlanoAtividade');
+            cardBody.innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-info-circle fa-3x text-info mb-2"></i>
+                    <p class="text-muted mb-0">Funcionalidade de Planos de Atividade temporariamente indisponível</p>
+                    <small class="text-muted">Em processo de refatoração</small>
+                </div>
+            `;
         },
         
-        // Carregar dados dos relatórios
-        async carregarRelatorios() {
-            try {
-                const response = await fetch('/api/relatorios-estagio');
-                const data = await response.json();
-                
-                const cardBody = document.getElementById('cardRelatorios');
-                
-                if (data.success && data.relatorios && data.relatorios.length > 0) {
-                    if (data.relatorios.length === 1) {
-                        const relatorio = data.relatorios[0];
-                        cardBody.innerHTML = `
-                            <div class="mb-3">
-                                <h6 class="text-muted mb-2">Registro Único:</h6>
-                                <p class="mb-1"><strong>Campo:</strong> ${relatorio.campo_nome || 'N/A'}</p>
-                                <p class="mb-1"><strong>Tipo:</strong> ${relatorio.tipo_relatorio || 'N/A'}</p>
-                                <p class="mb-1"><strong>Status:</strong> 
-                                    <span class="badge bg-primary">${relatorio.status || 'Pendente'}</span>
-                                </p>
-                                <p class="mb-0"><strong>Data:</strong> ${relatorio.data_relatorio || 'N/A'}</p>
-                            </div>
-                        `;
-                    } else {
-                        cardBody.innerHTML = `
-                            <div class="mb-3">
-                                <div class="row text-center">
-                                    <div class="col-6">
-                                        <h4 class="text-info mb-0">${data.relatorios.length}</h4>
-                                        <small class="text-muted">Total de Relatórios</small>
-                                    </div>
-                                    <div class="col-6">
-                                        <h4 class="text-success mb-0">${data.concluidos || 0}</h4>
-                                        <small class="text-muted">Concluídos</small>
-                                    </div>
-                                </div>
-                                <hr>
-                                <p class="mb-0 text-muted"><i class="fas fa-clock me-1"></i>Última atualização: ${data.ultimaAtualizacao || 'Hoje'}</p>
-                            </div>
-                        `;
-                    }
-                } else {
-                    cardBody.innerHTML = `
-                        <div class="text-center py-3">
-                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">Nenhum relatório cadastrado</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Erro ao carregar relatórios:', error);
-                document.getElementById('cardRelatorios').innerHTML = `
-                    <div class="text-center py-3">
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
-                        <p class="text-muted mb-0">Erro ao carregar dados</p>
-                    </div>
-                `;
-            }
-        },
+
         
         // Configurar event listeners
         setupEventListeners() {
@@ -353,7 +313,7 @@
             }
             
             // Event listeners para filtros
-            ['filtroPlano', 'filtroRelatorios', 'filtroStatus'].forEach(id => {
+            ['filtroPlano', 'filtroStatus'].forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
                     element.addEventListener('change', () => this.aplicarFiltros());
@@ -412,7 +372,7 @@
         aplicarFiltros() {
             const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
             const filtroPlano = document.getElementById('filtroPlano')?.value || '';
-            const filtroRelatorios = document.getElementById('filtroRelatorios')?.value || '';
+
             const filtroStatus = document.getElementById('filtroStatus')?.value || '';
             const tableRows = document.querySelectorAll('#estagiariosTable tbody tr');
             
@@ -441,14 +401,7 @@
                     }
                 }
                 
-                // Filtro Relatórios (coluna 6 - índice 6)
-                if (filtroRelatorios && mostrarLinha) {
-                    const relatoriosCell = row.cells[6];
-                    const relatoriosText = relatoriosCell.textContent.trim();
-                    if (!relatoriosText.includes(filtroRelatorios)) {
-                        mostrarLinha = false;
-                    }
-                }
+
                 
                 // Filtro Status (coluna 7 - índice 7)
                 if (filtroStatus && mostrarLinha) {
@@ -487,7 +440,9 @@
                 }, 3000);
                 
                 // Requisição
-                fetch('/admin/estagiario/' + id)
+                fetch('/admin/estagiario/' + id, {
+                    credentials: 'include'
+                })
                     .then(response => {
                         clearTimeout(timeout);
                         return response.json();
@@ -515,10 +470,10 @@
                                         <p style="margin: 5px 0;"><strong>CH Total:</strong> ${e.ch_total || 'N/A'}h</p>
                                         <p style="margin: 5px 0;"><strong>Início:</strong> ${e.data_inicio ? this.formatISOToBRDate(e.data_inicio) : 'N/A'}</p>
                                         <p style="margin: 5px 0;"><strong>Fim:</strong> ${e.data_termino ? this.formatISOToBRDate(e.data_termino) : 'N/A'}</p>
+                                        <p style="margin: 5px 0; color: #ffc107; font-weight: bold;">${e.situacao || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <h6 style="color: #6c757d; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-info-circle me-1"></i>Status</h6>
-                                        <p style="margin: 5px 0;"><strong>Situação:</strong> ${e.situacao || 'N/A'}</p>
                                         <p style="margin: 5px 0;"><strong>Processo SEI:</strong> ${e.processo_sei || 'N/A'}</p>
                                     </div>
                                 </div>
@@ -628,8 +583,9 @@
                 if (id) {
                     this.showLoading(true);
                     
-                    fetch(`/secure/estagio/campo/${id}`, {
-                        method: 'DELETE'
+                    fetch(`/secure/estagios/campo/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -960,12 +916,13 @@
         }
         
         // Enviar dados para o servidor
-        fetch('/secure/estagio/campo/criar', {
+        fetch('/secure/estagios/campo/criar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(result => {
@@ -1006,9 +963,46 @@
         AdminDashboard.salvarCampoEstagio();
     }
     
+    // Função para verificar e desabilitar botão Novo para categoria 3
+    function verificarPermissaoBotaoNovo() {
+        // Verificar se usuário é categoria 3 (Aluno/Estagiário)
+        const userCategoria = '<%= user.categoria %>';
+        const totalRegistros = <%= camposEstagio ? camposEstagio.length : 0 %>;
+        
+        console.log('Verificando permissão botão Novo:', { categoria: userCategoria, registros: totalRegistros });
+        
+        if (userCategoria === '3' && totalRegistros >= 1) {
+            const btnNovo = document.getElementById('btnNovoCampoEstagio');
+            if (btnNovo) {
+                btnNovo.disabled = true;
+                btnNovo.classList.remove('btn-success');
+                btnNovo.classList.add('btn-secondary');
+                btnNovo.title = 'Alunos/Estagiários podem cadastrar apenas um campo de estágio';
+                btnNovo.style.cursor = 'not-allowed';
+                
+                // Remover o onclick e adicionar um alert
+                btnNovo.removeAttribute('onclick');
+                btnNovo.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('Alunos/Estagiários podem cadastrar apenas um campo de estágio.');
+                });
+                
+                console.log('Botão Novo desabilitado para usuário categoria 3 com', totalRegistros, 'registro(s)');
+            }
+        }
+    }
+    
     // Inicializar event listeners
     document.addEventListener('DOMContentLoaded', function() {
         AdminDashboard.init();
+        
+        // Verificar permissão do botão Novo
+        verificarPermissaoBotaoNovo();
+        
+        // Inicializar exibição do primeiro registro para definir campoSelecionadoId
+        if (registrosOriginais.length > 0) {
+            atualizarExibicaoRegistro();
+        }
         
         // Event listener para fechar modal com ESC
         document.addEventListener('keydown', function(event) {
@@ -1106,40 +1100,313 @@
         AdminRotinas.init();
     });
     
+    // Variável global para armazenar o ID do campo selecionado
+    let campoSelecionadoId = null;
+    
     // Funções para gerenciar os cards
     function gerenciarCampoEstagio() {
-        // Recarrega a página atual para atualizar os dados
-        window.location.reload();
-    }
-    
-    function excluirCampoEstagio() {
-        if (confirm('Tem certeza que deseja excluir o(s) campo(s) de estágio selecionado(s)?')) {
-            // Implementar lógica de exclusão
-            alert('Funcionalidade de exclusão será implementada');
+        const btnEditarCampo = document.getElementById('btnEditarCampo');
+        
+        // Verificar se o botão está desabilitado
+        if (btnEditarCampo && btnEditarCampo.disabled) {
+            alert('Edição disponível apenas para campos com situação "Em Edição".');
+            return;
+        }
+        
+        if (campoSelecionadoId) {
+            // Abre o formulário de edição com o ID do campo selecionado
+            window.open(`/secure/estagios/campo/editar/${campoSelecionadoId}`, '_blank');
+        } else {
+            alert('Por favor, selecione um campo de estágio para editar.');
         }
     }
     
+    // Função de exclusão removida conforme solicitação
+    
+    // Funções relacionadas aos planos de atividade removidas - tabela campo_estagio_planoatividade não existe mais
     function gerenciarPlanoAtividade() {
-        window.location.href = '/plano';
+        alert('Funcionalidade de Planos de Atividade temporariamente indisponível.\nEm processo de refatoração.');
     }
     
     function excluirPlanoAtividade() {
-        if (confirm('Tem certeza que deseja excluir o(s) plano(s) de atividade selecionado(s)?')) {
-            // Implementar lógica de exclusão
-            alert('Funcionalidade de exclusão será implementada');
+        alert('Funcionalidade de Planos de Atividade temporariamente indisponível.\nEm processo de refatoração.');
+    }
+    
+    // Função para gerar PDF do Campo de Estágio
+    function gerarPDFCampoEstagio() {
+        if (!campoSelecionadoId) {
+            alert('Por favor, selecione um campo de estágio para gerar o PDF.');
+            return;
+        }
+        
+        // Implementar chamada para geração de PDF
+        alert('Funcionalidade de geração de PDF será implementada em breve.');
+        // TODO: Implementar rota para geração de PDF
+        // window.open(`/secure/estagios/campo/${campoSelecionadoId}/pdf`, '_blank');
+    }
+    
+    // Função para anexar plano assinado
+    async function anexarPlanoAssinado() {
+        if (!campoSelecionadoId) {
+            alert('Por favor, selecione um campo de estágio para anexar o plano.');
+            return;
+        }
+        
+        try {
+            // Verificar se os parâmetros necessários estão configurados
+            const response = await fetch('/secure/parametros/buscar?nome=Pastas dos Anexos');
+            const parametroPastas = await response.json();
+            
+            const response2 = await fetch('/secure/parametros/buscar?nome=Planos Assinados');
+            const parametroPlanos = await response2.json();
+            
+            if (!parametroPastas.success || !parametroPastas.data || 
+                !parametroPlanos.success || !parametroPlanos.data) {
+                alert('Para utilizar esta funcionalidade, é necessário configurar os parâmetros:\n\n' +
+                      '• "Pastas dos Anexos"\n' +
+                      '• "Planos Assinados"\n\n' +
+                      'Entre em contato com o administrador do sistema.');
+                return;
+            }
+            
+            // Criar input file para seleção do PDF
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf';
+            input.style.display = 'none';
+            
+            input.onchange = async function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                if (file.type !== 'application/pdf') {
+                    alert('Por favor, selecione apenas arquivos PDF.');
+                    return;
+                }
+                
+                // Criar FormData para upload
+                const formData = new FormData();
+                formData.append('plano_assinado', file);
+                formData.append('campo_estagio_id', campoSelecionadoId);
+                
+                try {
+                    const uploadResponse = await fetch('/secure/estagios/campo/anexar-plano', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await uploadResponse.json();
+                    
+                    if (result.success) {
+                        alert('Plano assinado anexado com sucesso!');
+                        location.reload(); // Recarregar para atualizar a exibição
+                    } else {
+                        alert('Erro ao anexar plano: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Erro no upload:', error);
+                    alert('Erro ao anexar plano. Tente novamente.');
+                }
+            };
+            
+            document.body.appendChild(input);
+            input.click();
+            document.body.removeChild(input);
+            
+        } catch (error) {
+            console.error('Erro ao verificar parâmetros:', error);
+            alert('Erro ao verificar configurações. Tente novamente.');
         }
     }
     
-    function gerenciarRelatorios() {
-        window.location.href = '/relatorio';
+    // Variáveis para navegação entre registros
+    let registrosOriginais = <%- JSON.stringify(camposEstagio || []) %>;
+    let registrosFiltrados = [...registrosOriginais];
+    let indiceAtual = 0;
+    
+    // Função para navegar entre registros
+    function navegarRegistro(direcao) {
+        if (registrosFiltrados.length === 0) return;
+        
+        indiceAtual += direcao;
+        
+        if (indiceAtual < 0) {
+            indiceAtual = registrosFiltrados.length - 1;
+        } else if (indiceAtual >= registrosFiltrados.length) {
+            indiceAtual = 0;
+        }
+        
+        atualizarExibicaoRegistro();
     }
     
-    function excluirRelatorio() {
-        if (confirm('Tem certeza que deseja excluir o(s) relatório(s) selecionado(s)?')) {
-            // Implementar lógica de exclusão
-            alert('Funcionalidade de exclusão será implementada');
+    // Função para atualizar a exibição do registro atual
+    function atualizarExibicaoRegistro() {
+        if (registrosFiltrados.length === 0) {
+            document.getElementById('campoEstagioContent').innerHTML = '<div class="text-center py-3"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Nenhum registro encontrado</p></div>';
+            campoSelecionadoId = null; // Limpar seleção quando não há registros
+            return;
+        }
+        
+        const registro = registrosFiltrados[indiceAtual];
+        
+        // Armazenar o ID do campo atual para uso no botão Editar
+        campoSelecionadoId = registro.id_campo_estagio;
+        
+        // Atualizar situação
+        const situacaoElement = document.getElementById('situacaoAtual');
+        const situacao = registro.situacao || 'N/A';
+        situacaoElement.textContent = situacao;
+        
+        // Controlar cor da fonte baseada na situação
+        if (situacao !== 'Em Edição' && situacao !== 'N/A') {
+            situacaoElement.style.color = '#28a745'; // Verde
+        } else {
+            situacaoElement.style.color = '#ffc107'; // Amarelo (padrão)
+        }
+        
+        // Controlar estado do botão Editar baseado na situação
+        const btnEditarCampo = document.getElementById('btnEditarCampo');
+        if (btnEditarCampo) {
+            const situacao = registro.situacao || '';
+            const podeEditar = situacao === 'Em Edição';
+            btnEditarCampo.disabled = !podeEditar;
+            
+            if (!podeEditar) {
+                btnEditarCampo.title = 'Edição disponível apenas para campos com situação "Em Edição"';
+                btnEditarCampo.classList.remove('btn-outline-primary');
+                btnEditarCampo.classList.add('btn-outline-secondary');
+            } else {
+                btnEditarCampo.title = 'Editar campo de estágio';
+                btnEditarCampo.classList.remove('btn-outline-secondary');
+                btnEditarCampo.classList.add('btn-outline-primary');
+            }
+        }
+        
+        // Atualizar datas
+        document.getElementById('inicioAtual').textContent = registro.data_inicio ? new Date(registro.data_inicio).toLocaleDateString('pt-BR') : 'N/A';
+        document.getElementById('fimAtual').textContent = registro.data_fim ? new Date(registro.data_fim).toLocaleDateString('pt-BR') : 'N/A';
+        
+        // Atualizar pessoas
+        document.getElementById('estagiarioAtual').textContent = registro.nome_estagiario || 'N/A';
+        document.getElementById('orientadorAtual').textContent = registro.nome_orientador || 'N/A';
+        document.getElementById('supervisorAtual').textContent = registro.nome_supervisor || 'N/A';
+        document.getElementById('concedenteAtual').textContent = registro.nome_concedente || 'N/A';
+        
+        // Atualizar contador no header
+        const contadorHeader = document.getElementById('contadorHeader');
+        if (contadorHeader) {
+            contadorHeader.textContent = `${indiceAtual + 1} de ${registrosFiltrados.length}`;
+        }
+        
+        // Atualizar estado dos botões
+        const btnAnterior = document.getElementById('btnAnterior');
+        const btnProximo = document.getElementById('btnProximo');
+        
+        if (btnAnterior && btnProximo) {
+            btnAnterior.disabled = registrosFiltrados.length <= 1;
+            btnProximo.disabled = registrosFiltrados.length <= 1;
         }
     }
+    
+    // Função para filtrar registros
+    function filtrarRegistros() {
+        const termo = document.getElementById('campoBusca').value.toLowerCase().trim();
+        
+        if (termo === '') {
+            registrosFiltrados = [...registrosOriginais];
+        } else {
+            registrosFiltrados = registrosOriginais.filter(registro => {
+                return (
+                    (registro.nome_estagiario && registro.nome_estagiario.toLowerCase().includes(termo)) ||
+                    (registro.nome_orientador && registro.nome_orientador.toLowerCase().includes(termo)) ||
+                    (registro.nome_supervisor && registro.nome_supervisor.toLowerCase().includes(termo)) ||
+                    (registro.nome_concedente && registro.nome_concedente.toLowerCase().includes(termo)) ||
+                    (registro.situacao && registro.situacao.toLowerCase().includes(termo))
+                );
+            });
+        }
+        
+        indiceAtual = 0;
+        atualizarExibicaoRegistro();
+    }
+    
+    // Inicializar navegação quando a página carregar
+    // Função para carregar o link do WhatsApp
+    async function carregarLinkWhatsApp() {
+        try {
+            console.log('Iniciando carregamento do link do WhatsApp...');
+            const url = '/secure/parametros/buscar-valor?identificador=' + encodeURIComponent('Grupo WhatsApp') + '&identificadorValor=' + encodeURIComponent('Link do Estágio');
+            console.log('URL da requisição:', url);
+            
+            const response = await fetch(url);
+            console.log('Status da resposta:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Dados recebidos:', data);
+            
+            if (data.success && data.resultado && data.resultado.valor) {
+                console.log('Link encontrado:', data.resultado.valor);
+                const whatsappLink = document.getElementById('whatsappLink');
+                if (whatsappLink) {
+                    whatsappLink.href = data.resultado.valor;
+                    whatsappLink.style.display = 'inline-block';
+                    console.log('Link do WhatsApp configurado com sucesso!');
+                } else {
+                    console.error('Elemento whatsappLink não encontrado!');
+                }
+            } else {
+                console.warn('Resposta da API não contém dados válidos:', data);
+                // Notificar usuário sobre a falta dos parâmetros
+                console.warn('Link do WhatsApp não encontrado: parâmetro "Grupo WhatsApp" com valor "Link do Estágio" não configurado.');
+                
+                // Criar notificação visual para o usuário
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning alert-dismissible fade show mt-3';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Atenção!</strong> Link do grupo WhatsApp não configurado. Entre em contato com o administrador para configurar o parâmetro "Grupo WhatsApp" com valor "Link do Estágio".
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                // Inserir a notificação após o header
+                const container = document.querySelector('.container.mt-4');
+                const headerRow = container.querySelector('.row.mb-3');
+                if (container && headerRow) {
+                    headerRow.insertAdjacentElement('afterend', alertDiv);
+                }
+            }
+        } catch (error) {
+            console.error('Erro detalhado ao carregar link do WhatsApp:', error);
+            
+            // Notificar usuário sobre erro de conexão
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Erro!</strong> Não foi possível carregar o link do grupo WhatsApp. Verifique sua conexão ou entre em contato com o suporte.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container.mt-4');
+            const headerRow = container.querySelector('.row.mb-3');
+            if (container && headerRow) {
+                headerRow.insertAdjacentElement('afterend', alertDiv);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (registrosOriginais.length > 0) {
+            atualizarExibicaoRegistro();
+        }
+        // Carregar link do WhatsApp
+        carregarLinkWhatsApp();
+    });
+
 </script>
 
 <style>

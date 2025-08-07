@@ -60,8 +60,51 @@ class AuthController {
                 });
             }
 
-            // Tentar autenticar
-            const result = await this.authService.login(email, senha);
+            // SOLUÇÃO TEMPORÁRIA: Usar acesso direto ao banco como no forgotPassword
+            // Buscar usuário diretamente no banco
+            const bcrypt = require('bcrypt');
+            const query = `
+                SELECT p.*, pl.senha, pl.nivelacesso, pl.status as login_ativo
+                FROM pessoa p
+                INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
+                WHERE p.email = ? AND pl.status = 'Ativo'
+            `;
+            
+            const user = await databaseConfig.get(query, [email]);
+            
+            if (!user) {
+                throw new Error('Credenciais inválidas.');
+            }
+            
+            // Verificar senha
+            const senhaValida = await bcrypt.compare(senha, user.senha);
+            if (!senhaValida) {
+                throw new Error('Credenciais inválidas.');
+            }
+            
+            // Remover senha do resultado
+            delete user.senha;
+            
+            // Buscar permissões do usuário
+            const permissoes = await this.authService.getUserPermissions(user.id_pessoa);
+            
+            // Dados da sessão
+            const sessionData = {
+                id_pessoa: user.id_pessoa,
+                nome: user.nome,
+                email: user.email,
+                usuario: user.usuario,
+                nivelacesso: user.nivelacesso,
+                categoria: user.categoria,
+                permissoes: permissoes,
+                login_time: new Date().toISOString()
+            };
+            
+            const result = {
+                success: true,
+                message: 'Login realizado com sucesso',
+                user: sessionData
+            };
 
             if (result.success) {
                 // Configurar sessão
@@ -184,7 +227,7 @@ class AuthController {
                 cep,
                 senha,
                 confirmarSenha,
-                tipoacesso
+                nivelacesso
             } = req.body;
 
             // Validar dados obrigatórios
@@ -218,7 +261,7 @@ class AuthController {
             // Dados de login
             const loginData = {
                 senha,
-                tipoacesso: tipoacesso || 'Estagiário'
+                nivelacesso: nivelacesso || 'Estagiário'
             };
 
             // Registrar usuário
@@ -374,7 +417,7 @@ class AuthController {
                         id_pessoa: user.id_pessoa,
                         nome: user.nome,
                         email: user.email,
-                        tipoacesso: user.tipoacesso
+                        nivelacesso: user.nivelacesso
                     }
                 });
             } else {

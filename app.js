@@ -27,6 +27,7 @@ const LoggingMiddleware = require('./src/middleware/logging');
 
 // Importar rotas
 const routes = require('./src/routes');
+const secureRoutes = require('./routes/secure-routes');
 
 // Importar utilitários
 const Helpers = require('./src/utils/helpers');
@@ -79,8 +80,8 @@ class App {
         try {
             console.log('✅ Conexão com banco de dados estabelecida');
             
-            // Para SQLite, usar store de memória por enquanto
-            // this.sessionStore = null; // Usar store padrão de memória
+            // Usando MariaDB/MySQL para armazenamento de sessões
+            // this.sessionStore configurado no SessionConfig
             
         } catch (error) {
             console.error('❌ Erro ao conectar com banco de dados:', error.message);
@@ -99,6 +100,7 @@ class App {
                     defaultSrc: ["'self'"],
                     styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
                     scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
+                    scriptSrcAttr: ["'unsafe-inline'"],
                     imgSrc: ["'self'", 'data:', 'https:'],
                     fontSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com']
                 }
@@ -139,6 +141,18 @@ class App {
         });
         this.app.use('/auth/login', loginLimiter);
 
+        // Rate limiting específico para recuperação de senha
+        const forgotPasswordLimiter = rateLimit({
+            windowMs: 15 * 60 * 1000, // 15 minutos
+            max: 3, // Máximo 3 tentativas de recuperação
+            skipSuccessfulRequests: true,
+            message: {
+                error: 'Muitas tentativas de recuperação de senha. Tente novamente em 15 minutos.',
+                code: 'FORGOT_PASSWORD_RATE_LIMIT_EXCEEDED'
+            }
+        });
+        this.app.use('/auth/forgot-password', forgotPasswordLimiter);
+
         // Parsing
         this.app.use(express.json({ limit: '10mb' }));
         this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -173,6 +187,9 @@ class App {
             }
         });
         this.app.use(sessionMiddleware);
+
+        // Logging de requisições
+        this.app.use(LoggingMiddleware.requestLogger);
 
         // Configuração de upload
         const storage = multer.diskStorage({
@@ -211,14 +228,11 @@ class App {
         });
         this.app.use(upload.any());
 
-        // Logging
-        this.app.use(LoggingMiddleware.requestLogger);
-
         // Variáveis globais para views
         this.app.use((req, res, next) => {
             res.locals.user = req.session?.user || null;
             res.locals.isAuthenticated = !!req.session?.user;
-            res.locals.isAdmin = req.session?.user?.tipoacesso === 'administrador';
+            res.locals.isAdmin = req.session?.user?.nivelacesso === 'administrador';
             res.locals.currentPath = req.path;
             res.locals.appName = config.app?.name || 'Sistema de Gestão de Estágios';
             res.locals.appVersion = config.app?.version || '1.0.0';
@@ -246,8 +260,25 @@ class App {
             });
         });
 
+        // Rota de teste simples no nível raiz
+        this.app.get('/test-root', (req, res) => {
+            console.log('[TEST-ROOT] Rota de teste raiz acessada');
+            res.json({ message: 'Rota de teste raiz funcionando', method: req.method, path: req.path });
+        });
+        
+        // Interceptar requisições do Vite/HMR (específico do navegador Trae/Electron)
+        this.app.get('/@vite/*', (req, res) => {
+            console.log('[VITE-INTERCEPT] Interceptando requisição Vite:', req.path);
+            res.status(204).end(); // No Content - evita erro 404
+        });
+        
         // Rotas principais
+        console.log('[APP] Montando rotas principais');
         this.app.use('/', routes);
+        
+        // Rotas seguras
+        console.log('[APP] Montando rotas seguras');
+        this.app.use('/secure', secureRoutes);
     }
 
     /**
@@ -256,6 +287,7 @@ class App {
     initializeErrorHandling() {
         // Middleware para rotas não encontradas
         this.app.use((req, res, next) => {
+            console.log(`[404] Rota não encontrada: ${req.method} ${req.path}`);
             const error = new Error(`Rota não encontrada: ${req.method} ${req.path}`);
             error.status = 404;
             next(error);
@@ -352,8 +384,7 @@ class App {
                             console.log('🗄️  Store de sessão encerrado');
                         }
                         
-                        const dbConfig = new DatabaseConfig();
-                        await dbConfig.closeConnection();
+                        await database.close();
                         console.log('🗃️  Conexão com banco encerrada');
                         
                         console.log('✅ Aplicação encerrada com sucesso');

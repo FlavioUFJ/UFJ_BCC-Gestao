@@ -5,14 +5,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const DatabaseConfig = require('../config/database');
+const databaseConfig = require('../config/database');
 
 /**
  * Classe para logging e auditoria
  */
 class LoggingMiddleware {
     constructor() {
-        this.db = new DatabaseConfig();
+        this.db = databaseConfig;
         this.logDir = path.join(process.cwd(), 'logs');
         this.ensureLogDirectory();
     }
@@ -33,6 +33,7 @@ class LoggingMiddleware {
      * @param {Function} next - Next middleware
      */
     static requestLogger(req, res, next) {
+        console.log(`[REQUEST] ${req.method} ${req.originalUrl}`);
         const startTime = Date.now();
         const timestamp = new Date().toISOString();
         const ip = req.ip || req.connection.remoteAddress;
@@ -176,7 +177,7 @@ class LoggingMiddleware {
             fs.appendFileSync(logFile, logLine);
 
             // Salvar no banco de dados
-            const db = new DatabaseConfig();
+            const db = databaseConfig;
             await db.connect();
             
             const sql = `
@@ -282,7 +283,7 @@ class LoggingMiddleware {
      */
     static async getAuditLogs(filters = {}) {
         try {
-            const db = new DatabaseConfig();
+            const db = databaseConfig;
             await db.connect();
 
             let sql = 'SELECT * FROM auditoria WHERE 1=1';
@@ -340,7 +341,7 @@ class LoggingMiddleware {
             cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
             // Limpar logs do banco
-            const db = new DatabaseConfig();
+            const db = databaseConfig;
             await db.connect();
             
             await db.run(

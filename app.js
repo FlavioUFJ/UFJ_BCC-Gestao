@@ -17,7 +17,7 @@ const fs = require('fs');
 
 // Importar configurações
 const config = require('./src/config');
-const { database } = require('./src/config/database');
+const database = require('./src/config/database'); // Remover o destructuring
 const SessionConfig = require('./src/config/session');
 
 // Importar middlewares

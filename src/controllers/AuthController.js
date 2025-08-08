@@ -26,7 +26,7 @@ class AuthController {
             }
 
             res.render('login', {
-                title: 'Login - Sistema de Gestão de Estágios',
+                title: 'Login - CoordenAI - Gestão',
                 error: req.query.error ? decodeURIComponent(req.query.error) : null,
                 success: req.query.success ? decodeURIComponent(req.query.success) : null,
                 layout: 'layout',
@@ -222,7 +222,7 @@ class AuthController {
             }
 
             res.render('register', {
-                title: 'Cadastro - Sistema de Gestão de Estágios',
+                title: 'Cadastro - CoordenAI - Gestão',
                 error: req.query.error || null,
                 success: req.query.success || null,
                 currentPage: 'register'
@@ -499,7 +499,7 @@ class AuthController {
     async showForgotPassword(req, res) {
         try {
             res.render('recuperar-senha', {
-                title: 'Recuperar Senha - Sistema de Gestão de Estágios',
+                title: 'Recuperar Senha - CoordenAI - Gestão',
                 error: req.query.error || null,
                 success: req.query.success || null,
                 layout: 'layout',
@@ -564,7 +564,7 @@ class AuthController {
                     
                     await emailConfig.enviarEmail(
                         email,
-                        'Recuperação de Senha - Sistema de Gestão de Estágios',
+                        'Recuperação de Senha - CoordenAI - Gestão',
                         htmlContent
                     );
                     
@@ -618,7 +618,7 @@ class AuthController {
             // Token de teste temporário para debug
             if (token === 'debug-test-token') {
                 return res.render('reset-password', {
-                    title: 'Redefinir Senha - Sistema de Gestão de Estágios',
+                    title: 'Redefinir Senha - CoordenAI - Gestão',
                     token: token,
                     error: req.query.error || null,
                     success: req.query.success || null,
@@ -645,7 +645,7 @@ class AuthController {
             res.app.set('layout', false);
             
             res.render('reset-password', {
-                title: 'Redefinir Senha - Sistema de Gestão de Estágios',
+                title: 'Redefinir Senha - CoordenAI - Gestão',
                 token: token,
                 error: req.query.error || null,
                 success: req.query.success || null,

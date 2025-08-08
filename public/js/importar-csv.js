@@ -442,7 +442,4 @@ class ImportadorCsv {
     }
 }
 
-// Instanciar o importador quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', () => {
-    new ImportadorCsv();
-});
+// Classe disponível globalmente - será instanciada manualmente quando necessário

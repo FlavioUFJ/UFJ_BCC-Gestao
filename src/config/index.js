@@ -169,7 +169,7 @@ const security = {
  * Configurações da aplicação
  */
 const app = {
-    name: 'Sistema de Gestão de Estágios',
+    name: 'CoordenAI - Gestão',
     version: '1.0.0',
     description: 'Sistema para gerenciamento de estágios acadêmicos',
     author: 'UFJ - Universidade Federal de Jataí'

@@ -1,5 +1,5 @@
 /**
- * Servidor Principal - Sistema de Gestão de Estágios UFJ BCC
+ * Servidor Principal - CoordenAI - Gestão UFJ BCC
  * Ponto de entrada da aplicação refatorada
  */
 

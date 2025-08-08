@@ -1,5 +1,5 @@
 /**
- * Aplicação Principal - Sistema de Gestão de Estágios UFJ BCC
+ * Aplicação Principal - CoordenAI - Gestão UFJ BCC
  * Arquivo principal que configura e inicializa toda a aplicação
  */
 
@@ -257,7 +257,7 @@ class App {
             res.locals.isAuthenticated = !!req.session?.user;
             res.locals.isAdmin = req.session?.user?.nivelacesso === 'administrador';
             res.locals.currentPath = req.path;
-            res.locals.appName = config.app?.name || 'Sistema de Gestão de Estágios';
+            res.locals.appName = config.app?.name || 'CoordenAI - Gestão';
             res.locals.appVersion = config.app?.version || '1.0.0';
             res.locals.environment = this.environment;
             res.locals.helpers = Helpers;

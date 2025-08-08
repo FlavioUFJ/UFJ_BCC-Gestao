@@ -82,7 +82,7 @@ class PlanoAtividadeController {
             }
             
             res.render('planos-atividade-list', { 
-                title: 'Planos de Atividade',
+                title: 'Plano de Atividades - CoordenAI - Gestão',
                 planos,
                 user: req.session.user
             });

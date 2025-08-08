@@ -2320,6 +2320,14 @@
             // Inicializar GerenciadorModulos
             GerenciadorModulos.init();
             
+            // Inicializar ImportadorCsv
+            if (typeof ImportadorCsv !== 'undefined') {
+                console.log('Inicializando ImportadorCsv...');
+                new ImportadorCsv();
+            } else {
+                console.error('ImportadorCsv não está definido!');
+            }
+            
             // Configurar botão Nova Pessoa
             configurarBtnNovaPessoa();
             

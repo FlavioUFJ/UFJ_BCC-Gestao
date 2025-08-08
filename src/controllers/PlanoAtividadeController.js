@@ -24,31 +24,42 @@ class PlanoAtividadeController {
             
             let query = `
                 SELECT 
-                    pa.id_planoatividade,
-                    pa.id_campo_estagio,
-                    pa.situacao,
-                    pa.estagiarioapto,
-                    pa.data_lancamento,
-                    pa.data_fechamento,
-                    pa.data_inicial,
-                    pa.data_final,
-                    pa.cargahoraria,
-                    pa.atividades,
-                    pa.cronograma,
-                    pa.objetivos,
-                    pa.recursos,
-                    pa.dataultimaatualizacao,
-                    pc.nome as empresa,
-                    ce.data_inicio as campo_data_inicial,
-                    ce.data_fim as campo_data_final,
-                    pe.nome as nome_estagiario,
-                    po.nome as nome_orientador,
-                    ps.nome as nome_supervisor
-                FROM campo_estagio_planoatividade pa
-                LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                    ce.tipo_estagio AS ce_tipo_estagio, 
+                    ce.semestre_ano AS ce_semestre_ano, 
+                    pe.nome AS nome_estagiario, 
+                    po.nome AS nome_orientador, 
+                    ps.nome AS nome_supervisor, 
+                    pc.nome AS nome_concedente, 
+                    ce.situacao AS ce_situacao, 
+                    ce.data_inicio AS ce_data_inicio, 
+                    ce.data_fim AS ce_data_fim, 
+                    ce.cargahoraria AS ce_cargahoraria, 
+                    ce.observacoes AS ce_observacoes, 
+                    po.categoria AS po_categoria, 
+                    pc.categoria AS pc_categoria, 
+                    pe.categoria AS pe_categoria, 
+                    ps.categoria AS ps_categoria, 
+                    pa.id_planoatividade AS pa_id_planoatividade, 
+                    pa.id_campo_estagio AS pa_id_campo_estagio, 
+                    pa.situacao AS pa_situacao, 
+                    pa.data_lancamento AS pa_data_lancamento, 
+                    pa.data_fechamento AS pa_data_fechamento, 
+                    pa.data_inicial AS pa_data_inicial, 
+                    pa.data_final AS pa_data_final, 
+                    pa.cargahoraria AS pa_cargahoraria, 
+                    pa.atividades AS pa_atividades, 
+                    pa.cronograma AS pa_cronograma, 
+                    pa.objetivos AS pa_objetivos, 
+                    pa.recursos AS pa_recursos, 
+                    pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
+                    pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
+                    pa.autenticacao_orientador AS pa_autenticacao_orientador, 
+                    pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+                FROM campo_estagio_planoatividade pa 
+                LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
                 LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
             `;
             
@@ -61,7 +72,7 @@ class PlanoAtividadeController {
                 query += ` WHERE ce.id_pessoa_supervisor = ?`;
             }
             
-            query += ` ORDER BY pa.dataultimaatualizacao DESC`;
+            query += ` ORDER BY pa_dataultimaatualizacao DESC`;
             
             const params = ['Estagiário', 'Professor', 'Supervisor'].includes(userCategory) ? [userId] : [];
             const planos = await databaseConfig.all(query, params);
@@ -105,22 +116,50 @@ class PlanoAtividadeController {
                 });
             }
             
-            // Buscar dados do campo de estágio
+            // Buscar dados do campo de estágio com nova query unificada
             const campoEstagio = await databaseConfig.get(`
                 SELECT 
-                    ce.*,
-                    pe.nome as nome_estagiario,
-                    po.nome as nome_orientador,
-                    ps.nome as nome_supervisor,
-                    pc.nome as empresa,
-                    ce.data_inicio as data_inicial,
-                    ce.data_fim as data_final
-                FROM campo_estagio ce
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
-                WHERE ce.id_campo_estagio = ?
+                    ce.id_campo_estagio as ce_id_campo_estagio, 
+                    ce.tipo_estagio AS ce_tipo_estagio, 
+                    ce.semestre_ano AS ce_semestre_ano, 
+                    pe.nome AS nome_estagiario, 
+                    po.nome AS nome_orientador, 
+                    ps.nome AS nome_supervisor, 
+                    pc.nome AS nome_concedente, 
+                    ce.situacao AS ce_situacao, 
+                    ce.data_inicio AS ce_data_inicio, 
+                    ce.data_fim AS ce_data_fim, 
+                    ce.cargahoraria AS ce_cargahoraria, 
+                    ce.observacoes AS ce_observacoes, 
+                    po.categoria AS po_categoria, 
+                    pc.categoria AS pc_categoria, 
+                    pe.categoria AS pe_categoria, 
+                    ps.categoria AS ps_categoria, 
+                    pa.id_planoatividade AS pa_id_planoatividade, 
+                    pa.id_campo_estagio AS pa_id_campo_estagio, 
+                    pa.situacao AS pa_situacao, 
+                    pa.data_lancamento AS pa_data_lancamento, 
+                    pa.data_fechamento AS pa_data_fechamento, 
+                    pa.data_inicial AS pa_data_inicial, 
+                    pa.data_final AS pa_data_final, 
+                    pa.cargahoraria AS pa_cargahoraria, 
+                    pa.atividades AS pa_atividades, 
+                    pa.cronograma AS pa_cronograma, 
+                    pa.objetivos AS pa_objetivos, 
+                    pa.recursos AS pa_recursos, 
+                    pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
+                    pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
+                    pa.autenticacao_orientador AS pa_autenticacao_orientador, 
+                    pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+                FROM 
+                    campo_estagio_planoatividade AS pa 
+                    RIGHT OUTER JOIN campo_estagio AS ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                    RIGHT OUTER JOIN pessoa AS pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+                    RIGHT OUTER JOIN pessoa AS po ON ce.id_pessoa_orientador = po.id_pessoa 
+                    RIGHT OUTER JOIN pessoa AS ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
+                    RIGHT OUTER JOIN pessoa AS pc ON ce.id_pessoa_concedente = pc.id_pessoa 
+                WHERE ce.id_campo_estagio is not NULL
+                    AND ce.id_campo_estagio = ?
             `, [campoEstagioId]);
             
             if (!campoEstagio) {
@@ -172,7 +211,6 @@ class PlanoAtividadeController {
             const {
                 id_campo_estagio,
                 situacao,
-                estagiarioapto,
                 data_inicial,
                 data_final,
                 cargahoraria,
@@ -200,14 +238,7 @@ class PlanoAtividadeController {
                 });
             }
 
-            // Validar campo estagiarioapto
-            if (!estagiarioapto || (estagiarioapto !== 'Sim' && estagiarioapto !== 'Não')) {
-                console.log('DEBUG: Campo estagiarioapto inválido:', estagiarioapto);
-                return res.status(400).json({
-                    success: false,
-                    message: 'É necessário informar se o estagiário está apto (Sim ou Não)'
-                });
-            }
+
             
             // Verificar se já existe um plano para este campo de estágio
             const planoExistente = await databaseConfig.get(
@@ -222,6 +253,25 @@ class PlanoAtividadeController {
                 });
             }
             
+            // Função para converter data DD/MM/YYYY para YYYY-MM-DD
+            const converterDataParaISO = (dataBR) => {
+                if (!dataBR || dataBR.length !== 10) return null;
+                const partes = dataBR.split('/');
+                if (partes.length !== 3) return null;
+                return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            };
+
+            // Converter datas do formato brasileiro para ISO
+            const dataInicialISO = converterDataParaISO(data_inicial);
+            const dataFinalISO = converterDataParaISO(data_final);
+
+            if (!dataInicialISO || !dataFinalISO) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Formato de data inválido. Use DD/MM/AAAA'
+                });
+            }
+
             // Validações de data
             const campoEstagio = await this.buscarCampoEstagio(id_campo_estagio);
             if (!campoEstagio) {
@@ -231,10 +281,10 @@ class PlanoAtividadeController {
                 });
             }
 
-            const dataInicialCampo = new Date(campoEstagio.data_inicial);
-            const dataFinalCampo = new Date(campoEstagio.data_final);
-            const dataInicialPlano = new Date(data_inicial);
-            const dataFinalPlano = new Date(data_final);
+            const dataInicialCampo = new Date(campoEstagio.ce_data_inicio);
+            const dataFinalCampo = new Date(campoEstagio.ce_data_fim);
+            const dataInicialPlano = new Date(dataInicialISO);
+            const dataFinalPlano = new Date(dataFinalISO);
 
             // Validar se data inicial do plano é >= data inicial do campo
             if (dataInicialPlano < dataInicialCampo) {
@@ -265,19 +315,18 @@ class PlanoAtividadeController {
             
             const sql = `
                 INSERT INTO campo_estagio_planoatividade (
-                    id_campo_estagio, situacao, estagiarioapto, data_lancamento,
+                    id_campo_estagio, situacao, data_lancamento,
                     data_inicial, data_final, cargahoraria, atividades,
                     cronograma, objetivos, recursos, dataultimaatualizacao
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             
             const params = [
                 id_campo_estagio,
                 situacao || 'Em edição',
-                estagiarioapto,
                 dataAtual,
-                data_inicial,
-                data_final,
+                dataInicialISO,
+                dataFinalISO,
                 cargahoraria,
                 atividades,
                 cronograma,
@@ -297,7 +346,7 @@ class PlanoAtividadeController {
                 return res.json({ success: true, message: 'Plano de atividade criado com sucesso', data: { id: result.lastID } });
             }
             
-            res.redirect('/dashboard-estagio?success=Plano de atividade criado com sucesso');
+            res.redirect('/estagios/dashboard?success=Plano de atividade criado com sucesso');
         } catch (error) {
             console.error('Erro ao criar plano de atividade:', error);
             
@@ -368,18 +417,43 @@ class PlanoAtividadeController {
             // Buscar plano de atividade com dados do campo de estágio
             const plano = await databaseConfig.get(`
                 SELECT 
-                    pa.*,
-                    ce.empresa,
-                    ce.data_inicial as campo_data_inicial,
-                    ce.data_final as campo_data_final,
-                    pe.nome as nome_estagiario,
-                    po.nome as nome_orientador,
-                    ps.nome as nome_supervisor
-                FROM campo_estagio_planoatividade pa
-                LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                    ce.tipo_estagio AS ce_tipo_estagio, 
+                    ce.semestre_ano AS ce_semestre_ano, 
+                    pe.nome AS nome_estagiario, 
+                    po.nome AS nome_orientador, 
+                    ps.nome AS nome_supervisor, 
+                    pc.nome AS nome_concedente, 
+                    ce.situacao AS ce_situacao, 
+                    ce.data_inicio AS ce_data_inicio, 
+                    ce.data_fim AS ce_data_fim, 
+                    ce.cargahoraria AS ce_cargahoraria, 
+                    ce.observacoes AS ce_observacoes, 
+                    po.categoria AS po_categoria, 
+                    pc.categoria AS pc_categoria, 
+                    pe.categoria AS pe_categoria, 
+                    ps.categoria AS ps_categoria, 
+                    pa.id_planoatividade AS pa_id_planoatividade, 
+                    pa.id_campo_estagio AS pa_id_campo_estagio, 
+                    pa.situacao AS pa_situacao, 
+                    pa.data_lancamento AS pa_data_lancamento, 
+                    pa.data_fechamento AS pa_data_fechamento, 
+                    pa.data_inicial AS pa_data_inicial, 
+                    pa.data_final AS pa_data_final, 
+                    pa.cargahoraria AS pa_cargahoraria, 
+                    pa.atividades AS pa_atividades, 
+                    pa.cronograma AS pa_cronograma, 
+                    pa.objetivos AS pa_objetivos, 
+                    pa.recursos AS pa_recursos, 
+                    pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
+                    pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
+                    pa.autenticacao_orientador AS pa_autenticacao_orientador, 
+                    pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+                FROM campo_estagio_planoatividade pa 
+                LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
+                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
                 WHERE pa.id_planoatividade = ?
             `, [id]);
 
@@ -391,7 +465,7 @@ class PlanoAtividadeController {
             }
 
             // Verificar se pode ser editado (apenas se estiver "Em edição")
-            if (plano.situacao === 'Aprovado') {
+            if (plano.pa_situacao === 'Aprovado') {
                 return res.status(403).render('error', {
                     title: 'Erro',
                     message: 'Plano de atividade aprovado não pode ser editado'
@@ -400,10 +474,10 @@ class PlanoAtividadeController {
             
             // Criar objeto campoEstagio para compatibilidade com o formulário
             const campoEstagio = {
-                id_campo_estagio: plano.id_campo_estagio,
-                empresa: plano.empresa,
-                data_inicial: plano.campo_data_inicial,
-                data_final: plano.campo_data_final,
+                id_campo_estagio: plano.pa_id_campo_estagio,
+                empresa: plano.nome_concedente,
+                data_inicial: plano.ce_data_inicio,
+                data_final: plano.ce_data_fim,
                 nome_estagiario: plano.nome_estagiario,
                 nome_orientador: plano.nome_orientador,
                 nome_supervisor: plano.nome_supervisor
@@ -434,7 +508,6 @@ class PlanoAtividadeController {
             const { id } = req.params;
             const {
                 situacao,
-                estagiarioapto,
                 data_inicial,
                 data_final,
                 cargahoraria,
@@ -472,13 +545,31 @@ class PlanoAtividadeController {
                 });
             }
 
+            // Função para converter data DD/MM/YYYY para YYYY-MM-DD
+            const converterDataParaISO = (dataBR) => {
+                if (!dataBR || dataBR.length !== 10) return null;
+                const partes = dataBR.split('/');
+                if (partes.length !== 3) return null;
+                return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            };
+
+            // Converter datas do formato brasileiro para ISO
+            const dataInicialISO = converterDataParaISO(data_inicial);
+            const dataFinalISO = converterDataParaISO(data_final);
+
+            if (!dataInicialISO || !dataFinalISO) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Formato de data inválido. Use DD/MM/AAAA'
+                });
+            }
+
             const dataAtual = new Date().toISOString();
 
             // Atualizar plano de atividade
             const sql = `
                 UPDATE campo_estagio_planoatividade SET
                     situacao = ?,
-                    estagiarioapto = ?,
                     data_inicial = ?,
                     data_final = ?,
                     cargahoraria = ?,
@@ -492,9 +583,8 @@ class PlanoAtividadeController {
 
             await databaseConfig.run(sql, [
                 situacao || planoExistente.situacao,
-                estagiarioapto,
-                data_inicial,
-                data_final,
+                dataInicialISO,
+                dataFinalISO,
                 cargahoraria,
                 atividades,
                 cronograma,
@@ -511,7 +601,7 @@ class PlanoAtividadeController {
                 });
             }
 
-            res.redirect('/dashboard-estagio?success=Plano de atividade atualizado com sucesso');
+            res.redirect('/estagios/dashboard?success=Plano de atividade atualizado com sucesso');
         } catch (error) {
             console.error('Erro ao atualizar plano de atividade:', error);
             
@@ -598,9 +688,9 @@ class PlanoAtividadeController {
      * @returns {string} HTML template
      */
     async renderPDFTemplate(plano) {
-        const dataInicial = plano.data_inicial ? new Date(plano.data_inicial).toLocaleDateString('pt-BR') : 'Não informado';
-        const dataFinal = plano.data_final ? new Date(plano.data_final).toLocaleDateString('pt-BR') : 'Não informado';
-        const dataLancamento = plano.data_lancamento ? new Date(plano.data_lancamento).toLocaleDateString('pt-BR') : 'Não informado';
+        const dataInicial = plano.pa_data_inicial ? new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR') : 'Não informado';
+        const dataFinal = plano.pa_data_final ? new Date(plano.pa_data_final).toLocaleDateString('pt-BR') : 'Não informado';
+        const dataLancamento = plano.pa_data_lancamento ? new Date(plano.pa_data_lancamento).toLocaleDateString('pt-BR') : 'Não informado';
         
         return `
         <!DOCTYPE html>
@@ -641,10 +731,10 @@ class PlanoAtividadeController {
                             <span class="info-label">Email:</span> ${plano.email_estagiario || 'Não informado'}
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Empresa:</span> ${plano.empresa || 'Não informado'}
+                            <span class="info-label">Empresa:</span> ${plano.nome_concedente || 'Não informado'}
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Situação:</span> ${plano.situacao || 'Em edição'}
+                            <span class="info-label">Situação:</span> ${plano.pa_situacao || 'Em edição'}
                         </div>
                     </div>
                     <div>
@@ -658,7 +748,7 @@ class PlanoAtividadeController {
                             <span class="info-label">Período:</span> ${dataInicial} - ${dataFinal}
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Carga Horária:</span> ${plano.cargahoraria || 'Não informado'} horas/semana
+                            <span class="info-label">Carga Horária:</span> ${plano.pa_cargahoraria || 'Não informado'} horas/semana
                         </div>
                     </div>
                 </div>
@@ -667,28 +757,28 @@ class PlanoAtividadeController {
             <div class="section">
                 <div class="section-title">ATIVIDADES A DESENVOLVER</div>
                 <div class="content-box">
-                    ${plano.atividades ? plano.atividades.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${plano.pa_atividades ? plano.pa_atividades.replace(/\n/g, '<br>') : 'Não informado'}
                 </div>
             </div>
             
             <div class="section">
                 <div class="section-title">OBJETIVOS</div>
                 <div class="content-box">
-                    ${plano.objetivos ? plano.objetivos.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${plano.pa_objetivos ? plano.pa_objetivos.replace(/\n/g, '<br>') : 'Não informado'}
                 </div>
             </div>
             
             <div class="section">
                 <div class="section-title">CRONOGRAMA</div>
                 <div class="content-box">
-                    ${plano.cronograma ? plano.cronograma.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${plano.pa_cronograma ? plano.pa_cronograma.replace(/\n/g, '<br>') : 'Não informado'}
                 </div>
             </div>
             
             <div class="section">
                 <div class="section-title">RECURSOS NECESSÁRIOS</div>
                 <div class="content-box">
-                    ${plano.recursos ? plano.recursos.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${plano.pa_recursos ? plano.pa_recursos.replace(/\n/g, '<br>') : 'Não informado'}
                 </div>
             </div>
             
@@ -753,20 +843,43 @@ class PlanoAtividadeController {
     async buscarPlanoAtividade(id) {
         const sql = `
             SELECT 
-                pa.*,
-                ce.situacao as situacao_campo_estagio,
-                ce.data_inicio,
-                ce.data_fim,
-                pessoaEstagiario.nome as nome_estagiario,
-                pessoaOrientador.nome as nome_orientador,
-                pessoaSupervisor.nome as nome_supervisor,
-                pessoaConcedente.nome as nome_concedente
-            FROM campo_estagio_planoatividade pa
-            LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-            LEFT JOIN pessoa pessoaEstagiario ON ce.id_pessoa_estagiario = pessoaEstagiario.id_pessoa
-            LEFT JOIN pessoa pessoaOrientador ON ce.id_pessoa_orientador = pessoaOrientador.id_pessoa
-            LEFT JOIN pessoa pessoaSupervisor ON ce.id_pessoa_supervisor = pessoaSupervisor.id_pessoa
-            LEFT JOIN pessoa pessoaConcedente ON ce.id_pessoa_concedente = pessoaConcedente.id_pessoa
+                ce.tipo_estagio AS ce_tipo_estagio, 
+                ce.semestre_ano AS ce_semestre_ano, 
+                pe.nome AS nome_estagiario, 
+                po.nome AS nome_orientador, 
+                ps.nome AS nome_supervisor, 
+                pc.nome AS nome_concedente, 
+                ce.situacao AS ce_situacao, 
+                ce.data_inicio AS ce_data_inicio, 
+                ce.data_fim AS ce_data_fim, 
+                ce.cargahoraria AS ce_cargahoraria, 
+                ce.observacoes AS ce_observacoes, 
+                po.categoria AS po_categoria, 
+                pc.categoria AS pc_categoria, 
+                pe.categoria AS pe_categoria, 
+                ps.categoria AS ps_categoria, 
+                pa.id_planoatividade AS pa_id_planoatividade, 
+                pa.id_campo_estagio AS pa_id_campo_estagio, 
+                pa.situacao AS pa_situacao, 
+                pa.data_lancamento AS pa_data_lancamento, 
+                pa.data_fechamento AS pa_data_fechamento, 
+                pa.data_inicial AS pa_data_inicial, 
+                pa.data_final AS pa_data_final, 
+                pa.cargahoraria AS pa_cargahoraria, 
+                pa.atividades AS pa_atividades, 
+                pa.cronograma AS pa_cronograma, 
+                pa.objetivos AS pa_objetivos, 
+                pa.recursos AS pa_recursos, 
+                pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
+                pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
+                pa.autenticacao_orientador AS pa_autenticacao_orientador, 
+                pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+            FROM campo_estagio_planoatividade pa 
+            LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+            LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+            LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
+            LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
+            LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
             WHERE pa.id_planoatividade = ?
         `;
 

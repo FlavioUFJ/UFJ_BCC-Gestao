@@ -188,10 +188,10 @@ fi
 if command -v curl > /dev/null 2>&1; then
     log "🌐 Testando conectividade HTTP..."
     sleep 3
-    if curl -f -s http://localhost:3000 > /dev/null; then
+    if curl -f -s http://localhost:3001 > /dev/null; then
         log "✅ Servidor HTTP respondendo corretamente"
     else
-        warn "⚠️  Servidor HTTP não está respondendo na porta 3000"
+        warn "⚠️  Servidor HTTP não está respondendo na porta 3001"
     fi
 fi
 

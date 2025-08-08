@@ -38,16 +38,16 @@
                     <div class="text-end">
                          <small class="text-muted" style="font-style: italic; font-weight: bold; color: black;">Período do estágio</small>
                          <div class="small">
-                             <% if (campoEstagio && campoEstagio.data_inicial) { %>
-                                 <%= new Date(campoEstagio.data_inicial).toLocaleDateString('pt-BR') %>
+                             <% if (campoEstagio && campoEstagio.ce_data_inicio) { %>
+                                 <%= new Date(campoEstagio.ce_data_inicio).toLocaleDateString('pt-BR') %>
                              <% } else { %>
                                  Não informado
                              <% } %> - 
-                             <% if (campoEstagio && campoEstagio.data_final && campoEstagio.data_final !== 'null' && campoEstagio.data_final.trim() !== '') { %>
+                             <% if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && campoEstagio.ce_data_fim.trim() !== '') { %>
                                  <% try { %>
-                                     <%= new Date(campoEstagio.data_final).toLocaleDateString('pt-BR') %>
+                                     <%= new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR') %>
                                  <% } catch(e) { %>
-                                     <%= campoEstagio.data_final %>
+                                     <%= campoEstagio.ce_data_fim %>
                                  <% } %>
                              <% } else { %>
                                  Não informado
@@ -55,7 +55,7 @@
                          </div>
                      </div>
                 </div>
-                <p class="mb-3"><strong><%= campoEstagio ? campoEstagio.empresa : 'Não informado' %></strong></p>
+                <p class="mb-3"><strong><%= campoEstagio ? campoEstagio.nome_concedente : 'Não informado' %></strong></p>
                 <div class="d-flex justify-content-between text-center">
                     <div class="flex-fill">
                         <div class="small"><%= campoEstagio ? campoEstagio.nome_estagiario : 'Não informado' %></div>
@@ -78,53 +78,49 @@
             <% if (plano) { %>
                 <input type="hidden" name="_method" value="PUT">
             <% } %>
-            <input type="hidden" name="id_campo_estagio" value="<%= campoEstagio ? campoEstagio.id_campo_estagio : '' %>">
+            <input type="hidden" name="id_campo_estagio" value="<%= campoEstagio ? campoEstagio.ce_id_campo_estagio : '' %>">
 
             <!-- Seção: Informações Gerais -->
             <div class="form-section">
-                <h5 class="section-title"><i class="fas fa-info-circle me-2"></i>Informações Gerais</h5>
+                <div class="mb-3">
+                    <h5 class="section-title mb-0"><i class="fas fa-info-circle me-2"></i>Informações Gerais</h5>
+                </div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="situacao" class="form-label">Situação *</label>
-                            <select class="form-select" id="situacao" name="situacao" required>
-                                <option value="Em edição" <%= plano && plano.situacao === 'Em edição' ? 'selected' : '' %>>Em edição</option>
-                                <option value="Aprovado" <%= plano && plano.situacao === 'Aprovado' ? 'selected' : '' %>>Aprovado</option>
-                                <option value="Reprovado" <%= plano && plano.situacao === 'Reprovado' ? 'selected' : '' %>>Reprovado</option>
+                            <select class="form-select" id="situacao" name="situacao" required disabled>
+                                <option value="Em edição" selected>Em edição</option>
+                                <option value="Aprovado">Aprovado</option>
+                                <option value="Reprovado">Reprovado</option>
                             </select>
+                            <input type="hidden" name="situacao" value="Em edição">
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="estagiarioapto" class="form-label">Estagiário Apto *</label>
-                            <select class="form-select" id="estagiarioapto" name="estagiarioapto" required>
-                                <option value="">Selecione uma opção</option>
-                                <option value="Sim" <%= plano && plano.estagiarioapto === 'Sim' ? 'selected' : '' %>>Sim</option>
-                                <option value="Não" <%= plano && plano.estagiarioapto === 'Não' ? 'selected' : '' %>>Não</option>
-                            </select>
-                        </div>
-                    </div>
+
                 </div>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="data_inicial" class="form-label">Data Inicial *</label>
-                            <input type="date" class="form-control" id="data_inicial" name="data_inicial" 
-                                   value="<% if (plano && plano.data_inicial) { %><%= new Date(plano.data_inicial).toISOString().split('T')[0] %><% } else if (campoEstagio && campoEstagio.data_inicial && campoEstagio.data_inicial !== 'null' && campoEstagio.data_inicial.trim() !== '') { %><% try { %><%= new Date(campoEstagio.data_inicial).toISOString().split('T')[0] %><% } catch(e) { %><% } %><% } %>" required>
+                            <input type="text" class="form-control" id="data_inicial" name="data_inicial" 
+                                   placeholder="DD/MM/AAAA" maxlength="10"
+                                   value="<% if (plano && plano.pa_data_inicial) { %><% try { %><%= new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } else if (campoEstagio && campoEstagio.ce_data_inicio && campoEstagio.ce_data_inicio !== 'null' && typeof campoEstagio.ce_data_inicio === 'string' && campoEstagio.ce_data_inicio.trim() !== '') { %><% try { %><%= new Date(campoEstagio.ce_data_inicio).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="data_final" class="form-label">Data Final *</label>
-                            <input type="date" class="form-control" id="data_final" name="data_final" 
-                                   value="<% if (plano && plano.data_final) { %><%= new Date(plano.data_final).toISOString().split('T')[0] %><% } else if (campoEstagio && campoEstagio.data_final && campoEstagio.data_final !== 'null' && campoEstagio.data_final.trim() !== '') { %><% try { %><%= new Date(campoEstagio.data_final).toISOString().split('T')[0] %><% } catch(e) { %><% } %><% } %>" required>
+                            <input type="text" class="form-control" id="data_final" name="data_final" 
+                                   placeholder="DD/MM/AAAA" maxlength="10"
+                                   value="<% if (plano && plano.pa_data_final) { %><% try { %><%= new Date(plano.pa_data_final).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } else if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && typeof campoEstagio.ce_data_fim === 'string' && campoEstagio.ce_data_fim.trim() !== '') { %><% try { %><%= new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="cargahoraria" class="form-label">Carga Horária (horas/semana) *</label>
                             <input type="number" class="form-control" id="cargahoraria" name="cargahoraria" 
-                                   value="<%= plano ? plano.cargahoraria : '' %>" min="1" max="40" required>
+                                   value="<%= plano ? plano.pa_cargahoraria : '' %>" min="1" max="40" required>
                         </div>
                     </div>
                 </div>
@@ -135,7 +131,7 @@
                 <h5 class="section-title"><i class="fas fa-tasks me-2"></i>Atividades a Desenvolver</h5>
                 <div class="mb-3">
                     <label for="atividades" class="form-label">Descrição das Atividades *</label>
-                    <textarea class="form-control" id="atividades" name="atividades" rows="6" required><%= plano ? plano.atividades : '' %></textarea>
+                    <textarea class="form-control" id="atividades" name="atividades" rows="6" required><%= plano ? plano.pa_atividades : '' %></textarea>
                     <div class="form-text">Descreva as principais atividades, responsabilidades e tarefas que o estagiário irá executar.</div>
                 </div>
             </div>
@@ -145,7 +141,7 @@
                 <h5 class="section-title"><i class="fas fa-bullseye me-2"></i>Objetivos</h5>
                 <div class="mb-3">
                     <label for="objetivos" class="form-label">Objetivos do Estágio *</label>
-                    <textarea class="form-control" id="objetivos" name="objetivos" rows="5" required><%= plano ? plano.objetivos : '' %></textarea>
+                    <textarea class="form-control" id="objetivos" name="objetivos" rows="5" required><%= plano ? plano.pa_objetivos : '' %></textarea>
                     <div class="form-text">Especifique os objetivos de aprendizagem, competências técnicas e comportamentais a serem desenvolvidas.</div>
                 </div>
             </div>
@@ -155,7 +151,7 @@
                 <h5 class="section-title"><i class="fas fa-calendar-alt me-2"></i>Cronograma</h5>
                 <div class="mb-3">
                     <label for="cronograma" class="form-label">Cronograma de Atividades *</label>
-                    <textarea class="form-control" id="cronograma" name="cronograma" rows="5" required><%= plano ? plano.cronograma : '' %></textarea>
+                    <textarea class="form-control" id="cronograma" name="cronograma" rows="5" required><%= plano ? plano.pa_cronograma : '' %></textarea>
                     <div class="form-text">Organize as atividades por períodos (semanal, mensal) com marcos e entregas esperadas.</div>
                 </div>
             </div>
@@ -165,20 +161,22 @@
                 <h5 class="section-title"><i class="fas fa-tools me-2"></i>Recursos Necessários</h5>
                 <div class="mb-3">
                     <label for="recursos" class="form-label">Recursos e Materiais</label>
-                    <textarea class="form-control" id="recursos" name="recursos" rows="4"><%= plano ? plano.recursos : '' %></textarea>
+                    <textarea class="form-control" id="recursos" name="recursos" rows="4"><%= plano ? plano.pa_recursos : '' %></textarea>
                     <div class="form-text">Especifique equipamentos, softwares, materiais e outros recursos necessários para o desenvolvimento das atividades.</div>
                 </div>
             </div>
 
             <!-- Botões de Ação -->
             <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary" onclick="history.back()">
-                    <i class="fas fa-arrow-left me-2"></i>Voltar
-                </button>
                 <div>
-                    <button type="button" class="btn btn-outline-primary me-2" onclick="limparFormulario()">
+                    <button type="button" class="btn btn-secondary me-2" onclick="history.back()">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="limparFormulario()">
                         <i class="fas fa-eraser me-2"></i>Limpar
                     </button>
+                </div>
+                <div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i><%= plano ? 'Atualizar' : 'Salvar' %> Plano
                     </button>
@@ -190,8 +188,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Datas do campo de estágio para validação
-        const dataInicialCampo = new Date('<%= campoEstagio && campoEstagio.data_inicial ? campoEstagio.data_inicial : '' %>');
-        const dataFinalCampo = new Date('<%= campoEstagio && campoEstagio.data_final ? campoEstagio.data_final : '' %>');
+        const dataInicialCampo = new Date('<%= campoEstagio && campoEstagio.ce_data_inicio ? campoEstagio.ce_data_inicio : '' %>');
+        const dataFinalCampo = new Date('<%= campoEstagio && campoEstagio.ce_data_fim ? campoEstagio.ce_data_fim : '' %>');
 
         // Validação de datas
         document.getElementById('data_inicial').addEventListener('change', function() {
@@ -212,6 +210,75 @@
                     this.value = '';
                 }
             }
+        });
+
+        // Função para converter data brasileira (DD/MM/YYYY) para formato ISO (YYYY-MM-DD)
+        function convertBRDateToISO(brDate) {
+            if (!brDate || typeof brDate !== 'string') return '';
+            
+            // Se já está no formato ISO, retorna como está
+            if (brDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return brDate;
+            }
+            
+            // Se está no formato brasileiro DD/MM/YYYY
+            const parts = brDate.split('/');
+            if (parts.length === 3) {
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+            
+            return '';
+        }
+
+        // Função para converter Date para formato DD/MM/YYYY
+        function formatarDataBR(data) {
+            if (!data) return '';
+            if (typeof data === 'string') {
+                // Se já está no formato DD/MM/YYYY, retorna como está
+                if (data.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                    return data;
+                }
+                // Se está no formato ISO, converte
+                if (data.match(/^\d{4}-\d{2}-\d{2}/)) {
+                    const dateObj = new Date(data);
+                    return dateObj.toLocaleDateString('pt-BR');
+                }
+            }
+            // Se é um objeto Date
+            if (data instanceof Date) {
+                return data.toLocaleDateString('pt-BR');
+            }
+            return '';
+        }
+
+        // Preencher campos de data se estiverem vazios e houver dados do campo de estágio
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataInicialInput = document.getElementById('data_inicial');
+            const dataFinalInput = document.getElementById('data_final');
+            
+            // Se os campos estão vazios, tentar preencher com dados do campo de estágio
+            <% if (campoEstagio && !plano) { %>
+                <% if (campoEstagio.ce_data_inicio) { %>
+                    if (!dataInicialInput.value.trim()) {
+                        const dataInicialFormatada = formatarDataBR(new Date('<%= campoEstagio.ce_data_inicio %>'));
+                        if (dataInicialFormatada) {
+                            dataInicialInput.value = dataInicialFormatada;
+                        }
+                    }
+                <% } %>
+                
+                <% if (campoEstagio.ce_data_fim) { %>
+                    if (!dataFinalInput.value.trim()) {
+                        const dataFinalFormatada = formatarDataBR(new Date('<%= campoEstagio.ce_data_fim %>'));
+                        if (dataFinalFormatada) {
+                            dataFinalInput.value = dataFinalFormatada;
+                        }
+                    }
+                <% } %>
+            <% } %>
         });
 
         document.getElementById('data_final').addEventListener('change', function() {
@@ -241,10 +308,43 @@
             }
         }
 
+        // Função para aplicar máscara de data DD/MM/YYYY
+        function aplicarMascaraData(input) {
+            input.addEventListener('input', function(e) {
+                let valor = e.target.value.replace(/\D/g, '');
+                if (valor.length >= 2) {
+                    valor = valor.substring(0,2) + '/' + valor.substring(2);
+                }
+                if (valor.length >= 5) {
+                    valor = valor.substring(0,5) + '/' + valor.substring(5,9);
+                }
+                e.target.value = valor;
+            });
+        }
+
+        // Função para converter data DD/MM/YYYY para Date
+        function converterDataBR(dataStr) {
+            if (!dataStr || dataStr.length !== 10) return null;
+            const partes = dataStr.split('/');
+            if (partes.length !== 3) return null;
+            return new Date(partes[2], partes[1] - 1, partes[0]);
+        }
+
+        // Aplicar máscaras aos campos de data
+        aplicarMascaraData(document.getElementById('data_inicial'));
+        aplicarMascaraData(document.getElementById('data_final'));
+
         // Validação do formulário antes do envio
         document.getElementById('formPlanoAtividade').addEventListener('submit', function(e) {
-            const dataInicial = new Date(document.getElementById('data_inicial').value);
-            const dataFinal = new Date(document.getElementById('data_final').value);
+            const dataInicial = converterDataBR(document.getElementById('data_inicial').value);
+            const dataFinal = converterDataBR(document.getElementById('data_final').value);
+            
+            // Validar se as datas são válidas
+            if (!dataInicial || !dataFinal) {
+                e.preventDefault();
+                alert('Por favor, insira datas válidas no formato DD/MM/AAAA.');
+                return false;
+            }
             
             // Validar datas em relação ao campo de estágio
             if (dataInicialCampo && dataInicial < dataInicialCampo) {
@@ -273,14 +373,7 @@
                 return false;
             }
 
-            // Validar se o campo estagiarioapto foi preenchido
-            const estagiarioApto = document.getElementById('estagiarioapto').value;
-            if (!estagiarioApto || estagiarioApto === '') {
-                e.preventDefault();
-                alert('É necessário informar se o estagiário está apto para o estágio.');
-                document.getElementById('estagiarioapto').focus();
-                return false;
-            }
+
         });
     </script>
 </body>

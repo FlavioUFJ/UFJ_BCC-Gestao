@@ -3,7 +3,7 @@
         <div class="col-md-5">
             <div class="card fade-in-up">
                 <div class="card-header text-center">
-                    <h4 class="mb-1" style="color: #333; font-weight: 600;">Gestão BCC-UFJ</h4>
+                    <h4 class="mb-1" style="color: #333; font-weight: 600;">Coordenação com Inteligência</h4>
                 </div>
                 <div class="card-body p-3">
                     <% if (typeof error !== 'undefined' && error && error.trim() !== '') { %>
@@ -11,6 +11,10 @@
                             <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
                         </div>
                     <% } %>
+                    
+                    <div class="text-center mb-4">
+                        <img src="/public/images/logo_coordenaicompleto.png" alt="" class="img-fluid" style="max-height: 80px; width: auto;">
+                    </div>
                     
                     <form method="POST" action="/auth/login">
                         <div class="mb-3">

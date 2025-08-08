@@ -183,13 +183,29 @@ router.get('/estagios/campo/novo', requireAuth, async (req, res) => {
             return res.redirect('/auth/login');
         }
 
+        // Buscar dados do plano de atividade se fornecido via query parameter
+        let planoAtividade = null;
+        const planoAtividadeId = req.query.plano_atividade_id;
+        if (planoAtividadeId) {
+            const db = databaseConfig;
+            const planoQuery = `
+                SELECT 
+                    pa.data_inicial AS pa_data_inicial,
+                    pa.data_final AS pa_data_final
+                FROM campo_estagio_planoatividade pa
+                WHERE pa.id_planoatividade = ?
+            `;
+            planoAtividade = await db.get(planoQuery, [planoAtividadeId]);
+        }
+
         res.render('campo-estagio-form', {
             title: 'Cadastro Campo de Estágio',
             user: user,
             isAdmin: await dbHelper.isAdmin(user),
             currentPage: 'campo-estagio-novo',
             isEdicao: false,
-            campoEstagio: null
+            campoEstagio: null,
+            planoAtividade: planoAtividade
         });
 
     } catch (error) {
@@ -236,6 +252,19 @@ router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
         
         const campoEstagio = await db.get(query, [campoId]);
         
+        // Buscar dados do plano de atividade associado para preenchimento automático
+        let planoAtividade = null;
+        if (campoEstagio) {
+            const planoQuery = `
+                SELECT 
+                    pa.data_inicial AS pa_data_inicial,
+                    pa.data_final AS pa_data_final
+                FROM campo_estagio_planoatividade pa
+                WHERE pa.id_campo_estagio = ?
+            `;
+            planoAtividade = await db.get(planoQuery, [campoId]);
+        }
+        
         if (!campoEstagio) {
             return res.status(404).render('error', {
                 title: 'Não encontrado',
@@ -250,6 +279,7 @@ router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
             isAdmin: await dbHelper.isAdmin(user),
             currentPage: 'campo-estagio-editar',
             campoEstagio: campoEstagio,
+            planoAtividade: planoAtividade,
             isEdicao: true
         });
 

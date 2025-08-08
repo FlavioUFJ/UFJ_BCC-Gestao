@@ -207,7 +207,7 @@
                         <div class="mb-3">
                             <div class="section-title">Atividades a serem desenvolvidas</div>
                             <div class="content-box">
-                                <%= plano.atividades_desenvolvidas %>
+                                <%= plano.pa_atividades %>
                             </div>
                         </div>
 
@@ -215,26 +215,26 @@
                         <div class="mb-3">
                             <div class="section-title">Objetivos do estágio</div>
                             <div class="content-box">
-                                <%= plano.objetivos %>
+                                <%= plano.pa_objetivos %>
                             </div>
                         </div>
 
-                        <% if (plano.cronograma) { %>
+                        <% if (plano.pa_cronograma) { %>
                         <!-- Cronograma -->
                         <div class="mb-3">
                             <div class="section-title">Cronograma</div>
                             <div class="content-box">
-                                <%= plano.cronograma %>
+                                <%= plano.pa_cronograma %>
                             </div>
                         </div>
                         <% } %>
 
-                        <% if (plano.recursos_necessarios) { %>
+                        <% if (plano.pa_recursos) { %>
                         <!-- Recursos -->
                         <div class="mb-3">
                             <div class="section-title">Recursos necessários</div>
                             <div class="content-box">
-                                <%= plano.recursos_necessarios %>
+                                <%= plano.pa_recursos %>
                             </div>
                         </div>
                         <% } %>

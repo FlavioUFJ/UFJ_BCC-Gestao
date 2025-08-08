@@ -293,6 +293,18 @@
             // Auto-preencher semestre/ano atual (apenas se não estiver em modo de edição)
             <% if (typeof isEdicao !== 'undefined' && !isEdicao) { %>
             preencherSemestreAnoAtual();
+            
+            // Preenchimento automático das datas com base no plano de atividade
+            <% if (typeof planoAtividade !== 'undefined' && planoAtividade) { %>
+            if ('<%= planoAtividade.pa_data_inicial %>') {
+                const dataInicial = new Date('<%= planoAtividade.pa_data_inicial %>');
+                document.getElementById('data_inicio').value = dataInicial.toLocaleDateString('pt-BR');
+            }
+            if ('<%= planoAtividade.pa_data_final %>') {
+                const dataFinal = new Date('<%= planoAtividade.pa_data_final %>');
+                document.getElementById('data_fim').value = dataFinal.toLocaleDateString('pt-BR');
+            }
+            <% } %>
             <% } %>
             
             // Configurar eventos
@@ -413,6 +425,19 @@
             if (campo.tipo_estagio) document.getElementById('tipo_estagio').value = campo.tipo_estagio;
             
             // Preencher datas (converter de ISO para formato brasileiro)
+            // Primeiro, verificar se há dados do plano de atividade para preenchimento automático
+            <% if (typeof planoAtividade !== 'undefined' && planoAtividade) { %>
+            if (!campo.data_inicio && '<%= planoAtividade.pa_data_inicial %>') {
+                const dataInicial = new Date('<%= planoAtividade.pa_data_inicial %>');
+                document.getElementById('data_inicio').value = dataInicial.toLocaleDateString('pt-BR');
+            }
+            if (!campo.data_fim && '<%= planoAtividade.pa_data_final %>') {
+                const dataFinal = new Date('<%= planoAtividade.pa_data_final %>');
+                document.getElementById('data_fim').value = dataFinal.toLocaleDateString('pt-BR');
+            }
+            <% } %>
+            
+            // Preencher com dados existentes do campo de estágio
             if (campo.data_inicio) {
                 const dataInicio = new Date(campo.data_inicio);
                 document.getElementById('data_inicio').value = dataInicio.toLocaleDateString('pt-BR');
@@ -698,6 +723,55 @@
             const dataInicio = document.getElementById('data_inicio').value;
             const dataFim = document.getElementById('data_fim').value;
             
+            // Datas do plano de atividade para validação
+            <% if (typeof planoAtividade !== 'undefined' && planoAtividade) { %>
+            const paDataInicial = '<%= planoAtividade.pa_data_inicial %>' ? new Date('<%= planoAtividade.pa_data_inicial %>') : null;
+            const paDataFinal = '<%= planoAtividade.pa_data_final %>' ? new Date('<%= planoAtividade.pa_data_final %>') : null;
+            <% } else { %>
+            const paDataInicial = null;
+            const paDataFinal = null;
+            <% } %>
+            
+            if (dataInicio) {
+                const inicio = parseDataBrasileira(dataInicio);
+                
+                // Validação: ce.data_inicio não pode ser menor que pa_data_inicial
+                if (paDataInicial && inicio && inicio < paDataInicial) {
+                    mostrarAlerta('A data de início não pode ser menor que a data inicial do plano de atividade (' + paDataInicial.toLocaleDateString('pt-BR') + ').', 'error');
+                    document.getElementById('data_inicio').focus();
+                    return false;
+                }
+                
+                // Validação: ce.data_inicio não pode ser maior que pa_data_final
+                if (paDataFinal && inicio && inicio > paDataFinal) {
+                    mostrarAlerta('A data de início não pode ser maior que a data final do plano de atividade (' + paDataFinal.toLocaleDateString('pt-BR') + ').', 'error');
+                    document.getElementById('data_inicio').focus();
+                    return false;
+                }
+            }
+            
+            if (dataFim) {
+                const fim = parseDataBrasileira(dataFim);
+                
+                // Validação: ce.data_fim não pode ser maior que pa_data_final
+                if (paDataFinal && fim && fim > paDataFinal) {
+                    mostrarAlerta('A data de fim não pode ser maior que a data final do plano de atividade (' + paDataFinal.toLocaleDateString('pt-BR') + ').', 'error');
+                    document.getElementById('data_fim').focus();
+                    return false;
+                }
+                
+                // Validação: ce.data_fim não pode ser menor ou igual a ce.data_inicio
+                if (dataInicio) {
+                    const inicio = parseDataBrasileira(dataInicio);
+                    if (inicio && fim && fim <= inicio) {
+                        mostrarAlerta('A data de fim deve ser maior que a data de início.', 'error');
+                        document.getElementById('data_fim').focus();
+                        return false;
+                    }
+                }
+            }
+            
+            // Validação geral: data de início não pode ser maior que data de fim
             if (dataInicio && dataFim) {
                 const inicio = parseDataBrasileira(dataInicio);
                 const fim = parseDataBrasileira(dataFim);
@@ -708,6 +782,7 @@
                     return false;
                 }
             }
+            
             return true;
         }
 

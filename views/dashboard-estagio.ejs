@@ -59,10 +59,10 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <% if (camposEstagio && camposEstagio.length > 1) { %>
-                                <small class="opacity-75" id="contadorHeader">1 de <%= camposEstagio.length %></small>
-                            <% } else if (camposEstagio && camposEstagio.length === 0) { %>
-                                <small class="opacity-75">0 registros</small>
+                            <% if (camposEstagio && camposEstagio.length > 0) { %>
+                                <span class="badge bg-light text-dark" id="contadorCampoEstagio">1/<%= camposEstagio.length %></span>
+                            <% } else { %>
+                                <span class="badge bg-light text-dark" id="contadorCampoEstagio">0/0</span>
                             <% } %>
                         </div>
                     </div>
@@ -78,11 +78,11 @@
                                     <strong>Início:</strong> <span id="inicioAtual"><%= camposEstagio[0].data_inicio ? new Date(camposEstagio[0].data_inicio).toLocaleDateString('pt-BR') : 'N/A' %></span>
                                 </div>
                                 <div class="col-4">
-                                    <strong>Fim:</strong> <span id="fimAtual"><%= camposEstagio[0].data_fim ? new Date(camposEstagio[0].data_fim).toLocaleDateString('pt-BR') : 'N/A' %></span>
+                                    <strong>Fim:</strong> <span id="fimAtual"><%= camposEstagio[0].ce_data_fim ? new Date(camposEstagio[0].ce_data_fim).toLocaleDateString('pt-BR') : 'N/A' %></span>
                                 </div>
                                 <div class="col-4 text-end">
                                     <span style="color: #ffc107; font-weight: bold;" id="situacaoAtual">
-                                        <%= camposEstagio[0].situacao || 'N/A' %>
+                                        <%= camposEstagio[0].ce_situacao || 'N/A' %>
                                     </span>
                                 </div>
                             </div>
@@ -148,11 +148,11 @@
                             <i class="fas fa-tasks fa-2x me-3"></i>
                             <div>
                                 <h5 class="mb-0">Plano de Atividade</h5>
-                                <small class="opacity-75">Planos de atividades dos estágios</small>
+
                             </div>
                         </div>
                         <div class="text-end">
-                            <small class="opacity-75">Em desenvolvimento</small>
+                            <span class="badge bg-light text-dark" id="contadorPaginacao">1/1</span>
                         </div>
                     </div>
                 </div>
@@ -229,32 +229,13 @@
                                 <small class="opacity-75">Controle de frequência dos estágios</small>
                             </div>
                         </div>
-                        <div class="text-end">
-                            <small class="opacity-75">Em desenvolvimento</small>
-                        </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <!-- Primeira linha: Período em negrito -->
-                        <p class="mb-2"><strong>Frequência - Março 2024</strong></p>
-                        
-                        <div class="row mb-2">
-                            <div class="col-4">
-                                <strong>Dias:</strong> <span>--/--</span>
-                            </div>
-                            <div class="col-4">
-                                <strong>Horas:</strong> <span>-- h</span>
-                            </div>
-                            <div class="col-4 text-end">
-                                <span style="color: #6c757d; font-weight: bold;">
-                                    Pendente
-                                </span>
-                            </div>
-                        </div>
-                        <p class="mb-1"><strong>Estagiário:</strong> <span>Aguardando implementação</span></p>
-                        <p class="mb-1"><strong>Orientador:</strong> <span>Aguardando implementação</span></p>
-                        <p class="mb-0"><strong>Supervisor:</strong> <span>Aguardando implementação</span></p>
+                    <div class="text-center py-4">
+                        <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0"><strong>Em desenvolvimento</strong></p>
+                        <small class="text-muted">Funcionalidade será implementada em breve</small>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
@@ -307,32 +288,13 @@
                                 <small class="opacity-75">Relatórios dos estágios</small>
                             </div>
                         </div>
-                        <div class="text-end">
-                            <small class="opacity-75">Em desenvolvimento</small>
-                        </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <!-- Primeira linha: Tipo do relatório em negrito -->
-                        <p class="mb-2"><strong>Relatório Final - 2024/1</strong></p>
-                        
-                        <div class="row mb-2">
-                            <div class="col-4">
-                                <strong>Entrega:</strong> <span>--/--/----</span>
-                            </div>
-                            <div class="col-4">
-                                <strong>Avaliado:</strong> <span>--/--/----</span>
-                            </div>
-                            <div class="col-4 text-end">
-                                <span style="color: #6c757d; font-weight: bold;">
-                                    Pendente
-                                </span>
-                            </div>
-                        </div>
-                        <p class="mb-1"><strong>Estagiário:</strong> <span>Aguardando implementação</span></p>
-                        <p class="mb-1"><strong>Orientador:</strong> <span>Aguardando implementação</span></p>
-                        <p class="mb-0"><strong>Supervisor:</strong> <span>Aguardando implementação</span></p>
+                    <div class="text-center py-4">
+                        <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0"><strong>Em desenvolvimento</strong></p>
+                        <small class="text-muted">Funcionalidade será implementada em breve</small>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
@@ -508,16 +470,29 @@
             const plano = planosAtividade[planoAtividadeAtualIndex];
             planoAtividadeSelecionadoId = plano.id_planoatividade;
             
-            const situacaoClass = plano.situacao === 'Aprovado' ? 'success' : 'warning';
-            const dataInicial = plano.data_inicial ? new Date(plano.data_inicial).toLocaleDateString('pt-BR') : 'Não informado';
-            const dataFinal = plano.data_final ? new Date(plano.data_final).toLocaleDateString('pt-BR') : 'Não informado';
+            // Definir cor da situação conforme solicitado
+            let situacaoColor = '#6c757d'; // cor padrão
+            const situacao = plano.pa_situacao || 'Em Edição';
+            if (situacao === 'Em Edição') {
+                situacaoColor = '#ffc107'; // amarelo
+            } else if (situacao === 'Cadastrado') {
+                situacaoColor = '#28a745'; // verde
+            } else if (situacao === 'Finalizado') {
+                situacaoColor = '#007bff'; // azul
+            }
+            
+            // Usar os campos corretos da query
+            const dataInicial = plano.pa_data_inicial ? new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR') : 'Não informado';
+            const dataFinal = plano.pa_data_final ? new Date(plano.pa_data_final).toLocaleDateString('pt-BR') : 'Não informado';
             
             cardBody.innerHTML = `
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <p class="mb-2"><strong>Plano de Atividades - ${plano.situacao || 'Em edição'}</strong></p>
-                        <p class="mb-1 text-muted"><small><strong>Período:</strong> ${dataInicial} - ${dataFinal}</small></p>
-                        <p class="mb-1 text-muted"><small><strong>Carga Horária:</strong> ${plano.cargahoraria || 'Não informado'} horas/semana</small></p>
+                        <p class="mb-2"><strong style="color: ${situacaoColor}; font-weight: bold;">${situacao}</strong></p>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted"><small><strong>Período:</strong> ${dataInicial} - ${dataFinal}</small></span>
+                            <span class="text-muted"><small><strong>CH semanal:</strong> ${plano.pa_cargahoraria || 'Não informado'}</small></span>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <p class="mb-1 text-muted"><small><strong>Estagiário:</strong> ${plano.nome_estagiario || 'Não informado'}</small></p>
@@ -525,11 +500,13 @@
                         <p class="mb-1 text-muted"><small><strong>Supervisor:</strong> ${plano.nome_supervisor || 'Não informado'}</small></p>
                     </div>
                 </div>
-                <div class="mt-2">
-                    <span class="badge bg-${situacaoClass}">${plano.situacao || 'Em edição'}</span>
-                    <span class="badge bg-secondary ms-1">${planoAtividadeAtualIndex + 1} de ${planosAtividade.length}</span>
-                </div>
             `;
+            
+            // Atualizar contador de paginação no cabeçalho
+            const contadorPaginacao = document.getElementById('contadorPaginacao');
+            if (contadorPaginacao) {
+                contadorPaginacao.textContent = `${planoAtividadeAtualIndex + 1}/${planosAtividade.length}`;
+            }
             
             // Controlar estado dos botões baseado na situação do plano
             this.controlarBotoesPlanoAtividade(plano);
@@ -540,7 +517,7 @@
             // Botão Editar - desabilitado se plano for "Aprovado" ou não existir plano
             const btnEditarPlano = document.getElementById('btnPlanAtiEditar');
             if (btnEditarPlano) {
-                const podeEditar = plano && plano.situacao !== 'Aprovado';
+                const podeEditar = plano && plano.pa_situacao !== 'Aprovado';
                 btnEditarPlano.disabled = !podeEditar;
                 
                 if (!podeEditar) {
@@ -578,7 +555,7 @@
             // Botão Aprovar - desabilitado se plano já estiver aprovado ou não existir plano
             const btnAprovarPlano = document.getElementById('btnPlanAtiAprovar');
             if (btnAprovarPlano) {
-                const podeAprovar = plano && plano.situacao !== 'Aprovado';
+                const podeAprovar = plano && plano.pa_situacao !== 'Aprovado';
                 btnAprovarPlano.disabled = !podeAprovar;
                 
                 if (!podeAprovar) {
@@ -772,9 +749,9 @@
                                         <h6 style="color: #17a2b8; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-calendar me-1"></i>Cronograma</h6>
                                         <p style="margin: 5px 0;"><strong>CH Semanal:</strong> ${e.ch_semanal || 'N/A'}h</p>
                                         <p style="margin: 5px 0;"><strong>CH Total:</strong> ${e.ch_total || 'N/A'}h</p>
-                                        <p style="margin: 5px 0;"><strong>Início:</strong> ${e.data_inicio ? this.formatISOToBRDate(e.data_inicio) : 'N/A'}</p>
-                                        <p style="margin: 5px 0;"><strong>Fim:</strong> ${e.data_termino ? this.formatISOToBRDate(e.data_termino) : 'N/A'}</p>
-                                        <p style="margin: 5px 0; color: #ffc107; font-weight: bold;">${e.situacao || 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Início:</strong> ${e.ce_data_inicio ? this.formatISOToBRDate(e.ce_data_inicio) : 'N/A'}</p>
+                                        <p style="margin: 5px 0;"><strong>Fim:</strong> ${e.ce_data_fim ? this.formatISOToBRDate(e.ce_data_fim) : 'N/A'}</p>
+                                        <p style="margin: 5px 0; color: #ffc107; font-weight: bold;">${e.ce_situacao || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <h6 style="color: #6c757d; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;"><i class="fas fa-info-circle me-1"></i>Status</h6>
@@ -1469,7 +1446,7 @@
             return;
         }
         
-        if (planoAtual.situacao === 'Aprovado') {
+        if (planoAtual.pa_situacao === 'Aprovado') {
             alert('Planos de atividade aprovados não podem ser editados.');
             return;
         }
@@ -1505,7 +1482,7 @@
             return;
         }
         
-        if (planoAtual.situacao === 'Aprovado') {
+        if (planoAtual.pa_situacao === 'Aprovado') {
             alert('Este plano de atividade já está aprovado.');
             return;
         }
@@ -1768,9 +1745,9 @@
         }
         
         // Atualizar contador no header
-        const contadorHeader = document.getElementById('contadorHeader');
-        if (contadorHeader) {
-            contadorHeader.textContent = `${indiceAtual + 1} de ${registrosFiltrados.length}`;
+        const contadorCampoEstagio = document.getElementById('contadorCampoEstagio');
+        if (contadorCampoEstagio) {
+            contadorCampoEstagio.textContent = `${indiceAtual + 1}/${registrosFiltrados.length}`;
         }
         
         // Atualizar estado dos botões

@@ -21,9 +21,6 @@ class PlanoAtividadeService {
         try {
             let sql = `
                 SELECT 
-                    ce.tipo_estagio AS cetipo_estagio, 
-                    ce.semestre_ano AS cesemestre_ano, 
-                    ce.situacao AS cesituacao, 
                     pe.nome AS nome_estagiario, 
                     po.nome AS nome_orientador, 
                     ps.nome AS nome_supervisor, 
@@ -42,7 +39,6 @@ class PlanoAtividadeService {
                     pa.id_planoatividade AS pa_id_planoatividade, 
                     pa.id_campo_estagio AS pa_id_campo_estagio, 
                     pa.situacao AS pa_situacao, 
-                    pa.estagiarioapto AS pa_estagiarioapto, 
                     pa.data_lancamento AS pa_data_lancamento, 
                     pa.data_fechamento AS pa_data_fechamento, 
                     pa.data_inicial AS pa_data_inicial, 
@@ -220,9 +216,6 @@ class PlanoAtividadeService {
         try {
             const sql = `
                 SELECT 
-                    ce.tipo_estagio AS cetipo_estagio, 
-                    ce.semestre_ano AS cesemestre_ano, 
-                    ce.situacao AS cesituacao, 
                     pe.nome AS nome_estagiario, 
                     po.nome AS nome_orientador, 
                     ps.nome AS nome_supervisor, 
@@ -241,7 +234,6 @@ class PlanoAtividadeService {
                     pa.id_planoatividade AS pa_id_planoatividade, 
                     pa.id_campo_estagio AS pa_id_campo_estagio, 
                     pa.situacao AS pa_situacao, 
-                    pa.estagiarioapto AS pa_estagiarioapto, 
                     pa.data_lancamento AS pa_data_lancamento, 
                     pa.data_fechamento AS pa_data_fechamento, 
                     pa.data_inicial AS pa_data_inicial, 
@@ -334,7 +326,7 @@ class PlanoAtividadeService {
             // Buscar dados do campo de estágio relacionado
             const campoEstagio = await databaseConfig.get(
                 'SELECT * FROM campo_estagio WHERE id_campo_estagio = ?',
-                [planoAtividade.id_campo_estagio]
+                [planoAtividade.pa_id_campo_estagio]
             );
 
             if (!campoEstagio) {

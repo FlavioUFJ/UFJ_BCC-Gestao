@@ -226,7 +226,46 @@ class PlanoAtividadeController {
                 });
             }
             
-            const dataAtual = new Date().toISOString();
+            // Validações de data
+            const campoEstagio = await this.buscarCampoEstagio(id_campo_estagio);
+            if (!campoEstagio) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Campo de estágio não encontrado'
+                });
+            }
+
+            const dataInicialCampo = new Date(campoEstagio.data_inicial);
+            const dataFinalCampo = new Date(campoEstagio.data_final);
+            const dataInicialPlano = new Date(data_inicial);
+            const dataFinalPlano = new Date(data_final);
+
+            // Validar se data inicial do plano é >= data inicial do campo
+            if (dataInicialPlano < dataInicialCampo) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A data inicial do plano não pode ser menor que a data inicial do estágio'
+                });
+            }
+
+            // Validar se data final do plano é <= data final do campo
+            if (dataFinalPlano > dataFinalCampo) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A data final do plano não pode ser maior que a data final do estágio'
+                });
+            }
+
+            // Validar se data inicial <= data final
+            if (dataInicialPlano > dataFinalPlano) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A data inicial não pode ser maior que a data final'
+                });
+            }
+
+            // Formato correto para MySQL DATETIME
+            const dataAtual = new Date().toISOString().slice(0, 19).replace('T', ' ');
             
             const sql = `
                 INSERT INTO campo_estagio_planoatividade (

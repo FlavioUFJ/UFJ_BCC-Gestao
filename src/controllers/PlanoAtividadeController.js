@@ -200,19 +200,6 @@ class PlanoAtividadeController {
                 });
             }
             
-            // Verificar se o campo de estágio existe
-            const campoEstagio = await databaseConfig.get(
-                'SELECT id_campo_estagio FROM campo_estagio WHERE id_campo_estagio = ?',
-                [id_campo_estagio]
-            );
-            
-            if (!campoEstagio) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Campo de estágio não encontrado'
-                });
-            }
-            
             // Verificar se já existe um plano para este campo de estágio
             const planoExistente = await databaseConfig.get(
                 'SELECT id_planoatividade FROM campo_estagio_planoatividade WHERE id_campo_estagio = ?',

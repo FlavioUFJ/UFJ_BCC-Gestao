@@ -319,15 +319,27 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Resposta do servidor:', data); // Debug
                 if (data.success && data.parametros.length > 0) {
                     const parametro = data.parametros[0];
-                    // Assumindo que o parâmetro tem estrutura com número e nome da seguradora
-                    if (parametro.valor) {
-                        const valores = parametro.valor.split('|'); // Assumindo separação por pipe
-                        document.getElementById('apolice_seguro').value = valores[0] || '';
-                        document.getElementById('nome_seguradora').value = valores[1] || '';
+                    console.log('Parâmetro encontrado:', parametro); // Debug
+                    
+                    // Buscar valores específicos nos arrays de valores
+                    if (parametro.valores && parametro.valores.length > 0) {
+                        const numeroApolice = parametro.valores.find(v => v.nome === 'Número da Apólice');
+                        const nomeSeguradora = parametro.valores.find(v => v.nome === 'Nome da Seguradora');
+                        
+                        if (numeroApolice) {
+                            document.getElementById('apolice_seguro').value = numeroApolice.valor || '';
+                        }
+                        if (nomeSeguradora) {
+                            document.getElementById('nome_seguradora').value = nomeSeguradora.valor || '';
+                        }
+                        
+                        console.log('Valores carregados:', { numeroApolice: numeroApolice?.valor, nomeSeguradora: nomeSeguradora?.valor }); // Debug
                     }
                 } else {
+                    console.log('Nenhum parâmetro encontrado ou erro:', data); // Debug
                     mostrarAlerta('Parâmetros de seguro não encontrados. Verifique se os parâmetros "Apólice de Seguro" estão cadastrados.', 'warning');
                 }
             })

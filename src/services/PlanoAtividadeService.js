@@ -21,15 +21,15 @@ class PlanoAtividadeService {
         try {
             let sql = `
                 SELECT 
-                    pa.id_plano_atividade,
+                    pa.id_planoatividade,
                     pa.id_campo_estagio,
                     pa.situacao,
                     pa.data_inicial,
                     pa.data_final,
                     pa.cargahoraria,
                     pa.observacoes,
-                    pa.data_cadastro,
-                    pa.data_atualizacao,
+                    pa.data_lancamento as data_cadastro,
+                    pa.dataultimaatualizacao as data_atualizacao,
                     ce.tipo_estagio,
                     ce.semestre_ano,
                     pe.nome as nome_estagiario,
@@ -213,7 +213,7 @@ class PlanoAtividadeService {
                 LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
                 LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
                 LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
-                WHERE pa.id_plano_atividade = ?
+                WHERE pa.id_planoatividade = ?
             `;
             
             const result = await databaseConfig.get(sql, [id]);

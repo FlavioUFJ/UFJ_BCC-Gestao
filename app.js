@@ -41,6 +41,8 @@ class App {
         this.port = process.env.PORT || config.environment.PORT || 3000;
         this.environment = process.env.NODE_ENV || 'development';
         this.sessionStore = null;
+		// Configurar trust proxy ANTES dos middlewares
+        this.app.set('trust proxy', 1);
         
         this.initializeDirectories();
         this.initializeDatabase();
@@ -73,38 +75,49 @@ class App {
         });
     }
 
-    /**
-     * Inicializa conexão com banco de dados
-     */
-    async initializeDatabase() {
-        try {
-            console.log('✅ Conexão com banco de dados estabelecida');
-            
-            // Usando MariaDB/MySQL para armazenamento de sessões
-            // this.sessionStore configurado no SessionConfig
-            
-        } catch (error) {
-            console.error('❌ Erro ao conectar com banco de dados:', error.message);
-            process.exit(1);
-        }
-    }
+	/**
+	 * Inicializa conexão com banco de dados
+	 */
+	async initializeDatabase() {
+		try {
+			console.log('✅ Conexão com banco de dados estabelecida');
+			
+			// Configurar MySQL Store para sessões
+			const sessionStoreOptions = {
+				host: database.config.host,
+				port: database.config.port,
+				user: database.config.user,
+				password: database.config.password,
+				database: database.config.database,
+				clearExpired: true,
+				checkExpirationInterval: 900000, // 15 minutos
+				expiration: 86400000, // 24 horas
+				createDatabaseTable: true,
+				schema: {
+					tableName: 'sessions',
+					columnNames: {
+						session_id: 'session_id',
+						expires: 'expires',
+						data: 'data'
+					}
+				}
+			};
+			
+			this.sessionStore = new MySQLStore(sessionStoreOptions);
+			
+		} catch (error) {
+			console.error('❌ Erro ao conectar com banco de dados:', error.message);
+			process.exit(1);
+		}
+	}
 
     /**
      * Inicializa middlewares
      */
     initializeMiddlewares() {
-        // Segurança
+        // Segurança - CSP TEMPORARIAMENTE DESABILITADO PARA DEBUG
         this.app.use(helmet({
-            contentSecurityPolicy: {
-                directives: {
-                    defaultSrc: ["'self'"],
-                    styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
-                    scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
-                    scriptSrcAttr: ["'unsafe-inline'"],
-                    imgSrc: ["'self'", 'data:', 'https:'],
-                    fontSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com']
-                }
-            }
+            contentSecurityPolicy: false
         }));
 
         // Compressão
@@ -129,7 +142,8 @@ class App {
         });
         this.app.use(limiter);
 
-        // Rate limiting específico para login
+        // Rate limiting específico para login - TEMPORARIAMENTE DESABILITADO PARA DEBUG
+        /*
         const loginLimiter = rateLimit({
             windowMs: 15 * 60 * 1000, // 15 minutos
             max: 5, // Máximo 5 tentativas de login
@@ -140,6 +154,7 @@ class App {
             }
         });
         this.app.use('/auth/login', loginLimiter);
+        */
 
         // Rate limiting específico para recuperação de senha
         const forgotPasswordLimiter = rateLimit({
@@ -370,31 +385,34 @@ class App {
                 console.log('=' .repeat(50));
             });
 
-            // Graceful shutdown
-            const gracefulShutdown = (signal) => {
-                console.log(`\n🛑 Recebido sinal ${signal}. Encerrando servidor...`);
-                
-                server.close(async () => {
-                    console.log('🔌 Servidor HTTP encerrado');
-                    
-                    try {
-                        // Fechar conexões do banco
-                        if (this.sessionStore) {
-                            await this.sessionStore.close();
-                            console.log('🗄️  Store de sessão encerrado');
-                        }
-                        
-                        await database.close();
-                        console.log('🗃️  Conexão com banco encerrada');
-                        
-                        console.log('✅ Aplicação encerrada com sucesso');
-                        process.exit(0);
-                    } catch (error) {
-                        console.error('❌ Erro ao encerrar aplicação:', error);
-                        process.exit(1);
-                    }
-                });
-            };
+			// Graceful shutdown
+			const gracefulShutdown = (signal) => {
+				console.log(`\n🛑 Recebido sinal ${signal}. Encerrando servidor...`);
+				
+				server.close(async () => {
+					console.log('🔌 Servidor HTTP encerrado');
+					
+					try {
+						// Fechar conexões do banco
+						if (this.sessionStore && typeof this.sessionStore.close === 'function') {
+							await this.sessionStore.close();
+							console.log('🗄️  Store de sessão encerrado');
+						}
+						
+						// Verificar se database existe e tem método close
+						if (database && typeof database.close === 'function') {
+							await database.close();
+							console.log('🗃️  Conexão com banco encerrada');
+						}
+						
+						console.log('✅ Aplicação encerrada com sucesso');
+						process.exit(0);
+					} catch (error) {
+						console.error('❌ Erro ao encerrar aplicação:', error);
+						process.exit(1);
+					}
+				});
+			};
 
             // Capturar sinais de encerramento
             process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

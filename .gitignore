@@ -1,0 +1,85 @@
+# Dependências
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Arquivos de configuração sensíveis
+.env
+.env.local
+.env.production
+.env.development
+dadosConexaoSGDB.js
+
+# Logs
+logs/
+*.log
+
+# Backups
+backups/
+*.db
+*.sql.backup
+
+# Uploads e arquivos temporários
+uploads/
+temp/
+*.tmp
+*.temp
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Scripts de produção e configuração
+corrigir-*.sh
+diagnostico-*.sh
+deploy.sh
+setup-server.sh
+fix-*.sh
+github_*.sh
+apache-*.conf
+ecosystem.config.js
+
+# Arquivos de teste e debug
+test_*.js
+test-*.js
+test_*.html
+test-*.html
+debug-*.sh
+check_*.js
+create_*.js
+fix_*.js
+update_*.js
+verify_*.js
+
+# Documentação de análise e deploy
+ANALISE_*.md
+DEPLOY.md
+
+# Arquivos SQL de configuração
+create_missing_tables_*.sql
+fix_*.sql
+update_*.sql
+script_*.sql
+
+# Arquivos de exemplo e prompts
+exemplo_*.csv
+prompts*/
+
+# Arquivos HTML de reset e teste
+*reset_page.html
+test_*.html
+actual_*.html
+correct_*.html
+final_*.html
+fixed_*.html
+real_*.html
+temp_*.html

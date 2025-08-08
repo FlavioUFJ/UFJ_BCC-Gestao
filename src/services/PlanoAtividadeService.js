@@ -21,26 +21,46 @@ class PlanoAtividadeService {
         try {
             let sql = `
                 SELECT 
-                    pa.id_planoatividade,
-                    pa.id_campo_estagio,
-                    pa.situacao,
-                    pa.data_inicial,
-                    pa.data_final,
-                    pa.cargahoraria,
-                    pa.observacoes,
-                    pa.data_lancamento as data_cadastro,
-                    pa.dataultimaatualizacao as data_atualizacao,
-                    ce.tipo_estagio,
-                    ce.semestre_ano,
-                    pe.nome as nome_estagiario,
-                    po.nome as nome_orientador,
-                    ps.nome as nome_supervisor,
-                    pc.nome as nome_concedente
-                FROM campo_estagio_planoatividade pa
-                INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                    ce.tipo_estagio AS cetipo_estagio, 
+                    ce.semestre_ano AS cesemestre_ano, 
+                    ce.situacao AS cesituacao, 
+                    pe.nome AS nome_estagiario, 
+                    po.nome AS nome_orientador, 
+                    ps.nome AS nome_supervisor, 
+                    pc.nome AS nome_concedente, 
+                    ce.tipo_estagio AS ce_tipo_estagio, 
+                    ce.semestre_ano AS ce_semestre_ano, 
+                    ce.situacao AS ce_situacao, 
+                    ce.data_inicio AS ce_data_inicio, 
+                    ce.data_fim AS ce_data_fim, 
+                    ce.cargahoraria AS ce_cargahoraria, 
+                    ce.observacoes AS ce_observacoes, 
+                    po.categoria AS po_categoria, 
+                    pc.categoria AS pc_categoria, 
+                    pe.categoria AS pe_categoria, 
+                    ps.categoria AS ps_categoria, 
+                    pa.id_planoatividade AS pa_id_planoatividade, 
+                    pa.id_campo_estagio AS pa_id_campo_estagio, 
+                    pa.situacao AS pa_situacao, 
+                    pa.estagiarioapto AS pa_estagiarioapto, 
+                    pa.data_lancamento AS pa_data_lancamento, 
+                    pa.data_fechamento AS pa_data_fechamento, 
+                    pa.data_inicial AS pa_data_inicial, 
+                    pa.data_final AS pa_data_final, 
+                    pa.cargahoraria AS pa_cargahoraria, 
+                    pa.atividades AS pa_atividades, 
+                    pa.cronograma AS pa_cronograma, 
+                    pa.objetivos AS pa_objetivos, 
+                    pa.recursos AS pa_recursos, 
+                    pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
+                    pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
+                    pa.autenticacao_orientador AS pa_autenticacao_orientador, 
+                    pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+                FROM campo_estagio_planoatividade pa 
+                LEFT JOIN  campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
                 LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
             `;
             
@@ -200,18 +220,46 @@ class PlanoAtividadeService {
         try {
             const sql = `
                 SELECT 
-                    pa.*,
-                    ce.tipo_estagio,
-                    ce.semestre_ano,
-                    pe.nome as nome_estagiario,
-                    po.nome as nome_orientador,
-                    ps.nome as nome_supervisor,
-                    pc.nome as nome_concedente
-                FROM campo_estagio_planoatividade pa
-                INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                    ce.tipo_estagio AS cetipo_estagio, 
+                    ce.semestre_ano AS cesemestre_ano, 
+                    ce.situacao AS cesituacao, 
+                    pe.nome AS nome_estagiario, 
+                    po.nome AS nome_orientador, 
+                    ps.nome AS nome_supervisor, 
+                    pc.nome AS nome_concedente, 
+                    ce.tipo_estagio AS ce_tipo_estagio, 
+                    ce.semestre_ano AS ce_semestre_ano, 
+                    ce.situacao AS ce_situacao, 
+                    ce.data_inicio AS ce_data_inicio, 
+                    ce.data_fim AS ce_data_fim, 
+                    ce.cargahoraria AS ce_cargahoraria, 
+                    ce.observacoes AS ce_observacoes, 
+                    po.categoria AS po_categoria, 
+                    pc.categoria AS pc_categoria, 
+                    pe.categoria AS pe_categoria, 
+                    ps.categoria AS ps_categoria, 
+                    pa.id_planoatividade AS pa_id_planoatividade, 
+                    pa.id_campo_estagio AS pa_id_campo_estagio, 
+                    pa.situacao AS pa_situacao, 
+                    pa.estagiarioapto AS pa_estagiarioapto, 
+                    pa.data_lancamento AS pa_data_lancamento, 
+                    pa.data_fechamento AS pa_data_fechamento, 
+                    pa.data_inicial AS pa_data_inicial, 
+                    pa.data_final AS pa_data_final, 
+                    pa.cargahoraria AS pa_cargahoraria, 
+                    pa.atividades AS pa_atividades, 
+                    pa.cronograma AS pa_cronograma, 
+                    pa.objetivos AS pa_objetivos, 
+                    pa.recursos AS pa_recursos, 
+                    pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
+                    pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
+                    pa.autenticacao_orientador AS pa_autenticacao_orientador, 
+                    pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+                FROM campo_estagio_planoatividade pa 
+                LEFT JOIN  campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
                 LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
                 WHERE pa.id_planoatividade = ?
             `;

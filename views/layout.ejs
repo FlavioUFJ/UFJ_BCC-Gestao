@@ -385,6 +385,13 @@
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="z-index: 1040;">
+                        <li>
+                            <a class="dropdown-item" href="/">
+                                <i class="fas fa-th-large me-2"></i>
+                                Módulos
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
                         <% if (user.categoria === 'Coordenador' || user.categoria === '1' || user.matricula === 'coordenador' || user.nivelacesso === 'Administrador') { %>
                         <li>
                             <a class="dropdown-item" href="/admin/rotinas?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagios/dashboard')) %>">
@@ -440,6 +447,40 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <script>
+        // Função para logout com limpeza de cache
+        function logoutComLimpezaCache() {
+            // Limpar localStorage e sessionStorage
+            if (typeof(Storage) !== "undefined") {
+                localStorage.clear();
+                sessionStorage.clear();
+            }
+            
+            // Limpar cache do navegador (quando possível)
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
+                });
+            }
+            
+            // Redirecionar para logout
+            window.location.href = '/logout';
+        }
+        
+        // Aplicar a função aos links de logout
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+            logoutLinks.forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    logoutComLimpezaCache();
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>

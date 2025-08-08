@@ -162,12 +162,32 @@ class AuthController {
             // Destruir sessão
             await SessionConfig.logout(req);
 
+            // Limpar cookies de sessão e cache para segurança
+            res.clearCookie('gestao.sid', {
+                path: '/',
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax'
+            });
+            
+            // Limpar outros cookies relacionados ao sistema
+            res.clearCookie('connect.sid', { path: '/' });
+            
+            // Headers para limpar cache do navegador
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'Clear-Site-Data': '"cache", "cookies", "storage"'
+            });
+
             // Resposta para AJAX
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
                 return res.json({
                     success: true,
                     message: messages.success.logout,
-                    redirect: '/auth/login'
+                    redirect: '/auth/login',
+                    clearCache: true
                 });
             }
 
@@ -176,7 +196,15 @@ class AuthController {
         } catch (error) {
             console.error('Erro no logout:', error);
             
-            // Mesmo com erro, redirecionar para login
+            // Mesmo com erro, limpar cookies e redirecionar para login
+            res.clearCookie('gestao.sid', { path: '/' });
+            res.clearCookie('connect.sid', { path: '/' });
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+            
             return res.redirect('/auth/login');
         }
     }

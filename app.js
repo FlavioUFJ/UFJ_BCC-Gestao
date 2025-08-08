@@ -179,6 +179,14 @@ class App {
         this.app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
             maxAge: '1h'
         }));
+        
+        // Favicon específico na raiz
+        this.app.get('/favicon.ico', (req, res) => {
+            res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+        });
+        this.app.get('/favicon.svg', (req, res) => {
+            res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+        });
 
         // View engine
         this.app.use(expressLayouts);

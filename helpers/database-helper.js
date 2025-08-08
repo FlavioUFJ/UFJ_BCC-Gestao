@@ -4,19 +4,19 @@
  */
 
 const AccessControl = require('../middleware/access-control');
-const sqlite3 = require('sqlite3').verbose();
+const databaseConfig = require('../src/config/database');
 
 class DatabaseHelper {
-    constructor(dbPath = './database.db') {
-        this.db = new sqlite3.Database(dbPath);
-        this.accessControl = new AccessControl(this.db);
+    constructor() {
+        this.db = databaseConfig;
+        this.accessControl = new AccessControl();
     }
 
     /**
      * Executa query SELECT com controle de acesso automático
      * @param {string} query - Query SQL
      * @param {Array} params - Parâmetros da query
-     * @param {Object} user - Objeto do usuário logado {id_pessoa, tipoacesso}
+     * @param {Object} user - Objeto do usuário logado {id_pessoa, nivelacesso}
      * @param {string} tableName - Nome da tabela principal
      * @returns {Promise<Array>}
      */

@@ -42,6 +42,38 @@ Este projeto utiliza arquivos de configuração que contêm informações sensí
 
 Para ambiente de produção, crie o arquivo `ecosystem.config.js` baseado nas necessidades do servidor.
 
+## Scripts de Produção
+
+Os seguintes scripts foram removidos do controle de versão por conterem informações sensíveis:
+- `deploy.sh` - Script de deploy
+- `corrigir-database-producao.sh` - Correção de banco em produção
+- `diagnostico-servidor.sh` - Diagnóstico do servidor
+- `fix-git-ownership-producao.sh` - Correção de permissões Git
+- `setup-server.sh` - Configuração inicial do servidor
+- `ecosystem.config.js` - Configuração PM2
+
+### Scripts Disponíveis
+
+#### `deploy-servidor.sh`
+Script para deploy automático no servidor de aplicação:
+- Faz backup da aplicação atual
+- Puxa a versão mais recente do GitHub
+- Sobrescreve alterações locais (força atualização)
+- Instala dependências
+- Configura ambiente de produção
+- Reinicia serviços
+
+#### `monitor-servidor.sh`
+Script para monitoramento e diagnóstico:
+- `./monitor-servidor.sh status` - Status geral da aplicação
+- `./monitor-servidor.sh logs` - Logs recentes
+- `./monitor-servidor.sh pm2` - Status detalhado PM2
+- `./monitor-servidor.sh db` - Teste de conexão com banco
+- `./monitor-servidor.sh health` - Verificação completa
+- `./monitor-servidor.sh restart` - Reinicia aplicação
+- `./monitor-servidor.sh stop` - Para aplicação
+- `./monitor-servidor.sh start` - Inicia aplicação
+
 ## Arquivos Ignorados pelo Git
 
 Os seguintes tipos de arquivos são automaticamente ignorados pelo Git:

@@ -110,14 +110,14 @@
                         <div class="mb-3">
                             <label for="data_inicial" class="form-label">Data Inicial *</label>
                             <input type="date" class="form-control" id="data_inicial" name="data_inicial" 
-                                   value="<%= plano && plano.data_inicial ? new Date(plano.data_inicial).toISOString().split('T')[0] : '' %>" required>
+                                   value="<%= plano && plano.data_inicial ? new Date(plano.data_inicial).toISOString().split('T')[0] : (campoEstagio && campoEstagio.data_inicial ? new Date(campoEstagio.data_inicial).toISOString().split('T')[0] : '') %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="data_final" class="form-label">Data Final *</label>
                             <input type="date" class="form-control" id="data_final" name="data_final" 
-                                   value="<%= plano && plano.data_final ? new Date(plano.data_final).toISOString().split('T')[0] : '' %>" required>
+                                   value="<%= plano && plano.data_final ? new Date(plano.data_final).toISOString().split('T')[0] : (campoEstagio && campoEstagio.data_final ? new Date(campoEstagio.data_final).toISOString().split('T')[0] : '') %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -136,7 +136,7 @@
                 <div class="mb-3">
                     <label for="atividades" class="form-label">Descrição das Atividades *</label>
                     <textarea class="form-control" id="atividades" name="atividades" rows="6" required 
-                              placeholder="Descreva detalhadamente as atividades que serão desenvolvidas durante o estágio..."><%= plano ? plano.atividades : '' %></textarea>
+                              placeholder="Descreva detalhadamente as atividades que serão desenvolvidas durante o estágio"><%= plano ? plano.atividades : '' %></textarea>
                     <div class="form-text">Descreva as principais atividades, responsabilidades e tarefas que o estagiário irá executar.</div>
                 </div>
             </div>
@@ -146,8 +146,7 @@
                 <h5 class="section-title"><i class="fas fa-bullseye me-2"></i>Objetivos</h5>
                 <div class="mb-3">
                     <label for="objetivos" class="form-label">Objetivos do Estágio *</label>
-                    <textarea class="form-control" id="objetivos" name="objetivos" rows="5" required 
-                              placeholder="Defina os objetivos de aprendizagem e competências a serem desenvolvidas..."><%= plano ? plano.objetivos : '' %></textarea>
+                    <textarea class="form-control" id="objetivos" name="objetivos" rows="5" required><%= plano ? plano.objetivos : '' %></textarea>
                     <div class="form-text">Especifique os objetivos de aprendizagem, competências técnicas e comportamentais a serem desenvolvidas.</div>
                 </div>
             </div>
@@ -157,8 +156,7 @@
                 <h5 class="section-title"><i class="fas fa-calendar-alt me-2"></i>Cronograma</h5>
                 <div class="mb-3">
                     <label for="cronograma" class="form-label">Cronograma de Atividades *</label>
-                    <textarea class="form-control" id="cronograma" name="cronograma" rows="5" required 
-                              placeholder="Estabeleça um cronograma detalhado das atividades por período..."><%= plano ? plano.cronograma : '' %></textarea>
+                    <textarea class="form-control" id="cronograma" name="cronograma" rows="5" required><%= plano ? plano.cronograma : '' %></textarea>
                     <div class="form-text">Organize as atividades por períodos (semanal, mensal) com marcos e entregas esperadas.</div>
                 </div>
             </div>
@@ -168,8 +166,7 @@
                 <h5 class="section-title"><i class="fas fa-tools me-2"></i>Recursos Necessários</h5>
                 <div class="mb-3">
                     <label for="recursos" class="form-label">Recursos e Materiais</label>
-                    <textarea class="form-control" id="recursos" name="recursos" rows="4" 
-                              placeholder="Liste os recursos, materiais, equipamentos e ferramentas necessários..."><%= plano ? plano.recursos : '' %></textarea>
+                    <textarea class="form-control" id="recursos" name="recursos" rows="4"><%= plano ? plano.recursos : '' %></textarea>
                     <div class="form-text">Especifique equipamentos, softwares, materiais e outros recursos necessários para o desenvolvimento das atividades.</div>
                 </div>
             </div>

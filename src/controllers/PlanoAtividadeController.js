@@ -166,6 +166,9 @@ class PlanoAtividadeController {
      */
     async store(req, res) {
         try {
+            console.log('DEBUG: Iniciando criação de plano de atividade');
+            console.log('DEBUG: Dados recebidos:', req.body);
+            
             const {
                 id_campo_estagio,
                 situacao,
@@ -180,7 +183,17 @@ class PlanoAtividadeController {
             } = req.body;
             
             // Validações básicas
+            console.log('DEBUG: Validando campos obrigatórios');
             if (!id_campo_estagio || !atividades || !objetivos || !cronograma || !data_inicial || !data_final || !cargahoraria) {
+                console.log('DEBUG: Campos obrigatórios faltando:', {
+                    id_campo_estagio: !!id_campo_estagio,
+                    atividades: !!atividades,
+                    objetivos: !!objetivos,
+                    cronograma: !!cronograma,
+                    data_inicial: !!data_inicial,
+                    data_final: !!data_final,
+                    cargahoraria: !!cargahoraria
+                });
                 return res.status(400).json({
                     success: false,
                     message: 'Campos obrigatórios não preenchidos'
@@ -238,7 +251,12 @@ class PlanoAtividadeController {
                 dataAtual
             ];
             
+            console.log('DEBUG: Executando SQL:', sql);
+            console.log('DEBUG: Parâmetros:', params);
+            
             const result = await databaseConfig.run(sql, params);
+            
+            console.log('DEBUG: Plano criado com sucesso, ID:', result.lastID);
             
             if (req.xhr || req.headers.accept?.includes('application/json')) {
                 return res.json({ success: true, message: 'Plano de atividade criado com sucesso', data: { id: result.lastID } });

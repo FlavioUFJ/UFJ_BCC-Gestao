@@ -67,7 +67,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="cardCampoEstagio">
                     <% if (camposEstagio && camposEstagio.length > 0) { %>
                         <div class="mb-3" id="campoEstagioContent">
                             <!-- Primeira linha: Concedente em negrito -->
@@ -102,18 +102,18 @@
                 <div class="card-footer bg-transparent">
                     <div class="d-flex justify-content-between mb-3">
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-success btn-sm" id="btnNovoCampoEstagio" onclick="window.location.href='/secure/estagios/campo/novo?origem=' + encodeURIComponent(window.location.pathname)">
+                            <button type="button" class="btn btn-success btn-sm" id="btnCampEstNovo" onclick="window.location.href='/secure/estagios/campo/novo?origem=' + encodeURIComponent(window.location.pathname)">
                                 <i class="fas fa-plus me-1"></i>Novo
                             </button>
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnEditarCampo" onclick="gerenciarCampoEstagio()">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnCampEstEditar" onclick="campEstGerenciar()">
                                 <i class="fas fa-edit me-1"></i>Editar
                             </button>
                         </div>
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-info btn-sm" id="btnGerarPDF" onclick="gerarPDFCampoEstagio()">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="btnCampEstGerarPDF" onclick="campEstGerarPDF()">
                                 <i class="fas fa-file-pdf me-1"></i>Gerar PDF
                             </button>
-                            <button type="button" class="btn btn-outline-warning btn-sm" id="btnAnexarPlano" onclick="anexarPlanoAssinado()">
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="btnCampEstAnexarPlano" onclick="campEstAnexarPlano()">
                                 <i class="fas fa-paperclip me-1"></i>Anexar Plano Assinado
                             </button>
                         </div>
@@ -122,15 +122,15 @@
                     <% if (camposEstagio && camposEstagio.length > 1) { %>
                         <!-- Barra de navegação -->
                         <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnAnterior" onclick="navegarRegistro(-1)">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCampEstAnterior" onclick="campEstNavegar(-1)">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
                             
                             <div class="flex-grow-1 mx-2">
-                                <input type="text" class="form-control form-control-sm" id="campoBusca" placeholder="Buscar por estagiário, orientador..." onkeyup="filtrarRegistros()">
+                                <input type="text" class="form-control form-control-sm" id="campEstBusca" placeholder="Buscar por estagiário, orientador..." onkeyup="campEstFiltrar()">
                             </div>
                             
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnProximo" onclick="navegarRegistro(1)">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCampEstProximo" onclick="campEstNavegar(1)">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -143,32 +143,74 @@
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-success text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-tasks fa-2x me-3"></i>
-                        <div>
-                            <h5 class="mb-0">Plano de Atividade</h5>
-                            <small class="opacity-75">Planos de atividades dos estágios</small>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-tasks fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Plano de Atividade</h5>
+                                <small class="opacity-75">Planos de atividades dos estágios</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="opacity-75">Em desenvolvimento</small>
                         </div>
                     </div>
                 </div>
                 <div class="card-body" id="cardPlanoAtividade">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="visually-hidden">Carregando...</span>
+                    <div class="mb-3">
+                        <!-- Primeira linha: Título do plano em negrito -->
+                        <p class="mb-2"><strong>Plano de Atividades - Semestre 2024/1</strong></p>
+                        
+                        <div class="row mb-2">
+                            <div class="col-4">
+                                <strong>Criado:</strong> <span>--/--/----</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>Aprovado:</strong> <span>--/--/----</span>
+                            </div>
+                            <div class="col-4 text-end">
+                                <span style="color: #6c757d; font-weight: bold;">
+                                    Pendente
+                                </span>
+                            </div>
                         </div>
-                        <p class="text-muted mt-2 mb-0">Carregando dados...</p>
+                        <p class="mb-1"><strong>Estagiário:</strong> <span>Aguardando implementação</span></p>
+                        <p class="mb-1"><strong>Orientador:</strong> <span>Aguardando implementação</span></p>
+                        <p class="mb-0"><strong>Supervisor:</strong> <span>Aguardando implementação</span></p>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-plus me-1"></i>Novo
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success btn-sm" id="btnPlanAtiNovo" onclick="planAtiNovo()" title="Criar novo plano de atividade">
+                                <i class="fas fa-plus me-1"></i>Novo
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnPlanAtiEditar" onclick="planAtiEditar()" title="Editar plano de atividade selecionado">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="btnPlanAtiGerarPDF" onclick="planAtiGerarPDF()" title="Gerar PDF do plano de atividade">
+                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="btnPlanAtiAprovar" onclick="planAtiAprovar()" title="Aprovar plano de atividade">
+                                <i class="fas fa-check me-1"></i>Aprovar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de navegação -->
+                    <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPlanAtiAnterior" onclick="planAtiNavegar('anterior')" title="Plano anterior">
+                            <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-edit me-1"></i>Gerenciar
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="excluirPlanoAtividade()">
-                            <i class="fas fa-trash me-1"></i>Excluir
+                        
+                        <div class="flex-grow-1 mx-2">
+                            <input type="text" class="form-control form-control-sm" id="planAtiBusca" placeholder="Buscar planos..." onkeyup="planAtiFiltrar()">
+                        </div>
+                        
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnPlanAtiProximo" onclick="planAtiNavegar('proximo')" title="Próximo plano">
+                            <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
@@ -179,31 +221,74 @@
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-warning text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-calendar-check fa-2x me-3"></i>
-                        <div>
-                            <h5 class="mb-0">Frequência</h5>
-                            <small class="opacity-75">Controle de frequência dos estágios</small>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-check fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Frequência</h5>
+                                <small class="opacity-75">Controle de frequência dos estágios</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="opacity-75">Em desenvolvimento</small>
                         </div>
                     </div>
                 </div>
-                <div class="card-body" id="cardFrequencia">
-                    <div class="text-center py-3">
-                        <i class="fas fa-info-circle fa-3x text-warning mb-2"></i>
-                        <p class="text-muted mb-0">Funcionalidade de Frequência temporariamente indisponível</p>
-                        <small class="text-muted">Em processo de refatoração</small>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <!-- Primeira linha: Período em negrito -->
+                        <p class="mb-2"><strong>Frequência - Março 2024</strong></p>
+                        
+                        <div class="row mb-2">
+                            <div class="col-4">
+                                <strong>Dias:</strong> <span>--/--</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>Horas:</strong> <span>-- h</span>
+                            </div>
+                            <div class="col-4 text-end">
+                                <span style="color: #6c757d; font-weight: bold;">
+                                    Pendente
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mb-1"><strong>Estagiário:</strong> <span>Aguardando implementação</span></p>
+                        <p class="mb-1"><strong>Orientador:</strong> <span>Aguardando implementação</span></p>
+                        <p class="mb-0"><strong>Supervisor:</strong> <span>Aguardando implementação</span></p>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-plus me-1"></i>Novo
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-warning btn-sm" id="btnFreqAtiNovo" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-plus me-1"></i>Novo
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnFreqAtiEditar" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="btnFreqAtiGerarPDF" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" id="btnFreqAtiValidar" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-check-circle me-1"></i>Validar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de navegação desabilitada -->
+                    <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded opacity-50">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnFreqAtiAnterior" disabled>
+                            <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-edit me-1"></i>Gerenciar
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-trash me-1"></i>Excluir
+                        
+                        <div class="flex-grow-1 mx-2">
+                            <input type="text" class="form-control form-control-sm" id="freqAtiBusca" placeholder="Buscar frequências..." disabled>
+                        </div>
+                        
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnFreqAtiProximo" disabled>
+                            <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
@@ -214,31 +299,74 @@
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-info text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-file-alt fa-2x me-3"></i>
-                        <div>
-                            <h5 class="mb-0">Relatórios</h5>
-                            <small class="opacity-75">Relatórios dos estágios</small>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-alt fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Relatórios</h5>
+                                <small class="opacity-75">Relatórios dos estágios</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="opacity-75">Em desenvolvimento</small>
                         </div>
                     </div>
                 </div>
-                <div class="card-body" id="cardRelatorios">
-                    <div class="text-center py-3">
-                        <i class="fas fa-info-circle fa-3x text-info mb-2"></i>
-                        <p class="text-muted mb-0">Funcionalidade de Relatórios temporariamente indisponível</p>
-                        <small class="text-muted">Em processo de refatoração</small>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <!-- Primeira linha: Tipo do relatório em negrito -->
+                        <p class="mb-2"><strong>Relatório Final - 2024/1</strong></p>
+                        
+                        <div class="row mb-2">
+                            <div class="col-4">
+                                <strong>Entrega:</strong> <span>--/--/----</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>Avaliado:</strong> <span>--/--/----</span>
+                            </div>
+                            <div class="col-4 text-end">
+                                <span style="color: #6c757d; font-weight: bold;">
+                                    Pendente
+                                </span>
+                            </div>
+                        </div>
+                        <p class="mb-1"><strong>Estagiário:</strong> <span>Aguardando implementação</span></p>
+                        <p class="mb-1"><strong>Orientador:</strong> <span>Aguardando implementação</span></p>
+                        <p class="mb-0"><strong>Supervisor:</strong> <span>Aguardando implementação</span></p>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-plus me-1"></i>Novo
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-info btn-sm" id="btnRelAtiNovo" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-plus me-1"></i>Novo
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnRelAtiEditar" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="btnRelAtiGerarPDF" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" id="btnRelAtiAvaliar" disabled title="Funcionalidade em desenvolvimento">
+                                <i class="fas fa-star me-1"></i>Avaliar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de navegação desabilitada -->
+                    <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded opacity-50">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnRelAtiAnterior" disabled>
+                            <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-edit me-1"></i>Gerenciar
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" disabled title="Funcionalidade temporariamente indisponível">
-                            <i class="fas fa-trash me-1"></i>Excluir
+                        
+                        <div class="flex-grow-1 mx-2">
+                            <input type="text" class="form-control form-control-sm" id="relAtiBusca" placeholder="Buscar relatórios..." disabled>
+                        </div>
+                        
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnRelAtiProximo" disabled>
+                            <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
@@ -281,28 +409,204 @@
         init() {
             this.setupEventListeners();
             this.setupModalEventListeners();
-            this.carregarDadosCards();
+            this.carregarCamposEstagio();
+            this.carregarPlanosAtividade();
+            this.carregarFrequencias();
+            this.carregarRelatorios();
         },
         
-        // Carregar dados dos cards
-        async carregarDadosCards() {
-            // Função carregarPlanosAtividade removida - tabela campo_estagio_planoatividade não existe mais
-            this.inicializarCardPlanoAtividade();
+        // Carregar dados de Campo de Estágio
+        async carregarCamposEstagio() {
+            try {
+                // Os dados já estão disponíveis na variável registrosOriginais
+                // que é preenchida pelo servidor
+                console.log('Carregando campos de estágio...', registrosOriginais);
+                if (typeof registrosOriginais !== 'undefined' && registrosOriginais && registrosOriginais.length > 0) {
+                    registrosFiltrados = [...registrosOriginais];
+                    indiceAtual = 0;
+                    // Chamar a função global atualizarExibicaoRegistro
+                    if (typeof atualizarExibicaoRegistro === 'function') {
+                        atualizarExibicaoRegistro();
+                    } else {
+                        console.error('Função atualizarExibicaoRegistro não encontrada');
+                    }
+                } else {
+                    console.log('Nenhum campo de estágio encontrado ou registrosOriginais não definido');
+                    // Exibir mensagem de nenhum registro encontrado
+                    const campoContent = document.getElementById('campoEstagioContent');
+                    if (campoContent) {
+                        campoContent.innerHTML = '<div class="text-center py-3"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Nenhum registro encontrado</p></div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar campos de estágio:', error);
+            }
         },
         
-        // Inicializar card de plano de atividade com mensagem informativa
-        inicializarCardPlanoAtividade() {
+        // Carregar dados de Frequência
+        async carregarFrequencias() {
+            try {
+                // Implementação futura - dados de frequência
+                console.log('Carregando dados de frequência...');
+            } catch (error) {
+                console.error('Erro ao carregar frequências:', error);
+            }
+        },
+        
+        // Carregar dados de Relatórios
+        async carregarRelatorios() {
+            try {
+                // Implementação futura - dados de relatórios
+                console.log('Carregando dados de relatórios...');
+            } catch (error) {
+                console.error('Erro ao carregar relatórios:', error);
+            }
+        },
+        
+        // Carregar planos de atividade
+        async carregarPlanosAtividade() {
+            try {
+                mostrarLoadingPlanoAtividade(true);
+                
+                const response = await fetch('/planos-atividade', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    planosAtividade = result.data || [];
+                    planoAtividadeAtualIndex = 0;
+                    planoAtividadeSelecionadoId = null;
+                    
+                    this.atualizarExibicaoPlanoAtividade();
+                } else {
+                    console.error('Erro ao carregar planos de atividade:', result.message);
+                    this.exibirMensagemPlanoAtividade('Erro ao carregar planos de atividade');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar planos de atividade:', error);
+                this.exibirMensagemPlanoAtividade('Erro ao conectar com o servidor');
+            } finally {
+                mostrarLoadingPlanoAtividade(false);
+            }
+        },
+        
+        // Atualizar exibição do plano de atividade
+        atualizarExibicaoPlanoAtividade() {
+            const cardBody = document.getElementById('cardPlanoAtividade');
+            
+            if (!planosAtividade || planosAtividade.length === 0) {
+                this.exibirMensagemPlanoAtividade('Nenhum plano de atividade encontrado');
+                // Desabilitar todos os botões quando não há planos
+                this.controlarBotoesPlanoAtividade(null);
+                return;
+            }
+            
+            const plano = planosAtividade[planoAtividadeAtualIndex];
+            planoAtividadeSelecionadoId = plano.id_planoatividade;
+            
+            const situacaoClass = plano.situacao === 'Aprovado' ? 'success' : 'warning';
+            const dataInicial = plano.data_inicial ? new Date(plano.data_inicial).toLocaleDateString('pt-BR') : 'Não informado';
+            const dataFinal = plano.data_final ? new Date(plano.data_final).toLocaleDateString('pt-BR') : 'Não informado';
+            
+            cardBody.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Plano de Atividades - ${plano.situacao || 'Em edição'}</strong></p>
+                        <p class="mb-1 text-muted"><small><strong>Período:</strong> ${dataInicial} - ${dataFinal}</small></p>
+                        <p class="mb-1 text-muted"><small><strong>Carga Horária:</strong> ${plano.cargahoraria || 'Não informado'} horas/semana</small></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted"><small><strong>Estagiário:</strong> ${plano.nome_estagiario || 'Não informado'}</small></p>
+                        <p class="mb-1 text-muted"><small><strong>Orientador:</strong> ${plano.nome_orientador || 'Não informado'}</small></p>
+                        <p class="mb-1 text-muted"><small><strong>Supervisor:</strong> ${plano.nome_supervisor || 'Não informado'}</small></p>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="badge bg-${situacaoClass}">${plano.situacao || 'Em edição'}</span>
+                    <span class="badge bg-secondary ms-1">${planoAtividadeAtualIndex + 1} de ${planosAtividade.length}</span>
+                </div>
+            `;
+            
+            // Controlar estado dos botões baseado na situação do plano
+            this.controlarBotoesPlanoAtividade(plano);
+        },
+        
+        // Controlar estado dos botões do card Plano de Atividade
+        controlarBotoesPlanoAtividade(plano) {
+            // Botão Editar - desabilitado se plano for "Aprovado" ou não existir plano
+            const btnEditarPlano = document.getElementById('btnPlanAtiEditar');
+            if (btnEditarPlano) {
+                const podeEditar = plano && plano.situacao !== 'Aprovado';
+                btnEditarPlano.disabled = !podeEditar;
+                
+                if (!podeEditar) {
+                    if (!plano) {
+                        btnEditarPlano.title = 'Nenhum plano de atividade selecionado';
+                    } else {
+                        btnEditarPlano.title = 'Planos aprovados não podem ser editados';
+                    }
+                    btnEditarPlano.classList.remove('btn-outline-primary');
+                    btnEditarPlano.classList.add('btn-outline-secondary');
+                } else {
+                    btnEditarPlano.title = 'Editar plano de atividade selecionado';
+                    btnEditarPlano.classList.remove('btn-outline-secondary');
+                    btnEditarPlano.classList.add('btn-outline-primary');
+                }
+            }
+            
+            // Botão Gerar PDF - desabilitado se não existir plano
+            const btnGerarPDFPlano = document.getElementById('btnPlanAtiGerarPDF');
+            if (btnGerarPDFPlano) {
+                const podeGerarPDF = plano !== null;
+                btnGerarPDFPlano.disabled = !podeGerarPDF;
+                
+                if (!podeGerarPDF) {
+                    btnGerarPDFPlano.title = 'Nenhum plano de atividade selecionado';
+                    btnGerarPDFPlano.classList.remove('btn-outline-info');
+                    btnGerarPDFPlano.classList.add('btn-outline-secondary');
+                } else {
+                    btnGerarPDFPlano.title = 'Gerar PDF do plano de atividade';
+                    btnGerarPDFPlano.classList.remove('btn-outline-secondary');
+                    btnGerarPDFPlano.classList.add('btn-outline-info');
+                }
+            }
+            
+            // Botão Aprovar - desabilitado se plano já estiver aprovado ou não existir plano
+            const btnAprovarPlano = document.getElementById('btnPlanAtiAprovar');
+            if (btnAprovarPlano) {
+                const podeAprovar = plano && plano.situacao !== 'Aprovado';
+                btnAprovarPlano.disabled = !podeAprovar;
+                
+                if (!podeAprovar) {
+                    if (!plano) {
+                        btnAprovarPlano.title = 'Nenhum plano de atividade selecionado';
+                    } else {
+                        btnAprovarPlano.title = 'Este plano já está aprovado';
+                    }
+                    btnAprovarPlano.classList.remove('btn-outline-warning');
+                    btnAprovarPlano.classList.add('btn-outline-secondary');
+                } else {
+                    btnAprovarPlano.title = 'Aprovar plano de atividade';
+                    btnAprovarPlano.classList.remove('btn-outline-secondary');
+                    btnAprovarPlano.classList.add('btn-outline-warning');
+                }
+            }
+        },
+        
+        // Exibir mensagem no card de plano de atividade
+        exibirMensagemPlanoAtividade(mensagem) {
             const cardBody = document.getElementById('cardPlanoAtividade');
             cardBody.innerHTML = `
                 <div class="text-center py-3">
-                    <i class="fas fa-info-circle fa-3x text-info mb-2"></i>
-                    <p class="text-muted mb-0">Funcionalidade de Planos de Atividade temporariamente indisponível</p>
-                    <small class="text-muted">Em processo de refatoração</small>
+                    <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">${mensagem}</p>
                 </div>
             `;
         },
-        
-
         
         // Configurar event listeners
         setupEventListeners() {
@@ -1104,8 +1408,8 @@
     let campoSelecionadoId = null;
     
     // Funções para gerenciar os cards
-    function gerenciarCampoEstagio() {
-        const btnEditarCampo = document.getElementById('btnEditarCampo');
+    function campEstGerenciar() {
+        const btnEditarCampo = document.getElementById('btnCampEstEditar');
         
         // Verificar se o botão está desabilitado
         if (btnEditarCampo && btnEditarCampo.disabled) {
@@ -1123,17 +1427,128 @@
     
     // Função de exclusão removida conforme solicitação
     
-    // Funções relacionadas aos planos de atividade removidas - tabela campo_estagio_planoatividade não existe mais
-    function gerenciarPlanoAtividade() {
-        alert('Funcionalidade de Planos de Atividade temporariamente indisponível.\nEm processo de refatoração.');
+    // Funções relacionadas aos planos de atividade
+    function planAtiNovo() {
+        console.log('planAtiNovo chamado:', {
+            campoSelecionadoId,
+            registrosOriginais,
+            registrosFiltrados
+        });
+        
+        if (!campoSelecionadoId) {
+            alert('Por favor, selecione um campo de estágio para criar o plano de atividade.');
+            return;
+        }
+        
+        // Verificar se o campo de estágio está em situação adequada
+        const campoAtual = registrosOriginais.find(c => c.id_campo_estagio == campoSelecionadoId);
+        if (!campoAtual) {
+            alert('Campo de estágio não encontrado.');
+            return;
+        }
+
+        if (campoAtual.situacao !== 'Cadastrado') {
+            alert('O plano de atividade só pode ser criado quando houver Campos de Estágio Cadastrados.');
+            return;
+        }
+        
+        // Redirecionar para formulário de criação
+        window.location.href = `/planos-atividade/create?campo_estagio_id=${campoSelecionadoId}`;
     }
     
-    function excluirPlanoAtividade() {
-        alert('Funcionalidade de Planos de Atividade temporariamente indisponível.\nEm processo de refatoração.');
+    function planAtiEditar() {
+        if (!planoAtividadeSelecionadoId) {
+            alert('Por favor, selecione um plano de atividade para editar.');
+            return;
+        }
+        
+        // Verificar se o plano pode ser editado
+        const planoAtual = planosAtividade.find(p => p.id_planoatividade == planoAtividadeSelecionadoId);
+        if (!planoAtual) {
+            alert('Plano de atividade não encontrado.');
+            return;
+        }
+        
+        if (planoAtual.situacao === 'Aprovado') {
+            alert('Planos de atividade aprovados não podem ser editados.');
+            return;
+        }
+        
+        // Redirecionar para formulário de edição
+        window.location.href = `/planos-atividade/${planoAtividadeSelecionadoId}/edit`;
+    }
+    
+    function planAtiGerarPDF() {
+        if (!planoAtividadeSelecionadoId) {
+            alert('Por favor, selecione um plano de atividade para gerar o PDF.');
+            return;
+        }
+        
+        // Confirmar geração do PDF
+        if (!confirm('Deseja gerar o PDF do plano de atividade selecionado?')) {
+            return;
+        }
+        
+        // Abrir PDF em nova janela
+        window.open(`/planos-atividade/${planoAtividadeSelecionadoId}/pdf`, '_blank');
+    }
+    
+    function planAtiAprovar() {
+        if (!planoAtividadeSelecionadoId) {
+            alert('Por favor, selecione um plano de atividade para aprovar.');
+            return;
+        }
+        
+        const planoAtual = planosAtividade.find(p => p.id_planoatividade == planoAtividadeSelecionadoId);
+        if (!planoAtual) {
+            alert('Plano de atividade não encontrado.');
+            return;
+        }
+        
+        if (planoAtual.situacao === 'Aprovado') {
+            alert('Este plano de atividade já está aprovado.');
+            return;
+        }
+        
+        if (confirm('Tem certeza que deseja aprovar este plano de atividade?\n\nApós a aprovação, não será mais possível editá-lo.')) {
+            aprovarPlano(planoAtividadeSelecionadoId);
+        }
+    }
+    
+    // Função auxiliar para aprovar plano
+    async function aprovarPlano(id) {
+        try {
+            mostrarLoadingPlanoAtividade(true);
+            
+            const response = await fetch(`/planos-atividade/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    situacao: 'Aprovado',
+                    data_fechamento: new Date().toISOString()
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                mostrarAlertaPlanoAtividade('success', 'Plano de atividade aprovado com sucesso!');
+                await carregarPlanosAtividade();
+            } else {
+                mostrarAlertaPlanoAtividade('error', result.message || 'Erro ao aprovar plano de atividade');
+            }
+        } catch (error) {
+            console.error('Erro ao aprovar plano:', error);
+            mostrarAlertaPlanoAtividade('error', 'Erro ao aprovar plano de atividade');
+        } finally {
+            mostrarLoadingPlanoAtividade(false);
+        }
     }
     
     // Função para gerar PDF do Campo de Estágio
-    function gerarPDFCampoEstagio() {
+    function campEstGerarPDF() {
         if (!campoSelecionadoId) {
             alert('Por favor, selecione um campo de estágio para gerar o PDF.');
             return;
@@ -1146,7 +1561,7 @@
     }
     
     // Função para anexar plano assinado
-    async function anexarPlanoAssinado() {
+    async function campEstAnexarPlano() {
         if (!campoSelecionadoId) {
             alert('Por favor, selecione um campo de estágio para anexar o plano.');
             return;
@@ -1225,7 +1640,7 @@
     let indiceAtual = 0;
     
     // Função para navegar entre registros
-    function navegarRegistro(direcao) {
+    function campEstNavegar(direcao) {
         if (registrosFiltrados.length === 0) return;
         
         indiceAtual += direcao;
@@ -1254,20 +1669,24 @@
         
         // Atualizar situação
         const situacaoElement = document.getElementById('situacaoAtual');
-        const situacao = registro.situacao || 'N/A';
-        situacaoElement.textContent = situacao;
-        
-        // Controlar cor da fonte baseada na situação
-        if (situacao !== 'Em Edição' && situacao !== 'N/A') {
-            situacaoElement.style.color = '#28a745'; // Verde
-        } else {
-            situacaoElement.style.color = '#ffc107'; // Amarelo (padrão)
+        if (situacaoElement) {
+            const situacao = registro.situacao || 'N/A';
+            situacaoElement.textContent = situacao;
+            
+            // Controlar cor da fonte baseada na situação
+            if (situacao !== 'Em Edição' && situacao !== 'N/A') {
+                situacaoElement.style.color = '#28a745'; // Verde
+            } else {
+                situacaoElement.style.color = '#ffc107'; // Amarelo (padrão)
+            }
         }
         
-        // Controlar estado do botão Editar baseado na situação
-        const btnEditarCampo = document.getElementById('btnEditarCampo');
+        // Controlar estado dos botões baseado na situação
+        const situacao = registro.situacao || '';
+        
+        // Botão Editar - desabilitado se situação for "Cadastrado"
+        const btnEditarCampo = document.getElementById('btnCampEstEditar');
         if (btnEditarCampo) {
-            const situacao = registro.situacao || '';
             const podeEditar = situacao === 'Em Edição';
             btnEditarCampo.disabled = !podeEditar;
             
@@ -1282,15 +1701,71 @@
             }
         }
         
+        // Botão Gerar PDF - desabilitado se situação for "Em Edição"
+        const btnGerarPDF = document.getElementById('btnCampEstGerarPDF');
+        if (btnGerarPDF) {
+            const podeGerarPDF = situacao === 'Cadastrado';
+            btnGerarPDF.disabled = !podeGerarPDF;
+            
+            if (!podeGerarPDF) {
+                btnGerarPDF.title = 'Geração de PDF disponível apenas para campos com situação "Cadastrado"';
+                btnGerarPDF.classList.remove('btn-outline-info');
+                btnGerarPDF.classList.add('btn-outline-secondary');
+            } else {
+                btnGerarPDF.title = 'Gerar PDF do campo de estágio';
+                btnGerarPDF.classList.remove('btn-outline-secondary');
+                btnGerarPDF.classList.add('btn-outline-info');
+            }
+        }
+        
+        // Botão Anexar Plano Assinado - desabilitado se situação for "Em Edição"
+        const btnAnexarPlano = document.getElementById('btnCampEstAnexarPlano');
+        if (btnAnexarPlano) {
+            const podeAnexarPlano = situacao === 'Cadastrado';
+            btnAnexarPlano.disabled = !podeAnexarPlano;
+            
+            if (!podeAnexarPlano) {
+                btnAnexarPlano.title = 'Anexar plano disponível apenas para campos com situação "Cadastrado"';
+                btnAnexarPlano.classList.remove('btn-outline-warning');
+                btnAnexarPlano.classList.add('btn-outline-secondary');
+            } else {
+                btnAnexarPlano.title = 'Anexar plano assinado';
+                btnAnexarPlano.classList.remove('btn-outline-secondary');
+                btnAnexarPlano.classList.add('btn-outline-warning');
+            }
+        }
+        
         // Atualizar datas
-        document.getElementById('inicioAtual').textContent = registro.data_inicio ? new Date(registro.data_inicio).toLocaleDateString('pt-BR') : 'N/A';
-        document.getElementById('fimAtual').textContent = registro.data_fim ? new Date(registro.data_fim).toLocaleDateString('pt-BR') : 'N/A';
+        const inicioElement = document.getElementById('inicioAtual');
+        if (inicioElement) {
+            inicioElement.textContent = registro.data_inicio ? new Date(registro.data_inicio).toLocaleDateString('pt-BR') : 'N/A';
+        }
+        
+        const fimElement = document.getElementById('fimAtual');
+        if (fimElement) {
+            fimElement.textContent = registro.data_fim ? new Date(registro.data_fim).toLocaleDateString('pt-BR') : 'N/A';
+        }
         
         // Atualizar pessoas
-        document.getElementById('estagiarioAtual').textContent = registro.nome_estagiario || 'N/A';
-        document.getElementById('orientadorAtual').textContent = registro.nome_orientador || 'N/A';
-        document.getElementById('supervisorAtual').textContent = registro.nome_supervisor || 'N/A';
-        document.getElementById('concedenteAtual').textContent = registro.nome_concedente || 'N/A';
+        const estagiarioElement = document.getElementById('estagiarioAtual');
+        if (estagiarioElement) {
+            estagiarioElement.textContent = registro.nome_estagiario || 'N/A';
+        }
+        
+        const orientadorElement = document.getElementById('orientadorAtual');
+        if (orientadorElement) {
+            orientadorElement.textContent = registro.nome_orientador || 'N/A';
+        }
+        
+        const supervisorElement = document.getElementById('supervisorAtual');
+        if (supervisorElement) {
+            supervisorElement.textContent = registro.nome_supervisor || 'N/A';
+        }
+        
+        const concedenteElement = document.getElementById('concedenteAtual');
+        if (concedenteElement) {
+            concedenteElement.textContent = registro.nome_concedente || 'N/A';
+        }
         
         // Atualizar contador no header
         const contadorHeader = document.getElementById('contadorHeader');
@@ -1309,8 +1784,8 @@
     }
     
     // Função para filtrar registros
-    function filtrarRegistros() {
-        const termo = document.getElementById('campoBusca').value.toLowerCase().trim();
+    function campEstFiltrar() {
+        const termo = document.getElementById('campEstBusca').value.toLowerCase().trim();
         
         if (termo === '') {
             registrosFiltrados = [...registrosOriginais];
@@ -1396,6 +1871,66 @@
             if (container && headerRow) {
                 headerRow.insertAdjacentElement('afterend', alertDiv);
             }
+        }
+    }
+
+    // Funções específicas para Plano de Atividade
+    function planAtiNavegar(direcao) {
+        if (!planosAtividade || planosAtividade.length === 0) return;
+        
+        if (direcao === 'anterior') {
+            planoAtividadeAtualIndex--;
+        } else if (direcao === 'proximo') {
+            planoAtividadeAtualIndex++;
+        }
+        
+        if (planoAtividadeAtualIndex < 0) {
+            planoAtividadeAtualIndex = planosAtividade.length - 1;
+        } else if (planoAtividadeAtualIndex >= planosAtividade.length) {
+            planoAtividadeAtualIndex = 0;
+        }
+        
+        AdminDashboard.atualizarExibicaoPlanoAtividade();
+    }
+    
+    function planAtiFiltrar() {
+        const filtro = document.getElementById('planAtiBusca').value.toLowerCase().trim();
+        
+        if (!filtro) {
+            // Se não há filtro, mostrar todos os planos
+            AdminDashboard.atualizarExibicaoPlanoAtividade();
+            return;
+        }
+        
+        const planosFiltrados = planosAtividade.filter(plano => {
+            return (plano.nome_estagiario && plano.nome_estagiario.toLowerCase().includes(filtro)) ||
+                   (plano.nome_orientador && plano.nome_orientador.toLowerCase().includes(filtro)) ||
+                   (plano.nome_supervisor && plano.nome_supervisor.toLowerCase().includes(filtro));
+        });
+        
+        if (planosFiltrados.length === 0) {
+            document.getElementById('cardPlanoAtividade').innerHTML = '<div class="text-center py-3"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Nenhum plano encontrado</p></div>';
+            return;
+        }
+        
+        // Temporariamente substituir os dados para exibição filtrada
+        const planosOriginais = [...planosAtividade];
+        planosAtividade = planosFiltrados;
+        planoAtividadeAtualIndex = 0;
+        AdminDashboard.atualizarExibicaoPlanoAtividade();
+    }
+    
+    function mostrarLoadingPlanoAtividade(mostrar) {
+        const cardBody = document.getElementById('cardPlanoAtividade');
+        if (mostrar) {
+            cardBody.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">Carregando planos de atividade...</p>
+                </div>
+            `;
         }
     }
 

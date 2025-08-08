@@ -8,6 +8,7 @@ const router = express.Router();
 const ParametroController = require('../controllers/ParametroController');
 const { requireAuth, requireAdmin } = require('../config/session');
 const ValidationMiddleware = require('../middleware/validation');
+const debugParametroMiddleware = require('../../middleware/parametro-debug');
 
 // Criar middlewares de validação específicos para parâmetros
 const validateParametro = (req, res, next) => {
@@ -70,10 +71,10 @@ const parametroController = new ParametroController();
 // ===== ROTAS PÚBLICAS (SEM AUTENTICAÇÃO) =====
 
 // GET /parametros/buscar - Buscar parâmetros (usado pelo frontend)
-router.get('/buscar', (req, res) => parametroController.buscar(req, res));
+router.get('/buscar', debugParametroMiddleware, (req, res) => parametroController.buscar(req, res));
 
 // GET /parametros/buscar-valor - Buscar valor específico de um parâmetro
-router.get('/buscar-valor', (req, res) => parametroController.buscarValorEspecifico(req, res));
+router.get('/buscar-valor', debugParametroMiddleware, (req, res) => parametroController.buscarValorEspecifico(req, res));
 
 // Middleware de autenticação para todas as rotas protegidas
 router.use(requireAuth);

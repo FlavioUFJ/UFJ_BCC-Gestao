@@ -41,9 +41,12 @@ class ParametroController {
      */
     async buscar(req, res) {
         try {
-            console.log('DEBUG: Iniciando busca de parâmetro');
+            console.log('[PARAMETRO-CONTROLLER] Iniciando busca de parâmetro');
+            console.log('[PARAMETRO-CONTROLLER] Headers:', req.headers);
+            console.log('[PARAMETRO-CONTROLLER] Session:', req.session?.user ? 'Autenticado' : 'Não autenticado');
+            console.log('[PARAMETRO-CONTROLLER] Environment:', process.env.NODE_ENV);
             const { identificador } = req.query;
-            console.log('DEBUG: Identificador recebido:', identificador);
+            console.log('[PARAMETRO-CONTROLLER] Identificador recebido:', identificador);
             
             if (!identificador) {
                 console.log('DEBUG: Identificador não fornecido');
@@ -105,9 +108,15 @@ class ParametroController {
      */
     async buscarValorEspecifico(req, res) {
         try {
+            console.log('[PARAMETRO-CONTROLLER] Iniciando busca de valor específico');
+            console.log('[PARAMETRO-CONTROLLER] Headers:', req.headers);
+            console.log('[PARAMETRO-CONTROLLER] Session:', req.session?.user ? 'Autenticado' : 'Não autenticado');
+            console.log('[PARAMETRO-CONTROLLER] Environment:', process.env.NODE_ENV);
             const { identificador, identificadorValor } = req.query;
+            console.log('[PARAMETRO-CONTROLLER] Parâmetros recebidos:', { identificador, identificadorValor });
             
             if (!identificador || !identificadorValor) {
+                console.log('[PARAMETRO-CONTROLLER] Parâmetros obrigatórios não fornecidos');
                 return res.status(400).json({
                     success: false,
                     message: 'Identificador e identificadorValor são obrigatórios'

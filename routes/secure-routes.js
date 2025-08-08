@@ -583,16 +583,16 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
  */
 router.get('/parametros/buscar', requireAuth, async (req, res) => {
     try {
-        const { nome } = req.query;
+        const { identificador } = req.query;
         
-        if (!nome) {
-            return res.json({ success: false, message: 'Nome do parâmetro é obrigatório' });
+        if (!identificador) {
+            return res.json({ success: false, message: 'Identificador é obrigatório' });
         }
 
         const db = databaseConfig;
         
         // Buscar parâmetro por identificador
-        const parametro = await db.get('SELECT * FROM parametro WHERE identificador = ?', [nome]);
+        const parametro = await db.get('SELECT * FROM parametro WHERE identificador = ?', [identificador]);
         
         if (!parametro) {
             return res.json({ success: false, message: 'Parâmetro não encontrado', parametros: [] });

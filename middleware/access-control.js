@@ -4,29 +4,29 @@
  * e suas relações com a tabela Pessoa
  */
 
-const sqlite3 = require('sqlite3').verbose();
+const databaseConfig = require('../src/config/database');
 
 // Mapeamento das tabelas e suas colunas que referenciam Pessoa
 const PESSOA_RELATIONS = {
     'pessoa': ['id_pessoa'],
     'pessoaFisica': ['id_pessoa'],
     'pessoaJuridica': ['id_pessoa'],
-    'campo_estagio': ['id_pessoa_curso', 'id_pessoa_estagiario', 'id_pessoa_orientador', 'id_pessoa_concedente', 'id_pessoa_supervisor'],
+    // 'campo_estagio': removido - Campo de Estágio
     'pessoa_login': ['id_pessoa'],
-    'usuario_modulos': ['id_pessoa'],
-    'campo_estagio_relatorio': [], // Relaciona indiretamente via campo_estagio
-    'campo_estagio_planoatividade': [] // Relaciona indiretamente via campo_estagio
+    'usuario_modulos': ['id_pessoa']
+    // 'campo_estagio_relatorio': removido - Campo de Estágio
+    // 'campo_estagio_planoatividade': removido - Campo de Estágio
 };
 
 // Tabelas que se relacionam indiretamente com Pessoa via campo_estagio
 const INDIRECT_RELATIONS = {
-    'campo_estagio_relatorio': 'id_campo_estagio',
-    'campo_estagio_planoatividade': 'id_campo_estagio'
+    // 'campo_estagio_relatorio': removido - Campo de Estágio
+    // 'campo_estagio_planoatividade': removido - Campo de Estágio
 };
 
 class AccessControl {
-    constructor(db) {
-        this.db = db;
+    constructor() {
+        this.db = databaseConfig;
     }
 
     /**
@@ -35,21 +35,18 @@ class AccessControl {
      * @returns {Promise<boolean>}
      */
     async isAdmin(userId) {
-        return new Promise((resolve, reject) => {
+        try {
             const query = `
-                SELECT pl.tipoacesso 
+                SELECT pl.nivelacesso 
                 FROM pessoa_login pl 
                 WHERE pl.id_pessoa = ? AND pl.status = 'Ativo'
             `;
             
-            this.db.get(query, [userId], (err, row) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(row && row.tipoacesso === 'Administrador');
-            });
-        });
+            const row = await this.db.get(query, [userId]);
+            return row && row.nivelacesso === 'Administrador';
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -100,21 +97,7 @@ class AccessControl {
             conditions.push(`(${directConditions.join(' OR ')})`);
         }
         
-        // Relações indiretas via campo_estagio
-        if (INDIRECT_RELATIONS[tableName]) {
-            const indirectCondition = `
-                ${tableName}.${INDIRECT_RELATIONS[tableName]} IN (
-                    SELECT ce.id_campo_estagio 
-                    FROM campo_estagio ce 
-                    WHERE ce.id_pessoa_curso = ${userId} 
-                       OR ce.id_pessoa_estagiario = ${userId}
-                       OR ce.id_pessoa_orientador = ${userId}
-                       OR ce.id_pessoa_concedente = ${userId}
-                       OR ce.id_pessoa_supervisor = ${userId}
-                )
-            `;
-            conditions.push(`(${indirectCondition})`);
-        }
+        // Relações indiretas via campo_estagio: removido - Campo de Estágio
         
         if (conditions.length === 0) {
             return query;
@@ -142,7 +125,7 @@ class AccessControl {
         const lowerQuery = query.toLowerCase();
         const lowerTableName = tableName.toLowerCase();
         
-        // Procurar padrões como "FROM campo_estagio ce" ou "JOIN campo_estagio ce"
+        // Procurar padrões como "FROM tabela alias" ou "JOIN tabela alias"
         const patterns = [
             new RegExp(`from\\s+${lowerTableName}\\s+(\\w+)`, 'i'),
             new RegExp(`join\\s+${lowerTableName}\\s+(\\w+)`, 'i'),
@@ -189,17 +172,12 @@ class AccessControl {
      * @returns {Promise}
      */
     async executeWithAccess(query, params, userId, tableName, method = 'all') {
-        const filteredQuery = await this.applyAccessFilter(query, userId, tableName);
-        
-        return new Promise((resolve, reject) => {
-            this.db[method](filteredQuery, params, (err, result) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                resolve(result);
-            });
-        });
+        try {
+            const filteredQuery = await this.applyAccessFilter(query, userId, tableName);
+            return await this.db[method](filteredQuery, params);
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -237,21 +215,7 @@ class AccessControl {
      * @param {string} tableAlias - Alias da tabela no JOIN
      * @returns {Promise<string>}
      */
-    async generateJoinAccessConditions(userId, tableAlias = 'ce') {
-        const isUserAdmin = await this.isAdmin(userId);
-        
-        if (isUserAdmin) {
-            return '1=1'; // Sempre verdadeiro para admin
-        }
-        
-        return `(
-            ${tableAlias}.id_pessoa_curso = ${userId} OR
-            ${tableAlias}.id_pessoa_estagiario = ${userId} OR
-            ${tableAlias}.id_pessoa_orientador = ${userId} OR
-            ${tableAlias}.id_pessoa_concedente = ${userId} OR
-            ${tableAlias}.id_pessoa_supervisor = ${userId}
-        )`;
-    }
+    // generateJoinAccessConditions: removido - Campo de Estágio
 }
 
 module.exports = AccessControl;

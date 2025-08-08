@@ -13,6 +13,47 @@ class PessoaManager {
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
+        `;
+        
+        // Modal separado para busca de vínculo
+        this.modalVinculoHtml = `
+            <div class="modal fade" id="pessoaVinculoModal" tabindex="-1" aria-labelledby="pessoaVinculoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pessoaVinculoModalLabel">Buscar Instituição/Empresa</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" id="termoBuscaVinculo" placeholder="Digite nome ou email para buscar..." minlength="2">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select" id="categoriaBuscaVinculo">
+                                            <option value="4,6">Todas as categorias permitidas</option>
+                                            <option value="4">Concedente/Local de Estágio</option>
+                                            <option value="6">Curso/Instituição de Ensino</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div id="resultadosBuscaVinculo"></div>
+                                    <div id="paginationControlsVinculo" class="d-flex justify-content-between align-items-center mt-3" style="display: none !important;">
+                                        <button class="btn btn-outline-primary btn-sm" id="btnPreviousVinculo" disabled>Anterior</button>
+                                        <span id="pageInfoVinculo">Página 1</span>
+                                        <button class="btn btn-outline-primary btn-sm" id="btnNextVinculo" disabled>Próxima</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.modalHtml += `
                             <!-- Abas -->
                             <ul class="nav nav-tabs" id="pessoaTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
@@ -104,6 +145,26 @@ class PessoaManager {
                                                 <input type="text" class="form-control" id="telefone" name="telefone">
                                             </div>
                                         </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-12">
+                                                <label for="instituicao_empresa" class="form-label">Instituição/Empresa</label>
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control" id="instituicao_empresa" name="instituicao_empresa" 
+                                                           placeholder="Informe o seu vínculo" 
+                                                           title="Informe o seu vínculo" 
+                                                           data-bs-toggle="tooltip" 
+                                                           data-bs-placement="top" 
+                                                           readonly>
+                                                    <input type="hidden" id="id_pessoaVinculo" name="id_pessoaVinculo">
+                                                    <button type="button" class="btn btn-outline-secondary position-absolute" 
+                                                            style="right: 5px; top: 50%; transform: translateY(-50%); z-index: 10; padding: 0.25rem 0.5rem;" 
+                                                            id="btnBuscarInstituicao" 
+                                                            title="Buscar Instituição/Empresa">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div class="mt-3">
                                             <button type="submit" class="btn btn-primary">Cadastrar Pessoa</button>
                                         </div>
@@ -126,15 +187,27 @@ class PessoaManager {
     }
     
     init() {
-        // Adicionar modal ao DOM se não existir
+        // Adicionar modal principal ao DOM se não existir
         if (!document.getElementById('pessoaModal')) {
             document.body.insertAdjacentHTML('beforeend', this.modalHtml);
         }
         
+        // Adicionar modal de vínculo ao DOM se não existir
+        if (!document.getElementById('pessoaVinculoModal')) {
+            document.body.insertAdjacentHTML('beforeend', this.modalVinculoHtml);
+        }
+        
         this.bindEvents();
+        this.bindVinculoEvents();
     }
     
     bindEvents() {
+        // Evitar múltiplas inicializações
+        if (this.eventsInitialized) {
+            return;
+        }
+        this.eventsInitialized = true;
+        
         // Busca em tempo real
         const termoBusca = document.getElementById('termoBusca');
         const categoriaBusca = document.getElementById('categoriaBusca');
@@ -165,6 +238,56 @@ class PessoaManager {
             formCadastrar.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.cadastrarPessoa();
+            });
+        }
+        
+        // Botão buscar instituição
+        const btnBuscarInstituicao = document.getElementById('btnBuscarInstituicao');
+        if (btnBuscarInstituicao) {
+            btnBuscarInstituicao.addEventListener('click', () => {
+                this.abrirBuscarPessoaVinculo();
+            });
+        }
+    }
+    
+    bindVinculoEvents() {
+        // Busca em tempo real no modal de vínculo
+        const termoBuscaVinculo = document.getElementById('termoBuscaVinculo');
+        const categoriaBuscaVinculo = document.getElementById('categoriaBuscaVinculo');
+        
+        if (termoBuscaVinculo) {
+            termoBuscaVinculo.addEventListener('input', this.debounce(() => {
+                const termo = termoBuscaVinculo.value.trim();
+                if (termo.length === 0) {
+                    // Se campo foi limpo, voltar para listagem paginada
+                    this.currentPageVinculo = 1;
+                    this.carregarTodasPessoasVinculo();
+                } else {
+                    // Buscar com qualquer quantidade de caracteres
+                    this.buscarPessoasVinculo();
+                }
+            }, 300));
+        }
+        
+        if (categoriaBuscaVinculo) {
+            categoriaBuscaVinculo.addEventListener('change', () => {
+                this.buscarPessoasVinculo();
+            });
+        }
+        
+        // Controles de paginação do modal de vínculo
+        const btnPreviousVinculo = document.getElementById('btnPreviousVinculo');
+        const btnNextVinculo = document.getElementById('btnNextVinculo');
+        
+        if (btnPreviousVinculo) {
+            btnPreviousVinculo.addEventListener('click', () => {
+                this.previousPageVinculo();
+            });
+        }
+        
+        if (btnNextVinculo) {
+            btnNextVinculo.addEventListener('click', () => {
+                this.nextPageVinculo();
             });
         }
         
@@ -229,8 +352,8 @@ class PessoaManager {
             'id_pessoa_supervisor': '5' // Supervisor
         };
         
-        // Definir categoria automaticamente baseada no inputId
-        const categoriaAutomatica = categoriaMap[inputId];
+        // Definir categoria automaticamente baseada no inputId ou configuração
+        const categoriaAutomatica = this.config.categoriaAutomatica || categoriaMap[inputId];
         
         // Configurar título do modal
         document.getElementById('pessoaModalLabel').textContent = this.config.modalTitle;
@@ -294,10 +417,11 @@ class PessoaManager {
         // Limpar campos
         if (!this.config.editMode) {
             document.getElementById('termoBusca').value = '';
-            // Aplicar categoria automática se definida, senão usar 'todos'
-            document.getElementById('categoriaBusca').value = categoriaAutomatica || 'todos';
             document.getElementById('resultadosBusca').innerHTML = '';
             document.getElementById('formCadastrarPessoa').reset();
+            
+            // Configurar combobox de categoria baseado na configuração
+            this.configurarComboboxCategoria(categoriaAutomatica);
             
             // Se há categoria automática, também definir no formulário de cadastro
             if (categoriaAutomatica) {
@@ -329,14 +453,24 @@ class PessoaManager {
         }
         
         // Abrir modal
-        const modal = new bootstrap.Modal(document.getElementById('pessoaModal'));
-        
-        // Adicionar listener para garantir que o loading seja removido quando o modal for fechado
         const modalElement = document.getElementById('pessoaModal');
-        modalElement.addEventListener('hidden.bs.modal', () => {
+        const modal = new bootstrap.Modal(modalElement);
+        
+        // Remover listeners anteriores para evitar conflitos
+        modalElement.removeEventListener('hidden.bs.modal', this.modalCloseHandler);
+        
+        // Criar handler para fechamento do modal
+        this.modalCloseHandler = () => {
             // Remover classe loading do body caso tenha ficado ativa
             document.body.classList.remove('loading');
-        }, { once: true });
+            // Limpar referências para evitar vazamentos de memória
+            this.currentCallback = null;
+            this.currentInputId = null;
+            this.currentConfig = null;
+        };
+        
+        // Adicionar listener para quando o modal for fechado
+        modalElement.addEventListener('hidden.bs.modal', this.modalCloseHandler, { once: true });
         
         modal.show();
     }
@@ -390,7 +524,9 @@ class PessoaManager {
         document.getElementById('paginationControls').style.display = 'none';
         
         try {
-            const response = await fetch(`/secure/pessoas/buscar?termo=${encodeURIComponent(termo)}&categoria=${categoria}`);
+            const response = await fetch(`/secure/pessoas/buscar?termo=${encodeURIComponent(termo)}&categoria=${categoria}`, {
+            credentials: 'include'
+        });
             const data = await response.json();
             
             if (data.success) {
@@ -453,17 +589,13 @@ class PessoaManager {
         });
     }
     
-    selecionarPessoa(id, nome) {
+    async selecionarPessoa(id, nome) {
         try {
             console.log('Selecionando pessoa:', { id, nome });
             
             if (this.currentCallback) {
-                // Criar objeto pessoa com a estrutura esperada pelos callbacks
-                const pessoa = {
-                    id_pessoa: id,
-                    nome: nome
-                };
-                this.currentCallback(pessoa);
+                // Chamar callback com os parâmetros corretos (id, nome)
+                await this.currentCallback(id, nome);
             } else {
                 console.warn('Nenhum callback definido para seleção de pessoa');
             }
@@ -502,8 +634,29 @@ class PessoaManager {
     }
     
     async cadastrarPessoa() {
+        // Evitar múltiplas execuções simultâneas
+        if (this.isSubmitting) {
+            console.log('Cadastro já em andamento, ignorando...');
+            return;
+        }
+        this.isSubmitting = true;
+        
         const formData = new FormData(document.getElementById('formCadastrarPessoa'));
         const data = Object.fromEntries(formData.entries());
+        
+        // Limpar máscaras de formatação antes de enviar
+        if (data.telefone) {
+            data.telefone = this.limparMascaraTelefone(data.telefone);
+        }
+        if (data.cnpj_cpf) {
+            data.cnpj_cpf = this.limparMascaraCpfCnpj(data.cnpj_cpf);
+        }
+        
+        // Incluir o campo id_pessoaVinculo se estiver preenchido
+        const idPessoaVinculo = document.getElementById('id_pessoaVinculo')?.value;
+        if (idPessoaVinculo) {
+            data.id_pessoaVinculo = idPessoaVinculo;
+        }
         
         // Mapear os valores do tipo para os códigos esperados pelo banco
         const tipoMap = {
@@ -536,44 +689,76 @@ class PessoaManager {
             
             if (this.config && this.config.editMode && this.editingPersonId) {
                 // Modo edição - fazer PUT para atualizar
-                response = await fetch(`/api/pessoas/${this.editingPersonId}`, {
+                const url = `/api/pessoas/${this.editingPersonId}`;
+                console.log('Fazendo PUT para:', url);
+                console.log('Dados a serem enviados:', data);
+                
+                response = await fetch(url, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
+                    credentials: 'include'
                 });
             } else {
                 // Modo cadastro - fazer POST para criar
-                response = await fetch('/secure/pessoas/criar', {
+                const url = '/secure/pessoas/criar';
+                console.log('Fazendo POST para:', url);
+                console.log('Dados a serem enviados:', data);
+                
+                response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
+                    credentials: 'include'
                 });
             }
             
+            console.log('Status da resposta:', response.status);
+            console.log('Headers da resposta:', response.headers);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Resposta não é JSON:', text);
+                throw new Error('Resposta do servidor não é JSON válido');
+            }
+            
             result = await response.json();
+            console.log('Resultado recebido:', result);
             
             if (result.success) {
-                alert(result.message);
-                
                 // Selecionar a pessoa (recém-criada ou editada)
                 if (this.currentCallback) {
                     const pessoa = result.pessoa || { id_pessoa: this.editingPersonId, nome: data.nome };
-                    this.currentCallback(pessoa.id_pessoa, pessoa.nome);
+                    await this.currentCallback(pessoa.id_pessoa, pessoa.nome);
                 }
                 
                 // Fechar modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('pessoaModal'));
                 modal.hide();
             } else {
-                alert('Erro: ' + result.message);
+                console.error('Erro ao cadastrar pessoa:', result.message);
             }
         } catch (error) {
             console.error('Erro ao cadastrar pessoa:', error);
-            alert('Erro ao cadastrar pessoa');
+            console.error('Detalhes do erro:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+        } finally {
+            // Resetar flag de submissão
+            this.isSubmitting = false;
         }
     }
     
@@ -617,12 +802,24 @@ class PessoaManager {
         input.value = valor;
     }
     
+    // Função para limpar máscara do telefone (manter apenas dígitos)
+    limparMascaraTelefone(telefone) {
+        return telefone ? telefone.replace(/\D/g, '') : '';
+    }
+    
+    // Função para limpar máscara do CPF/CNPJ (manter apenas dígitos)
+    limparMascaraCpfCnpj(cpfCnpj) {
+        return cpfCnpj ? cpfCnpj.replace(/\D/g, '') : '';
+    }
+    
     // Carregar todas as pessoas para paginação
     async carregarTodasPessoas() {
         try {
             const categoria = document.getElementById('categoriaBusca').value;
             console.log('DEBUG Frontend - carregarTodasPessoas categoria:', categoria);
-            const response = await fetch(`/secure/pessoas/buscar?termo=&categoria=${categoria}`);
+            const response = await fetch(`/secure/pessoas/buscar?termo=&categoria=${categoria}`, {
+            credentials: 'include'
+        });
             const data = await response.json();
             
             if (data.success) {
@@ -685,6 +882,285 @@ class PessoaManager {
         }
     }
     
+    // Abrir busca de pessoa vínculo (categorias 4 e 6)
+    abrirBuscarPessoaVinculo() {
+        // Configurar callback para seleção
+        this.currentVinculoCallback = (pessoaSelecionada) => {
+            // Callback para quando uma pessoa for selecionada
+            document.getElementById('id_pessoaVinculo').value = pessoaSelecionada.id_pessoa;
+            document.getElementById('instituicao_empresa').value = pessoaSelecionada.nome;
+        };
+        
+        // Limpar campos de busca
+        document.getElementById('termoBuscaVinculo').value = '';
+        document.getElementById('resultadosBuscaVinculo').innerHTML = '';
+        
+        // Reset pagination
+        this.currentPageVinculo = 1;
+        
+        // Carregar todas as pessoas das categorias 4 e 6
+        this.carregarTodasPessoasVinculo();
+        
+        // Abrir modal de vínculo
+        const modalElement = document.getElementById('pessoaVinculoModal');
+        const modal = new bootstrap.Modal(modalElement);
+        
+        // Remover listeners anteriores para evitar conflitos
+        modalElement.removeEventListener('hidden.bs.modal', this.modalVinculoCloseHandler);
+        modalElement.removeEventListener('shown.bs.modal', this.modalVinculoShowHandler);
+        
+        // Criar handler para quando o modal for mostrado
+        this.modalVinculoShowHandler = () => {
+            // Remover aria-hidden para evitar conflitos de acessibilidade
+            modalElement.removeAttribute('aria-hidden');
+        };
+        
+        // Criar handler para fechamento do modal
+        this.modalVinculoCloseHandler = () => {
+            // Limpar referências para evitar vazamentos de memória
+            this.currentVinculoCallback = null;
+        };
+        
+        // Adicionar listeners para eventos do modal
+        modalElement.addEventListener('shown.bs.modal', this.modalVinculoShowHandler, { once: true });
+        modalElement.addEventListener('hidden.bs.modal', this.modalVinculoCloseHandler, { once: true });
+        
+        modal.show();
+    }
+    
+    // Métodos específicos para o modal de vínculo
+    async buscarPessoasVinculo() {
+        const termo = document.getElementById('termoBuscaVinculo').value.trim();
+        const categoria = document.getElementById('categoriaBuscaVinculo').value;
+        console.log('DEBUG Frontend Vínculo - Valores capturados:', { termo, categoria });
+        const resultadosDiv = document.getElementById('resultadosBuscaVinculo');
+        
+        // Ocultar controles de paginação durante busca específica
+        document.getElementById('paginationControlsVinculo').style.display = 'none';
+        
+        try {
+            const response = await fetch(`/secure/pessoas/buscar?termo=${encodeURIComponent(termo)}&categoria=${categoria}`, {
+            credentials: 'include'
+        });
+            const data = await response.json();
+            
+            if (data.success) {
+                this.exibirResultadosVinculo(data.pessoas);
+            } else {
+                resultadosDiv.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+            }
+        } catch (error) {
+            console.error('Erro ao buscar pessoas vínculo:', error);
+            resultadosDiv.innerHTML = '<div class="alert alert-danger">Erro ao buscar pessoas</div>';
+        }
+    }
+    
+    async carregarTodasPessoasVinculo() {
+        const categoria = '4,6'; // Sempre categorias 4 e 6
+        const resultadosDiv = document.getElementById('resultadosBuscaVinculo');
+        
+        try {
+            const response = await fetch(`/secure/pessoas/buscar?categoria=${categoria}&pagina=${this.currentPageVinculo || 1}&limite=10`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                this.exibirResultadosVinculo(data.pessoas);
+                this.atualizarPaginacaoVinculo(data.total, data.pagina, data.totalPaginas);
+            } else {
+                resultadosDiv.innerHTML = `<div class="alert alert-warning">${data.message}</div>`;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar pessoas vínculo:', error);
+            resultadosDiv.innerHTML = '<div class="alert alert-danger">Erro ao carregar pessoas</div>';
+        }
+    }
+    
+    exibirResultadosVinculo(pessoas) {
+        const resultadosDiv = document.getElementById('resultadosBuscaVinculo');
+        
+        if (!pessoas || pessoas.length === 0) {
+            resultadosDiv.innerHTML = '<div class="alert alert-info">Nenhuma pessoa encontrada.</div>';
+            return;
+        }
+        
+        let html = '<div class="list-group">';
+        pessoas.forEach(pessoa => {
+            const categoriaTexto = this.getCategoriaTexto(pessoa.categoria);
+            html += `
+                <div class="list-group-item list-group-item-action" style="cursor: pointer;" onclick="pessoaManager.selecionarPessoaVinculo(${pessoa.id_pessoa}, '${pessoa.nome.replace(/'/g, "\\'")}')">  
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${pessoa.nome}</h6>
+                        <small class="text-muted">${categoriaTexto}</small>
+                    </div>
+                    <p class="mb-1">${pessoa.email || 'Email não informado'}</p>
+                    <small class="text-muted">${pessoa.telefone || 'Telefone não informado'}</small>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        resultadosDiv.innerHTML = html;
+    }
+    
+    selecionarPessoaVinculo(id, nome) {
+        try {
+            console.log('🎯 PESSOA VÍNCULO SELECIONADA:', { 
+                id: id, 
+                nome: nome, 
+                timestamp: new Date().toLocaleString('pt-BR') 
+            });
+            
+            if (this.currentVinculoCallback) {
+                // Criar objeto pessoa com a estrutura esperada pelos callbacks
+                const pessoa = {
+                    id_pessoa: id,
+                    nome: nome
+                };
+                console.log('✅ Executando callback com dados:', pessoa);
+                this.currentVinculoCallback(pessoa);
+            } else {
+                console.warn('⚠️ Nenhum callback definido para seleção de pessoa vínculo');
+            }
+            
+            // Fechar modal com tratamento de erro
+            const modalElement = document.getElementById('pessoaVinculoModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    // Fallback: criar nova instância do modal e fechar
+                    const newModal = new bootstrap.Modal(modalElement);
+                    newModal.hide();
+                }
+            } else {
+                console.error('Modal pessoaVinculoModal não encontrado');
+            }
+        } catch (error) {
+            console.error('Erro ao selecionar pessoa vínculo:', error);
+            // Tentar fechar modal mesmo com erro
+            try {
+                const modalElement = document.getElementById('pessoaVinculoModal');
+                if (modalElement) {
+                    modalElement.style.display = 'none';
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                }
+            } catch (fallbackError) {
+                console.error('Erro no fallback de fechamento do modal vínculo:', fallbackError);
+            }
+        }
+    }
+    
+    atualizarPaginacaoVinculo(total, paginaAtual, totalPaginas) {
+        const paginationControls = document.getElementById('paginationControlsVinculo');
+        const btnPrevious = document.getElementById('btnPreviousVinculo');
+        const btnNext = document.getElementById('btnNextVinculo');
+        const pageInfo = document.getElementById('pageInfoVinculo');
+        
+        if (total > 10) {
+            paginationControls.style.display = 'flex';
+            
+            btnPrevious.disabled = paginaAtual <= 1;
+            btnNext.disabled = paginaAtual >= totalPaginas;
+            
+            pageInfo.textContent = `Página ${paginaAtual} de ${totalPaginas} (${total} registros)`;
+        } else {
+            paginationControls.style.display = 'none';
+        }
+    }
+    
+    previousPageVinculo() {
+        if (this.currentPageVinculo > 1) {
+            this.currentPageVinculo--;
+            this.carregarTodasPessoasVinculo();
+        }
+    }
+    
+    nextPageVinculo() {
+        this.currentPageVinculo = (this.currentPageVinculo || 1) + 1;
+        this.carregarTodasPessoasVinculo();
+    }
+    
+    getCategoriaTexto(categoria) {
+        const categoriaNomes = {
+            '1': 'Coordenador',
+            '2': 'Professor Orientador',
+            '3': 'Aluno/Estagiário',
+            '4': 'Concedente/Local de Estágio',
+            '5': 'Supervisor',
+            '6': 'Curso/Instituição de Ensino',
+            '99': 'Usuário Geral'
+        };
+        return categoriaNomes[categoria] || 'Sem categoria';
+    }
+    
+    // Configurar combobox de categoria baseado na configuração
+    configurarComboboxCategoria(categoriaAutomatica) {
+        const categoriaBusca = document.getElementById('categoriaBusca');
+        if (!categoriaBusca) return;
+        
+        // Definir todas as categorias disponíveis
+        const todasCategorias = {
+            'todos': 'Todas as categorias',
+            '1': 'Coordenador',
+            '2': 'Professor Orientador', 
+            '3': 'Aluno/Estagiário',
+            '4': 'Concedente/Local de Estágio',
+            '5': 'Supervisor',
+            '6': 'Curso/Instituição de Ensino',
+            '99': 'Usuário Geral'
+        };
+        
+        // Limpar opções existentes
+        categoriaBusca.innerHTML = '';
+        
+        if (categoriaAutomatica && categoriaAutomatica.includes(',')) {
+            // Múltiplas categorias específicas (ex: '4,6')
+            const categorias = categoriaAutomatica.split(',');
+            
+            // Adicionar opção "Todas" apenas para as categorias permitidas
+            const opcaoTodas = document.createElement('option');
+            opcaoTodas.value = categoriaAutomatica;
+            opcaoTodas.textContent = 'Todas as categorias permitidas';
+            categoriaBusca.appendChild(opcaoTodas);
+            
+            // Adicionar apenas as categorias específicas
+            categorias.forEach(cat => {
+                if (todasCategorias[cat]) {
+                    const opcao = document.createElement('option');
+                    opcao.value = cat;
+                    opcao.textContent = todasCategorias[cat];
+                    categoriaBusca.appendChild(opcao);
+                }
+            });
+            
+            // Selecionar a opção "Todas" por padrão
+            categoriaBusca.value = categoriaAutomatica;
+        } else if (categoriaAutomatica && todasCategorias[categoriaAutomatica]) {
+            // Categoria única específica
+            const opcao = document.createElement('option');
+            opcao.value = categoriaAutomatica;
+            opcao.textContent = todasCategorias[categoriaAutomatica];
+            categoriaBusca.appendChild(opcao);
+            categoriaBusca.value = categoriaAutomatica;
+        } else {
+            // Sem restrição - mostrar todas as categorias
+            Object.entries(todasCategorias).forEach(([valor, texto]) => {
+                const opcao = document.createElement('option');
+                opcao.value = valor;
+                opcao.textContent = texto;
+                categoriaBusca.appendChild(opcao);
+            });
+            categoriaBusca.value = 'todos';
+        }
+    }
+    
     // Função utilitária para debounce
     debounce(func, wait) {
         let timeout;
@@ -699,8 +1175,12 @@ class PessoaManager {
     }
 }
 
-// Instanciar o gerenciador globalmente
-const pessoaManager = new PessoaManager();
+// Instanciar o gerenciador globalmente apenas se não existir
+if (!window.pessoaManager) {
+    window.pessoaManager = new PessoaManager();
+    window.pessoaManager.init(); // Inicializar para criar os modais
+    console.log('PessoaManager inicializado:', window.pessoaManager);
+}
 
 // Função helper para criar botões de busca de pessoa
 function criarBotaoBuscarPessoa(inputId, labelText = 'Buscar') {

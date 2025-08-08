@@ -349,7 +349,7 @@
     </style>
 </head>
 <body>
-    <% if (typeof user !== 'undefined' && user && currentPage === 'estagio') { %>
+    <% if (typeof user !== 'undefined' && user && typeof currentPage !== 'undefined' && currentPage === 'estagio') { %>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
@@ -363,21 +363,35 @@
                         </div>
                         <div class="d-flex flex-column">
                             <span class="fw-medium" style="font-size: 0.9rem;"><%= user.nome %></span>
+                            <% 
+                                // Mapeamento das categorias
+                                const categoriaNomes = {
+                                    '1': 'Coordenador',
+                                    '2': 'Professor Orientador',
+                                    '3': 'Aluno/Estagiário',
+                                    '4': 'Concedente/Local de Estágio',
+                                    '5': 'Supervisor',
+                                    '6': 'Curso/Instituição de Ensino',
+                                    '99': 'Usuário Geral'
+                                };
+                                const categoriaNome = categoriaNomes[String(user.categoria)] || 'Não informado';
+                            %>
+                            <small style="font-size: 0.7rem; font-weight: normal; color: #666; line-height: 1.2;"><%= categoriaNome %> [<%= user.nivelacesso %>]</small>
                             <% if (user.categoria !== 'Coordenador' && user.matricula && user.matricula !== 'coordenador') { %>
                             <small style="font-size: 12px; font-weight: normal; color: #666; line-height: 1;">Matrícula: <%= user.matricula %></small>
                             <% } %>
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="z-index: 1040;">
-                        <% if (user.categoria === 'Coordenador' || user.categoria === '1' || user.matricula === 'coordenador' || user.tipoacesso === 'Administrador') { %>
+                        <% if (user.categoria === 'Coordenador' || user.categoria === '1' || user.matricula === 'coordenador' || user.nivelacesso === 'Administrador') { %>
                         <li>
-                            <a class="dropdown-item" href="/admin/rotinas?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagio/dashboard')) %>">
+                            <a class="dropdown-item" href="/admin/rotinas?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagios/dashboard')) %>">
                                 <i class="fas fa-cogs me-2"></i>
                                 Rotinas Administrativas
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="/admin/parametro?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagio/dashboard')) %>">
+                            <a class="dropdown-item" href="/admin/parametro?origem=<%= encodeURIComponent(typeof originalUrl !== 'undefined' ? originalUrl : (typeof req !== 'undefined' && req.originalUrl ? req.originalUrl : '/estagios/dashboard')) %>">
                                 <i class="fas fa-sliders-h me-2"></i>
                                 Parâmetros
                             </a>

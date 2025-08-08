@@ -115,7 +115,7 @@ class BaseModel {
             const result = await databaseConfig.run(query, values);
             
             // Buscar e retornar o registro criado
-            return await this.findById(result.lastID);
+            return await this.findById(result.id);
         } catch (error) {
             console.error(`Erro ao criar registro em ${this.tableName}:`, error);
             if (error.message.includes('validation')) {

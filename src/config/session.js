@@ -4,6 +4,8 @@
  */
 
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
+const dadosConexao = require('../../dadosConexaoSGDB');
 
 class SessionConfig {
     /**
@@ -12,14 +14,37 @@ class SessionConfig {
      * @returns {Object}
      */
     static getConfig(options = {}) {
+        // Configurar o store MySQL para sessões
+        const sessionStore = new MySQLStore({
+            host: dadosConexao.host,
+            port: dadosConexao.port,
+            user: dadosConexao.user,
+            password: dadosConexao.password,
+            database: dadosConexao.database,
+            clearExpired: true,
+            checkExpirationInterval: 900000, // 15 minutos
+            expiration: 86400000, // 24 horas
+            createDatabaseTable: true,
+            charset: 'utf8mb4_bin',
+            schema: {
+                tableName: 'sessions',
+                columnNames: {
+                    session_id: 'session_id',
+                    expires: 'expires',
+                    data: 'data'
+                }
+            }
+        });
+
         const defaultConfig = {
             secret: process.env.SESSION_SECRET || 'gestao-estagio-secret-key-2024',
+            store: sessionStore,
             resave: false,
             saveUninitialized: false,
             cookie: {
                 secure: process.env.NODE_ENV === 'production', // HTTPS em produção
                 maxAge: 24 * 60 * 60 * 1000, // 24 horas
-                httpOnly: true, // Previne acesso via JavaScript
+                httpOnly: false, // Temporariamente false para debug
                 sameSite: 'lax' // Proteção CSRF
             },
             name: 'gestao.sid', // Nome customizado do cookie
@@ -94,7 +119,7 @@ class SessionConfig {
             }
         }
 
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({ 
                 success: false,
                 message: 'Acesso negado. Apenas administradores podem acessar este recurso.' 
@@ -132,7 +157,7 @@ class SessionConfig {
             const userPermissions = req.session.user.permissoes || [];
             const hasPermission = permissoesArray.some(perm => 
                 userPermissions.includes(perm) || 
-                req.session.user.tipoacesso === 'Administrador'
+                req.session.user.nivelacesso === 'Administrador'
             );
 
             if (!hasPermission) {
@@ -159,7 +184,7 @@ class SessionConfig {
             id_pessoa: req.session.user.id_pessoa,
             nome: req.session.user.nome,
             email: req.session.user.email,
-            tipoacesso: req.session.user.tipoacesso,
+            nivelacesso: req.session.user.nivelacesso,
             permissoes: req.session.user.permissoes || []
         };
     }

@@ -4,14 +4,24 @@
  */
 
 const EstagioService = require('../services/EstagioService');
+const CampoEstagioService = require('../services/CampoEstagioService');
+const PlanoAtividadeService = require('../services/PlanoAtividadeService');
+const FrequenciaService = require('../services/FrequenciaService');
+const RelatorioService = require('../services/RelatorioService');
 const Pessoa = require('../models/Pessoa');
+const Parametro = require('../models/Parametro');
 const { messages, enums, pagination } = require('../config');
 const databaseConfig = require('../config/database');
 
 class EstagioController {
     constructor() {
         this.estagioService = new EstagioService();
+        this.campoEstagioService = new CampoEstagioService();
+        this.planoAtividadeService = new PlanoAtividadeService();
+        this.frequenciaService = new FrequenciaService();
+        this.relatorioService = new RelatorioService();
         this.pessoaModel = new Pessoa();
+        this.parametroModel = new Parametro();
     }
 
     /**
@@ -45,16 +55,42 @@ class EstagioController {
             };
 
             // Filtrar por usuário se não for administrador
-            if (user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR) {
-                switch (user.tipoacesso) {
-                    case enums.tipoAcesso.ORIENTADOR:
+            if (user.nivelacesso !== 'Administrador') {
+                // Buscar a categoria do usuário
+                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
+                const usuario = await databaseConfig.get(usuarioSql, [user.id_pessoa]);
+                const categoriaUsuario = usuario?.categoria;
+                
+                // Aplicar filtros baseados na categoria
+                switch (categoriaUsuario) {
+                    case '1': // Coordenador - nenhuma restrição
+                        break;
+                    case '2': // Professor Orientador
                         options.orientador = user.id_pessoa;
                         break;
-                    case enums.tipoAcesso.ESTAGIARIO:
+                    case '3': // Aluno/Estagiário
                         options.estagiario = user.id_pessoa;
                         break;
-                    case enums.tipoAcesso.EMPRESA:
+                    case '4': // Concedente/Local de Estágio
                         options.empresa = user.id_pessoa;
+                        break;
+                    case '5': // Supervisor
+                        // Para supervisor, filtrar estágios onde é supervisor
+                        // Como a função listarEstagios não tem filtro por supervisor,
+                        // vamos usar o filtro de empresa temporariamente
+                        options.empresa = user.id_pessoa;
+                        break;
+                    case '6': // Instituição/Curso
+                         // Para instituição/curso, precisamos filtrar por id_pessoa_curso
+                         // Como a função listarEstagios não tem esse filtro específico,
+                         // vamos implementar uma lógica alternativa
+                         options.curso = user.id_pessoa;
+                         break;
+                    case '99': // Usuário Geral - sem acesso
+                        options.estagiario = -1; // Força retorno vazio
+                        break;
+                    default:
+                        options.estagiario = user.id_pessoa;
                         break;
                 }
             }
@@ -170,8 +206,8 @@ class EstagioController {
                 });
             }
 
-            // Redirecionamento normal
-            res.redirect(`/estagios/${estagio.id_campo_estagio}?success=${encodeURIComponent(messages.success.created)}`);
+            // Redirecionamento normal - removido referência ao campo_estagio
+            res.redirect(`/estagios?success=${encodeURIComponent(messages.success.created)}`);
         } catch (error) {
             console.error('Erro ao criar estágio:', error);
             
@@ -299,13 +335,12 @@ class EstagioController {
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
                 return res.json({
                     success: true,
-                    message: messages.success.updated,
                     data: estagioAtualizado
                 });
             }
 
             // Redirecionamento normal
-            res.redirect(`/estagios/${id}?success=${encodeURIComponent(messages.success.updated)}`);
+            res.redirect(`/estagios/${id}`);
         } catch (error) {
             console.error('Erro ao atualizar estágio:', error);
             
@@ -455,7 +490,7 @@ class EstagioController {
                 // Buscar estatísticas
                 estatisticas = await this.estagioService.buscarEstatisticas(
                     user.id_pessoa, 
-                    user.tipoacesso
+                    user.nivelacesso
                 );
             } catch (error) {
                 console.error('Erro ao buscar estatísticas:', error);
@@ -466,7 +501,7 @@ class EstagioController {
                 // Buscar estágios recentes do usuário
                 estagiosRecentes = await this.estagioService.buscarEstagiosPorUsuario(
                     user.id_pessoa, 
-                    user.tipoacesso
+                    user.nivelacesso
                 );
             } catch (error) {
                 console.error('Erro ao buscar estágios recentes:', error);
@@ -522,7 +557,7 @@ class EstagioController {
             const { userId, userType } = req.params;
             
             // Verificar permissão
-            if (req.session.user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR && 
+            if (req.session.user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR && 
                 req.session.user.id_pessoa !== parseInt(userId)) {
                 return res.status(403).json({
                     success: false,
@@ -619,37 +654,84 @@ class EstagioController {
         try {
             const user = req.session.user;
             
-            // Buscar dados específicos do módulo Estágio
+            // Buscar dados específicos de cada card do módulo Estágio
             let camposEstagio = [];
-            let estatisticas = {
-                total: 0,
-                ativos: 0,
-                concluidos: 0,
-                cancelados: 0
-            };
+            let planosAtividade = [];
+            let frequencias = [];
+            let relatorios = [];
+            
+            let estatisticasCampoEstagio = { total: 0, ativos: 0, concluidos: 0, cancelados: 0 };
+            let estatisticasPlanoAtividade = { total: 0, aprovados: 0, pendentes: 0, rejeitados: 0 };
+            let estatisticasFrequencia = { total: 0, aprovadas: 0, pendentes: 0, rejeitadas: 0 };
+            let estatisticasRelatorio = { total: 0, aprovados: 0, pendentes: 0, rejeitados: 0 };
 
             try {
-                // Buscar campos de estágio baseado no tipo de usuário
-                camposEstagio = await this.estagioService.buscarEstagiosPorUsuario(
+                // Buscar dados de Campo de Estágio
+                camposEstagio = await this.campoEstagioService.buscarCamposEstagiosPorUsuario(
                     user.id_pessoa, 
-                    user.tipoacesso
+                    user.nivelacesso
                 );
-                
-                // Buscar estatísticas
-                estatisticas = await this.estagioService.buscarEstatisticas(
+                estatisticasCampoEstagio = await this.campoEstagioService.buscarEstatisticasCampoEstagio(
                     user.id_pessoa, 
-                    user.tipoacesso
+                    user.nivelacesso
                 );
             } catch (error) {
-                console.error('Erro ao buscar dados do módulo Estágio:', error);
-                // Continuar com valores padrão
+                console.error('Erro ao buscar dados de Campo de Estágio:', error);
+            }
+
+            try {
+                // Buscar dados de Plano de Atividade
+                planosAtividade = await this.planoAtividadeService.buscarPlanosAtividadePorUsuario(
+                    user.id_pessoa, 
+                    user.nivelacesso
+                );
+                estatisticasPlanoAtividade = await this.planoAtividadeService.buscarEstatisticasPlanoAtividade(
+                    user.id_pessoa, 
+                    user.nivelacesso
+                );
+            } catch (error) {
+                console.error('Erro ao buscar dados de Plano de Atividade:', error);
+            }
+
+            try {
+                // Buscar dados de Frequência (em desenvolvimento)
+                frequencias = await this.frequenciaService.buscarFrequenciasPorUsuario(
+                    user.id_pessoa, 
+                    user.nivelacesso
+                );
+                estatisticasFrequencia = await this.frequenciaService.buscarEstatisticasFrequencia(
+                    user.id_pessoa, 
+                    user.nivelacesso
+                );
+            } catch (error) {
+                console.error('Erro ao buscar dados de Frequência:', error);
+            }
+
+            try {
+                // Buscar dados de Relatórios (em desenvolvimento)
+                relatorios = await this.relatorioService.buscarRelatoriosPorUsuario(
+                    user.id_pessoa, 
+                    user.nivelacesso
+                );
+                estatisticasRelatorio = await this.relatorioService.buscarEstatisticasRelatorio(
+                    user.id_pessoa, 
+                    user.nivelacesso
+                );
+            } catch (error) {
+                console.error('Erro ao buscar dados de Relatórios:', error);
             }
 
             res.render('dashboard-estagio', {
                 title: 'Módulo Estágio',
                 user,
                 camposEstagio,
-                estatisticas,
+                planosAtividade,
+                frequencias,
+                relatorios,
+                estatisticasCampoEstagio,
+                estatisticasPlanoAtividade,
+                estatisticasFrequencia,
+                estatisticasRelatorio,
                 currentPage: 'estagio',
                 currentUrl: req.originalUrl
             });

@@ -26,7 +26,6 @@ const paths = {
     public: path.resolve(__dirname, '../../public'),
     uploads: path.resolve(__dirname, '../../uploads'),
     backups: path.resolve(__dirname, '../../backups'),
-    database: path.resolve(__dirname, '../../database.db'),
     logs: path.resolve(__dirname, '../../logs')
 };
 
@@ -38,7 +37,7 @@ const upload = {
     allowedMimeTypes: {
         images: ['image/jpeg', 'image/png', 'image/gif'],
         documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-        excel: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        csv: ['text/csv', 'application/csv', 'text/plain']
     },
     destinations: {
         temp: path.join(paths.uploads, 'temp'),
@@ -64,7 +63,7 @@ const enums = {
         NAO_OBRIGATORIO: 'Não Obrigatório'
     },
     
-    tipoAcesso: {
+    nivelAcesso: {
         ADMINISTRADOR: 'Administrador',
         ORIENTADOR: 'Orientador',
         ESTAGIARIO: 'Estagiário',
@@ -195,7 +194,6 @@ const backup = {
 const messages = {
     success: {
         created: 'Registro criado com sucesso!',
-        updated: 'Registro atualizado com sucesso!',
         deleted: 'Registro excluído com sucesso!',
         login: 'Login realizado com sucesso!',
         logout: 'Logout realizado com sucesso!',
@@ -242,8 +240,7 @@ const config = {
 function validateConfig() {
     const required = [
         'environment.NODE_ENV',
-        'environment.PORT',
-        'paths.database'
+        'environment.PORT'
     ];
     
     const missing = [];
@@ -277,7 +274,7 @@ function printConfig() {
         console.log(`Ambiente: ${environment.NODE_ENV}`);
         console.log(`Porta: ${environment.PORT}`);
         console.log(`Debug: ${environment.DEBUG}`);
-        console.log(`Banco de dados: ${paths.database}`);
+        console.log(`Banco de dados: MariaDB`);
         console.log('================================');
     }
 }

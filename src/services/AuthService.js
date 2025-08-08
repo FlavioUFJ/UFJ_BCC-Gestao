@@ -42,7 +42,8 @@ class AuthService {
                 nome: user.nome,
                 email: user.email,
                 usuario: user.usuario,
-                tipoacesso: user.tipoacesso,
+                nivelacesso: user.nivelacesso,
+                categoria: user.categoria,
                 permissoes: permissoes,
                 login_time: new Date().toISOString()
             };
@@ -131,7 +132,7 @@ class AuthService {
                 // Criar login
                 await this.pessoaModel.createLogin(pessoa.id_pessoa, {
                     ...loginData,
-                    tipoacesso: loginData.tipoacesso || enums.tipoAcesso.ESTAGIARIO
+                    nivelacesso: loginData.nivelacesso || enums.nivelAcesso.ESTAGIARIO
                 });
 
                 // Confirmar transação
@@ -277,11 +278,11 @@ class AuthService {
         try {
             // Verificar se é administrador
             const user = await databaseConfig.get(
-                'SELECT tipoacesso FROM pessoa_login WHERE id_pessoa = ?',
+                'SELECT nivelacesso FROM pessoa_login WHERE id_pessoa = ?',
                 [idPessoa]
             );
             
-            if (user && user.tipoacesso === enums.tipoAcesso.ADMINISTRADOR) {
+            if (user && user.nivelacesso === enums.nivelAcesso.ADMINISTRADOR) {
                 return true;
             }
 

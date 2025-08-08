@@ -90,7 +90,7 @@
                 <h4 class="mb-1">🔒 <%= title %></h4>
                 <p class="mb-0">Usuário: <strong><%= user.nome %></strong>
                     <span class="access-level <%= isAdmin ? 'admin-level' : 'user-level' %>">
-                        <%= user.tipoacesso %>
+                        <%= user.nivelacesso %>
                     </span>
                 </p>
             </div>
@@ -114,130 +114,28 @@
     </div>
     <% } %>
 
-    <!-- Estatísticas -->
+    <!-- Estatísticas de Campo de Estágio: removido - Campo de Estágio -->
     <div class="stats-card">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-12">
                 <div class="text-center">
-                    <h3 class="text-primary mb-1"><%= totalRegistros %></h3>
-                    <small class="text-muted">Total de Estágios</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-center">
-                    <h3 class="text-success mb-1">
-                        <%= campos_estagio.filter(c => c.situacao === 'Aprovado').length %>
-                    </h3>
-                    <small class="text-muted">Aprovados</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-center">
-                    <h3 class="text-warning mb-1">
-                        <%= campos_estagio.filter(c => c.situacao === 'Em edição').length %>
-                    </h3>
-                    <small class="text-muted">Em Edição</small>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="text-center">
-                    <h3 class="text-info mb-1">
-                        <%= campos_estagio.filter(c => c.tipo_estagio === 'Obrigatório').length %>
-                    </h3>
-                    <small class="text-muted">Obrigatórios</small>
+                    <h5 class="text-muted">Funcionalidade de Campo de Estágio removida</h5>
+                    <small class="text-muted">Esta seção foi desabilitada</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tabela de Dados -->
-    <% if (campos_estagio && campos_estagio.length > 0) { %>
-    <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Estagiário</th>
-                    <th>Matrícula</th>
-                    <th>Tipo</th>
-                    <th>Situação</th>
-                    <th>Orientador</th>
-                    <th>Concedente</th>
-                    <th>Supervisor</th>
-                    <th>Período</th>
-                    <th>Carga Horária</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% campos_estagio.forEach(function(campo) { %>
-                <tr>
-                    <td><strong>#<%= campo.id_campo_estagio %></strong></td>
-                    <td>
-                        <div>
-                            <strong><%= campo.nome_estagiario || 'N/A' %></strong>
-                            <% if (campo.email_estagiario) { %>
-                            <br><small class="text-muted"><%= campo.email_estagiario %></small>
-                            <% } %>
-                        </div>
-                    </td>
-                    <td><%= campo.numero_matricula || 'N/A' %></td>
-                    <td>
-                        <span class="badge <%= campo.tipo_estagio === 'Obrigatório' ? 'badge-primary' : 'badge-secondary' %>">
-                            <%= campo.tipo_estagio || 'N/A' %>
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge <%= campo.situacao === 'Aprovado' ? 'badge-success' : 'badge-warning' %>">
-                            <%= campo.situacao || 'N/A' %>
-                        </span>
-                    </td>
-                    <td><%= campo.nome_orientador || 'N/A' %></td>
-                    <td><%= campo.nome_concedente || 'N/A' %></td>
-                    <td>
-                        <div>
-                            <%= campo.nome_supervisor || 'N/A' %>
-                            <% if (campo.email_supervisor) { %>
-                            <br><small class="text-muted"><%= campo.email_supervisor %></small>
-                            <% } %>
-                        </div>
-                    </td>
-                    <td>
-                        <small>
-                            <% if (campo.data_inicio_br) { %>
-                                <%= campo.data_inicio_br %>
-                            <% } %>
-                            <% if (campo.data_fim_br) { %>
-                                até<br><%= campo.data_fim_br %>
-                            <% } %>
-                        </small>
-                    </td>
-                    <td>
-                        <% if (campo.cargahoraria) { %>
-                            <strong><%= campo.cargahoraria %>h</strong>
-                        <% } else { %>
-                            N/A
-                        <% } %>
-                    </td>
-                </tr>
-                <% }); %>
-            </tbody>
-        </table>
-    </div>
-    <% } else { %>
+    <!-- Tabela de Dados: removido - Campo de Estágio -->
     <div class="no-data">
         <div class="mb-3">
-            <i class="fas fa-search fa-3x text-muted"></i>
+            <i class="fas fa-info-circle fa-3x text-muted"></i>
         </div>
-        <h5 class="text-muted">Nenhum registro encontrado</h5>
+        <h5 class="text-muted">Funcionalidade Removida</h5>
         <p class="text-muted">
-            <% if (!isAdmin) { %>
-                Você não possui acesso a nenhum campo de estágio ou não há registros vinculados ao seu usuário.
-            <% } else { %>
-                Não há campos de estágio cadastrados no sistema.
-            <% } %>
+            A funcionalidade de Campo de Estágio foi removida do sistema.
         </p>
     </div>
-    <% } %>
 
     <!-- Informações Técnicas (apenas para demonstração) -->
     <div class="mt-4">
@@ -254,15 +152,8 @@
                             <li>✅ <strong>Administrador:</strong> Sem filtros (acesso total)</li>
                             <% } else { %>
                             <li>🔒 <strong>Usuário Regular:</strong> Filtros de acesso aplicados</li>
-                            <li>📋 Tabela principal: <code>campo_estagio</code></li>
-                            <li>🔗 Colunas verificadas:</li>
-                            <ul>
-                                <li><code>id_pessoa_curso</code></li>
-                                <li><code>id_pessoa_estagiario</code></li>
-                                <li><code>id_pessoa_orientador</code></li>
-                                <li><code>id_pessoa_concedente</code></li>
-                                <li><code>id_pessoa_supervisor</code></li>
-                            </ul>
+                            <li>📋 Tabela principal: <em>Campo de Estágio removido</em></li>
+                            <li>🔗 Colunas verificadas: <em>Funcionalidade desabilitada</em></li>
                             <% } %>
                         </ul>
                     </div>
@@ -271,7 +162,7 @@
                         <ul class="list-unstyled">
                             <li><strong>ID:</strong> <%= user.id_pessoa %></li>
                             <li><strong>Nome:</strong> <%= user.nome %></li>
-                            <li><strong>Nível:</strong> <%= user.tipoacesso %></li>
+                            <li><strong>Nível:</strong> <%= user.nivelacesso %></li>
                             <li><strong>Admin:</strong> <%= isAdmin ? 'Sim' : 'Não' %></li>
                         </ul>
                     </div>
@@ -286,7 +177,7 @@
 // Adicionar funcionalidades JavaScript se necessário
 console.log('Controle de Acesso - Dados carregados:', {
     usuario: '<%= user.nome %>',
-    nivel: '<%= user.tipoacesso %>',
+    nivel: '<%= user.nivelacesso %>',
     isAdmin: <%= isAdmin %>,
     totalRegistros: <%= totalRegistros %>
 });

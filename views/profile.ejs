@@ -144,6 +144,16 @@ document.getElementById('cnpj_cpf').addEventListener('input', function(e) {
     e.target.value = value;
 });
 
+// Função para limpar máscara do telefone (manter apenas dígitos)
+function limparMascaraTelefone(telefone) {
+    return telefone ? telefone.replace(/\D/g, '') : '';
+}
+
+// Função para limpar máscara do CPF/CNPJ (manter apenas dígitos)
+function limparMascaraCpfCnpj(cpfCnpj) {
+    return cpfCnpj ? cpfCnpj.replace(/\D/g, '') : '';
+}
+
 // Validação do formulário
 document.getElementById('profileForm').addEventListener('submit', function(e) {
     const nome = document.getElementById('nome').value.trim();
@@ -161,6 +171,17 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Por favor, insira um e-mail válido.');
         return false;
+    }
+    
+    // Limpar máscaras de formatação antes de enviar
+    const telefoneInput = document.getElementById('telefone');
+    const cnpjCpfInput = document.getElementById('cnpj_cpf');
+    
+    if (telefoneInput.value) {
+        telefoneInput.value = limparMascaraTelefone(telefoneInput.value);
+    }
+    if (cnpjCpfInput.value) {
+        cnpjCpfInput.value = limparMascaraCpfCnpj(cnpjCpfInput.value);
     }
 });
 </script>

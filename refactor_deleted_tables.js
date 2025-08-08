@@ -2,7 +2,7 @@
  * Script de Refatoração - Remoção de Tabelas Deletadas
  * 
  * Este script identifica e corrige as referências às tabelas deletadas:
- * - planos_atividade
+ * - campo_estagio_planoatividade
  * - relatorios_estagio
  */
 
@@ -16,7 +16,7 @@ const filesToRefactor = [
     {
         file: 'routes/secure-routes.js',
         issues: [
-            'LEFT JOIN planos_atividade pa ON ce.id_campo_estagio = pa.campo_estagio_id',
+            'LEFT JOIN campo_estagio_planoatividade pa ON ce.id_campo_estagio = pa.campo_estagio_id',
             'LEFT JOIN relatorios_estagio re ON ce.id_campo_estagio = re.campo_estagio_id',
             'COUNT(pa.id_plano) as total_planos',
             'COUNT(re.id_relatorio) as total_relatorios'
@@ -26,9 +26,9 @@ const filesToRefactor = [
     {
         file: 'middleware/access-control.js',
         issues: [
-            "'planos_atividade': [], // Relaciona indiretamente via campo_estagio",
+            "'campo_estagio_planoatividade': [], // Relaciona indiretamente via campo_estagio",
             "'relatorios_estagio': [], // Relaciona indiretamente via campo_estagio",
-            "'planos_atividade': 'campo_estagio_id',",
+            "'campo_estagio_planoatividade': 'campo_estagio_id',",
             "'relatorios_estagio': 'campo_estagio_id',"
         ],
         description: 'Configurações de controle de acesso para tabelas deletadas'
@@ -90,7 +90,7 @@ affectedFeatures.forEach((feature, index) => {
 
 console.log('🔧 AÇÕES RECOMENDADAS:\n');
 console.log('1. PRIORIDADE ALTA - Corrigir routes/secure-routes.js:');
-console.log('   - Remover LEFT JOINs com planos_atividade e relatorios_estagio');
+console.log('   - Remover LEFT JOINs com campo_estagio_planoatividade e relatorios_estagio');
 console.log('   - Remover campos total_planos e total_relatorios do SELECT');
 console.log('   - Testar o relatório completo após as correções\n');
 

@@ -220,7 +220,7 @@
                 <i class="fas fa-graduation-cap me-2"></i>Sistema de Gestão de Estágios
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/dashboard">
+                <a class="nav-link" href="<%= origem %>" onclick="console.log('Redirecionando para:', '<%= origem %>')">
                     <i class="fas fa-arrow-left me-1"></i>Voltar ao Dashboard
                 </a>
                 <a class="nav-link" href="/logout">
@@ -297,8 +297,8 @@
                         </div>
                     </div>
                     <div class="col-md-4 text-end">
-                        <a href="#" class="text-decoration-none me-3" id="linkImportarPlanilha">
-                            <i class="fas fa-file-excel me-1"></i>Importar Planilha
+                        <a href="#" class="text-decoration-none me-3" id="linkImportarCsv">
+                            <i class="fas fa-file-csv me-1"></i>Importar CSV
                         </a>
                         <button type="button" class="btn btn-success" id="btnNovaPessoa">
                             <i class="fas fa-plus me-2"></i>Nova Pessoa
@@ -416,8 +416,8 @@
                                                 <input type="password" class="form-control" id="senhaLogin" name="senha" required autocomplete="new-password" value="">
                                             </div>
                                             <div class="mb-3">
-                                                <label for="tipoAcessoLogin" class="form-label">Tipo de Acesso:</label>
-                                                <select class="form-select" id="tipoAcessoLogin" name="tipoacesso" required>
+                                                <label for="nivelAcessoLogin" class="form-label">Nível de Acesso:</label>
+                        <select class="form-select" id="nivelAcessoLogin" name="nivelacesso" required>
                                                     <option value="">Selecione o nível de acesso...</option>
                                                     <option value="Visitante">Visitante (acesso restrito, apenas consultas)</option>
                                                     <option value="Operacional">Operacional (acesso médio, não pode acessar rotinas administrativas)</option>
@@ -975,6 +975,7 @@
         };
 
         // ===== FUNCIONALIDADE DA ABA PESSOAS =====
+        console.log('Definindo GerenciadorPessoas...');
         const GerenciadorPessoas = {
             paginaAtual: 1,
             totalPaginas: 1,
@@ -1060,7 +1061,7 @@
                             <td>${this.formatarCategoria(pessoa.categoria)}</td>
                             <td>${pessoa.cnpj_cpf || ''}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary me-1" onclick="GerenciadorPessoas.editarPessoa(${pessoa.id_pessoa})">
+                                <button class="btn btn-sm btn-primary me-1" onclick="console.log('Botão clicado para ID:', ${pessoa.id_pessoa}); GerenciadorPessoas.editarPessoa(${pessoa.id_pessoa})">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-sm btn-danger" onclick="GerenciadorPessoas.excluirPessoa(${pessoa.id_pessoa}, '${pessoa.nome}')">
@@ -1138,6 +1139,8 @@
 
             
             async editarPessoa(id) {
+                console.log('editarPessoa chamada com ID:', id);
+                console.log('pessoaManager disponível:', typeof window.pessoaManager);
                 try {
                     // Buscar dados da pessoa
                     const response = await fetch(`/api/pessoas/${id}`);
@@ -1146,8 +1149,10 @@
                     if (result.success) {
                         // Abrir modal em modo de edição
                         pessoaManager.abrirModal('', function(editedId, editedNome) {
-                             // Após editar, recarregar a lista de pessoas
-                             GerenciadorPessoas.buscarPessoas();
+                             // Após editar, recarregar a lista de pessoas com delay para evitar conflitos
+                             setTimeout(() => {
+                                 GerenciadorPessoas.buscarPessoas();
+                             }, 100);
                          }, {
                              showBuscarTab: false,
                              showTabs: false,
@@ -1157,11 +1162,11 @@
                              personData: result.pessoa
                          });
                     } else {
-                        alert('Erro ao carregar dados da pessoa: ' + result.message);
+                        console.error('Erro ao carregar dados da pessoa:', result.message);
                     }
                 } catch (error) {
                     console.error('Erro ao buscar pessoa:', error);
-                    alert('Erro ao carregar dados da pessoa');
+                    console.error('Erro ao carregar dados da pessoa');
                 }
             },
             
@@ -1192,26 +1197,25 @@
         };
 
         // Inicializar quando o DOM estiver carregado
-        document.addEventListener('DOMContentLoaded', () => {
-            AdminRotinas.init();
-            GerenciadorPessoas.init();
-        });
+        // Event listener consolidado removido - será usado o do final do arquivo
     </script>
     
     <!-- Script do gerenciador de pessoas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="/public/js/pessoa-manager.js"></script>
-<script src="/public/js/importar-planilha.js"></script>
+<script src="/public/js/importar-csv.js"></script>
     <script>
         // Configurar botão Nova Pessoa para usar o modal
-        document.addEventListener('DOMContentLoaded', () => {
+        // Função para configurar botão Nova Pessoa
+        function configurarBtnNovaPessoa() {
             const btnNovaPessoa = document.getElementById('btnNovaPessoa');
             if (btnNovaPessoa) {
                 btnNovaPessoa.addEventListener('click', () => {
                     // Abrir modal para cadastrar nova pessoa
                     pessoaManager.abrirModal('', function(id, nome) {
-                        // Após cadastrar, recarregar a lista de pessoas
-                        GerenciadorPessoas.buscarPessoas();
+                        // Após cadastrar, recarregar a lista de pessoas com delay para evitar conflitos
+                        setTimeout(() => {
+                            GerenciadorPessoas.buscarPessoas();
+                        }, 100);
                     }, {
                         showBuscarTab: false,
                         showTabs: false,
@@ -1220,26 +1224,16 @@
                     });
                 });
             }
-            
-            // Configurar link Importar Planilha
-            const linkImportarPlanilha = document.getElementById('linkImportarPlanilha');
-            if (linkImportarPlanilha) {
-                linkImportarPlanilha.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const modal = new bootstrap.Modal(document.getElementById('modalImportarPlanilha'));
-                    modal.show();
-                });
-            }
-        });
+        }
     </script>
 
-    <!-- Modal Importar Planilha -->
-    <div class="modal fade" id="modalImportarPlanilha" tabindex="-1" aria-labelledby="modalImportarPlanilhaLabel" aria-hidden="true">
+    <!-- Modal Importar CSV -->
+    <div class="modal fade" id="modalImportarCsv" tabindex="-1" aria-labelledby="modalImportarCsvLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalImportarPlanilhaLabel">
-                        <i class="fas fa-file-excel me-2"></i>Importar Cadastro de Pessoas
+                    <h5 class="modal-title" id="modalImportarCsvLabel">
+                        <i class="fas fa-file-csv me-2"></i>Importar Cadastro de Pessoas
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -1248,30 +1242,31 @@
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle me-2"></i>Instruções para Importação</h6>
                         <ul class="mb-0">
-                            <li>O arquivo deve estar no formato <strong>.xlsx</strong></li>
+                            <li>O arquivo deve estar no formato <strong>.csv</strong></li>
                             <li>A primeira linha deve conter os cabeçalhos das colunas</li>
                             <li>As colunas obrigatórias são: <strong>Tipo</strong>, <strong>Categoria</strong>, <strong>Nome</strong> e <strong>Email</strong></li>
                             <li>Colunas opcionais: <strong>Telefone</strong> e <strong>CPF/CNPJ</strong></li>
+                            <li>Use aspas duplas para campos que contenham vírgulas</li>
                         </ul>
                     </div>
                     
-                    <!-- Planilha modelo -->
+                    <!-- Arquivo modelo -->
                     <div class="mb-4">
-                        <h6><i class="fas fa-download me-2"></i>Planilha Modelo</h6>
-                        <p class="text-muted mb-2">Baixe a planilha modelo para facilitar a importação:</p>
+                        <h6><i class="fas fa-download me-2"></i>Arquivo Modelo</h6>
+                        <p class="text-muted mb-2">Baixe o arquivo modelo CSV para facilitar a importação:</p>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="btnBaixarModelo">
-                            <i class="fas fa-download me-2"></i>Baixar Planilha Modelo
+                            <i class="fas fa-download me-2"></i>Baixar Modelo CSV
                         </button>
                     </div>
                     
                     <!-- Formulário de upload -->
-                    <form id="formImportarPlanilha" enctype="multipart/form-data">
+                    <form id="formImportarCsv" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="arquivoPlanilha" class="form-label">
+                            <label for="arquivoCsv" class="form-label">
                                 <i class="fas fa-file-upload me-2"></i>Selecionar Arquivo
                             </label>
-                            <input type="file" class="form-control" id="arquivoPlanilha" name="arquivo" accept=".xlsx" required>
-                            <div class="form-text">Apenas arquivos .xlsx são aceitos</div>
+                            <input type="file" class="form-control" id="arquivoCsv" name="arquivo" accept=".csv" required>
+                            <div class="form-text">Apenas arquivos .csv são aceitos</div>
                         </div>
                         
                         <div class="mb-3">
@@ -1300,7 +1295,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnImportar">
-                        <i class="fas fa-upload me-2"></i>Importar Planilha
+                        <i class="fas fa-upload me-2"></i>Importar CSV
                     </button>
                 </div>
             </div>
@@ -1442,10 +1437,10 @@
                                 </span>
                             </td>
                             <td>
-                                <select class="form-select form-select-sm" onchange="GerenciadorModulos.alterarTipoAcesso(${usuario.id_pessoa}, this.value)" style="width: auto; display: inline-block;">
-                                    <option value="Administrador" ${usuario.tipoacesso === 'Administrador' ? 'selected' : ''}>Administrador</option>
-                                    <option value="Operacional" ${usuario.tipoacesso === 'Operacional' ? 'selected' : ''}>Operacional</option>
-                                    <option value="Visitante" ${usuario.tipoacesso === 'Visitante' ? 'selected' : ''}>Visitante</option>
+                                <select class="form-select form-select-sm" onchange="GerenciadorModulos.alterarNivelAcesso(${usuario.id_pessoa}, this.value)" style="width: auto; display: inline-block;">
+                                <option value="Administrador" ${usuario.nivelacesso === 'Administrador' ? 'selected' : ''}>Administrador</option>
+                                <option value="Operacional" ${usuario.nivelacesso === 'Operacional' ? 'selected' : ''}>Operacional</option>
+                                <option value="Visitante" ${usuario.nivelacesso === 'Visitante' ? 'selected' : ''}>Visitante</option>
                                 </select>
                             </td>
                             <td>${new Date(usuario.dataultimaatualizacao).toLocaleDateString('pt-BR')}</td>
@@ -1541,7 +1536,7 @@
                         body: JSON.stringify({
                             id_pessoa: formData.get('id_pessoa'),
                             senha: formData.get('senha'),
-                            tipoacesso: formData.get('tipoacesso')
+                            nivelacesso: formData.get('nivelacesso')
                         })
                     });
                     
@@ -1559,7 +1554,7 @@
                         document.getElementById('buscaPessoaLogin').value = '';
                         document.getElementById('pessoaLoginId').value = '';
                         document.getElementById('senhaLogin').value = '';
-                        document.getElementById('tipoAcessoLogin').value = '';
+                        document.getElementById('nivelAcessoLogin').value = '';
                         document.getElementById('resultadosBuscaPessoa').style.display = 'none';
                         
                         // Atualizar tabela de usuários cadastrados
@@ -2247,14 +2242,14 @@
                 }
             },
             
-            async alterarTipoAcesso(idPessoa, novoTipoAcesso) {
+            async alterarNivelAcesso(idPessoa, novoNivelAcesso) {
                 try {
                     const response = await fetch(`/admin/usuarios/${idPessoa}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ tipoacesso: novoTipoAcesso })
+                        body: JSON.stringify({ nivelacesso: novoNivelAcesso })
                     });
                     
                     if (response.ok) {
@@ -2297,22 +2292,46 @@
                 const buscaPessoa = document.getElementById('buscaPessoaLogin');
                 const senhaLogin = document.getElementById('senhaLogin');
                 const pessoaId = document.getElementById('pessoaLoginId');
-                const tipoAcesso = document.getElementById('tipoAcessoLogin');
+                const nivelAcesso = document.getElementById('nivelAcessoLogin');
                 const resultados = document.getElementById('resultadosBuscaPessoa');
                 
                 if (buscaPessoa) buscaPessoa.value = '';
                 if (senhaLogin) senhaLogin.value = '';
                 if (pessoaId) pessoaId.value = '';
-                if (tipoAcesso) tipoAcesso.value = '';
+                if (nivelAcesso) nivelAcesso.value = '';
                 if (resultados) resultados.style.display = 'none';
             }
         };
 
-        // Adicionar inicialização do GerenciadorModulos
+        // Event listener único consolidado
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar AdminRotinas
             if (typeof AdminRotinas !== 'undefined') AdminRotinas.init();
-            if (typeof GerenciadorPessoas !== 'undefined') GerenciadorPessoas.init();
+            
+            // Inicializar GerenciadorPessoas
+            console.log('Verificando GerenciadorPessoas:', typeof GerenciadorPessoas);
+            if (typeof GerenciadorPessoas !== 'undefined') {
+                console.log('Inicializando GerenciadorPessoas...');
+                GerenciadorPessoas.init();
+            } else {
+                console.error('GerenciadorPessoas não está definido!');
+            }
+            
+            // Inicializar GerenciadorModulos
             GerenciadorModulos.init();
+            
+            // Configurar botão Nova Pessoa
+            configurarBtnNovaPessoa();
+            
+            // Configurar link Importar CSV
+            const linkImportarCsv = document.getElementById('linkImportarCsv');
+            if (linkImportarCsv) {
+                linkImportarCsv.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const modal = new bootstrap.Modal(document.getElementById('modalImportarCsv'));
+                    modal.show();
+                });
+            }
         });
     </script>
 

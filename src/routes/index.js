@@ -5,19 +5,20 @@
 
 const express = require('express');
 const router = express.Router();
-const EstagioController = require('../controllers/EstagioController');
 const AuthController = require('../controllers/AuthController');
+const EstagioController = require('../controllers/EstagioController');
 const { requireAuth } = require('../config/session');
 
 // Instanciar controladores
-const estagioController = new EstagioController();
 const authController = new AuthController();
+const estagioController = new EstagioController();
 
 // Importar rotas modulares
 const authRoutes = require('./auth');
 const estagiosRoutes = require('./estagios');
 const pessoasRoutes = require('./pessoas');
 const parametroRoutes = require('./parametros');
+const planosAtividadeRoutes = require('./planos-atividade');
 
 // ===== ROTAS PRINCIPAIS =====
 
@@ -51,6 +52,7 @@ router.use('/estagios', estagiosRoutes);
 router.use('/pessoas', pessoasRoutes);
 router.use('/parametro', parametroRoutes);
 router.use('/admin/parametro', parametroRoutes);
+router.use('/planos-atividade', planosAtividadeRoutes);
 
 // ===== ROTAS DE ARQUIVOS ESTÁTICOS =====
 
@@ -111,7 +113,7 @@ router.get('/reports/:filename', requireAuth, (req, res) => {
 // Rota para rotinas administrativas (apenas admin)
 router.get('/admin/rotinas', requireAuth, (req, res) => {
     // Verificar se é admin
-    if (req.session.user.tipoacesso !== 'Administrador') {
+    if (req.session.user.nivelacesso !== 'Administrador') {
         return res.status(403).json({
             success: false,
             message: 'Acesso negado'
@@ -124,6 +126,120 @@ router.get('/admin/rotinas', requireAuth, (req, res) => {
         currentPage: 'admin-rotinas',
         origem: req.query.origem || '/dashboard'
     });
+});
+
+// ===== ROTAS DE API =====
+
+// Rota API para planos de atividade foi removida - tabela campo_estagio_planoatividade não existe mais
+
+// Rota API para importar pessoas
+router.post('/api/pessoas/importar', requireAuth, async (req, res) => {
+    try {
+        const { pessoas } = req.body;
+        
+        if (!pessoas || !Array.isArray(pessoas)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Dados de pessoas inválidos'
+            });
+        }
+        
+        const PessoaController = require('../controllers/PessoaController');
+        const pessoaController = new PessoaController();
+        
+        const resultados = {
+            sucessos: 0,
+            erros: 0,
+            detalhes: []
+        };
+        
+        // Processar cada pessoa com delay para evitar congelamento
+        for (let i = 0; i < pessoas.length; i++) {
+            // Adicionar pequeno delay a cada 10 pessoas para evitar congelamento
+            if (i > 0 && i % 10 === 0) {
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            const pessoaData = pessoas[i];
+            
+            try {
+                // Limpar máscaras de formatação antes de salvar
+                if (pessoaData.telefone) {
+                    pessoaData.telefone = pessoaData.telefone.replace(/\D/g, '');
+                }
+                
+                if (pessoaData.cnpj_cpf) {
+                    pessoaData.cnpj_cpf = pessoaData.cnpj_cpf.replace(/\D/g, '');
+                }
+                
+                // Mapear campos do CSV para campos do modelo
+                const dadosFormatados = {
+                    nome: pessoaData.nome,
+                    email: pessoaData.email,
+                    telefone: pessoaData.telefone,
+                    cnpj_cpf: pessoaData.cnpj_cpf,
+                    tipo: pessoaData.tipo,
+                    categoria: pessoaData.categoria,
+                    nivelacesso: pessoaData.categoria, // Mapear categoria para nivelacesso
+                    ativo: true
+                };
+                
+                // Criar requisição simulada para o controller
+                const mockReq = {
+                    body: dadosFormatados,
+                    session: req.session,
+                    xhr: true,
+                    headers: { accept: 'application/json' }
+                };
+                
+                const mockRes = {
+                    json: (data) => {
+                        if (data.success) {
+                            resultados.sucessos++;
+                            resultados.detalhes.push({
+                                linha: i + 1,
+                                nome: pessoaData.nome,
+                                status: 'sucesso'
+                            });
+                        } else {
+                            resultados.erros++;
+                            resultados.detalhes.push({
+                                linha: i + 1,
+                                nome: pessoaData.nome,
+                                status: 'erro',
+                                erro: data.message
+                            });
+                        }
+                    },
+                    status: () => mockRes
+                };
+                
+                // Chamar o método store do controller
+                await pessoaController.store(mockReq, mockRes);
+                
+            } catch (error) {
+                resultados.erros++;
+                resultados.detalhes.push({
+                    linha: i + 1,
+                    nome: pessoaData.nome || 'Nome não informado',
+                    status: 'erro',
+                    erro: error.message
+                });
+            }
+        }
+        
+        res.json({
+            success: true,
+            message: `Importação concluída: ${resultados.sucessos} sucessos, ${resultados.erros} erros`,
+            resultados
+        });
+        
+    } catch (error) {
+        console.error('Erro na importação de pessoas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor: ' + error.message
+        });
+    }
 });
 
 // Rota API para buscar pessoas
@@ -142,10 +258,19 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
             params.push(`%${termo.trim()}%`, `%${termo.trim()}%`);
         }
         
-        // Filtro por categoria
+        // Filtro por categoria (suporta múltiplas categorias separadas por vírgula)
         if (categoria && categoria !== 'todos') {
-            whereClause += ' AND p.categoria = ?';
-            params.push(categoria);
+            if (categoria.includes(',')) {
+                // Múltiplas categorias
+                const categorias = categoria.split(',').map(c => c.trim());
+                const placeholders = categorias.map(() => '?').join(',');
+                whereClause += ` AND p.categoria IN (${placeholders})`;
+                params.push(...categorias);
+            } else {
+                // Categoria única
+                whereClause += ' AND p.categoria = ?';
+                params.push(categoria);
+            }
         }
         
         // Contar total de registros
@@ -182,12 +307,66 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
     }
 });
 
+// Rota API para buscar pessoa por ID
+router.get('/api/pessoas/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const databaseConfig = require('../config/database');
+        
+        const query = `
+            SELECT p.id_pessoa, p.nome, p.email, p.telefone, p.categoria, p.cnpj_cpf, p.tipo
+            FROM pessoa p 
+            WHERE p.id_pessoa = ?
+        `;
+        
+        const pessoa = await databaseConfig.get(query, [id]);
+        
+        if (!pessoa) {
+            return res.status(404).json({
+                success: false,
+                message: 'Pessoa não encontrada'
+            });
+        }
+        
+        res.json({
+            success: true,
+            pessoa: pessoa
+        });
+    } catch (error) {
+        console.error('Erro ao buscar pessoa:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar pessoa: ' + error.message
+        });
+    }
+});
+
+// Rota API para atualizar pessoa por ID
+router.put('/api/pessoas/:id', requireAuth, async (req, res) => {
+    try {
+        const PessoaController = require('../controllers/PessoaController');
+        const pessoaController = new PessoaController();
+        
+        // Chamar o método update do controller
+        await pessoaController.update(req, res);
+    } catch (error) {
+        console.error('Erro ao atualizar pessoa:', error);
+        
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao atualizar pessoa: ' + error.message
+            });
+        }
+    }
+});
+
 // Rota para configurações (apenas admin)
 router.get('/settings', requireAuth, (req, res) => {
     const { requireAdmin } = require('../config/session');
     
     // Verificar se é admin
-    if (req.session.user.tipoacesso !== require('../config').enums.tipoAcesso.ADMINISTRADOR) {
+    if (req.session.user.nivelacesso !== require('../config').enums.nivelAcesso.ADMINISTRADOR) {
         return res.status(403).json({
             success: false,
             message: 'Acesso negado'
@@ -235,18 +414,8 @@ router.get('/api/search', requireAuth, async (req, res) => {
                 })));
                 break;
                 
-            case 'estagios':
-                const Estagio = require('../models/Estagio');
-                const estagioModel = new Estagio();
-                const estagios = await estagioModel.findAll({
-                    search: q,
-                    limit: 10
-                });
-                results.push(...estagios.data.map(e => ({
-                    id: e.id_campo_estagio,
-                    text: `${e.nome_estagiario} - ${e.nome_empresa}`,
-                    type: 'estagio'
-                })));
+            case 'estagio':
+                // Removido - Campo de Estágio
                 break;
                 
             default:
@@ -274,7 +443,7 @@ router.get('/api/search', requireAuth, async (req, res) => {
 router.get('/admin/usuarios', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -289,7 +458,7 @@ router.get('/admin/usuarios', requireAuth, async (req, res) => {
                 p.nome,
                 p.email,
                 p.categoria,
-                pl.tipoacesso,
+                pl.nivelacesso,
                 pl.status,
                 pl.dataultimaatualizacao
             FROM pessoa p
@@ -316,7 +485,7 @@ router.get('/admin/usuarios', requireAuth, async (req, res) => {
 router.get('/admin/buscar-usuarios', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -332,7 +501,7 @@ router.get('/admin/buscar-usuarios', requireAuth, async (req, res) => {
                 p.nome,
                 p.email,
                 p.categoria,
-                pl.tipoacesso,
+                pl.nivelacesso,
                 pl.status
             FROM pessoa p
             INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
@@ -362,7 +531,7 @@ router.get('/admin/buscar-usuarios', requireAuth, async (req, res) => {
 router.get('/admin/todos-usuarios', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -404,7 +573,7 @@ router.get('/admin/todos-usuarios', requireAuth, async (req, res) => {
 router.get('/admin/pessoas-sem-login', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -453,16 +622,16 @@ router.get('/admin/pessoas-sem-login', requireAuth, async (req, res) => {
 router.post('/admin/criar-login', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
             });
         }
 
-        const { id_pessoa, senha, tipoacesso } = req.body;
+        const { id_pessoa, senha, nivelacesso } = req.body;
         
-        if (!id_pessoa || !senha || !tipoacesso) {
+        if (!id_pessoa || !senha || !nivelacesso) {
             return res.status(400).json({
                 success: false,
                 error: 'Todos os campos são obrigatórios'
@@ -492,11 +661,11 @@ router.post('/admin/criar-login', requireAuth, async (req, res) => {
             
             // Inserir login
             const insertQuery = `
-                INSERT INTO pessoa_login (id_pessoa, senha, tipoacesso, status, dataultimaatualizacao)
+                INSERT INTO pessoa_login (id_pessoa, senha, nivelacesso, status, dataultimaatualizacao)
                 VALUES (?, ?, ?, 'Ativo', datetime('now', 'localtime'))
             `;
             
-            await databaseConfig.run(insertQuery, [id_pessoa, senhaHash, tipoacesso]);
+            await databaseConfig.run(insertQuery, [id_pessoa, senhaHash, nivelacesso]);
             
             res.json({ success: true, message: 'Login criado com sucesso' });
             
@@ -515,7 +684,7 @@ router.post('/admin/criar-login', requireAuth, async (req, res) => {
 router.get('/admin/modulos', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -538,7 +707,7 @@ router.get('/admin/modulos', requireAuth, async (req, res) => {
 router.post('/admin/modulos', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -558,7 +727,7 @@ router.post('/admin/modulos', requireAuth, async (req, res) => {
 router.delete('/admin/modulos/:id', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
-        if (req.session.user.tipoacesso !== 'Administrador') {
+        if (req.session.user.nivelacesso !== 'Administrador') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -577,12 +746,7 @@ router.delete('/admin/modulos/:id', requireAuth, async (req, res) => {
 // ===== MIDDLEWARES DE ERRO =====
 
 // Middleware para capturar rotas não encontradas
-router.use('*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Página não encontrada'
-    });
-});
+// Middleware catch-all removido para permitir que outras rotas (como /secure) sejam processadas
 
 // Middleware de tratamento de erros
 router.use((error, req, res, next) => {

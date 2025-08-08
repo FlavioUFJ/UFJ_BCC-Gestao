@@ -2,7 +2,7 @@
 -- Execute este script para limpar o banco de dados
 
 -- 1. Remover tabelas que dependem de estagiarios
-DROP TABLE IF EXISTS planos_atividade;
+DROP TABLE IF EXISTS campo_estagio_planoatividade;
 DROP TABLE IF EXISTS relatorios_estagio;
 
 -- 2. Remover a tabela estagiarios
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS estagiarios;
 
 -- 3. Recriar apenas as tabelas necessárias (sem estagiarios)
 -- Tabela de planos de atividade (sem referência a estagiarios)
-CREATE TABLE IF NOT EXISTS planos_atividade (
+CREATE TABLE IF NOT EXISTS campo_estagio_planoatividade (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     campo_estagio_id INTEGER,
     empresa TEXT,

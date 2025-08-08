@@ -421,13 +421,13 @@ class App {
             // Capturar erros não tratados
             process.on('uncaughtException', (error) => {
                 console.error('❌ Erro não capturado:', error);
-                loggingMiddleware.logError(error);
+                LoggingMiddleware.logError(error);
                 process.exit(1);
             });
             
             process.on('unhandledRejection', (reason, promise) => {
                 console.error('❌ Promise rejeitada não tratada:', reason);
-                loggingMiddleware.logError(new Error(`Unhandled Rejection: ${reason}`));
+                LoggingMiddleware.logError(new Error(`Unhandled Rejection: ${reason}`));
             });
             
             return server;

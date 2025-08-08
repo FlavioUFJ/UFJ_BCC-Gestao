@@ -16,7 +16,7 @@ class ValidationMiddleware {
      * @param {Function} next - Next middleware
      */
     static validatePessoa(req, res, next) {
-        const { nome, email, telefone, cep, tipoacesso } = req.body;
+        const { nome, email, telefone, cep, nivelacesso } = req.body;
         const errors = [];
 
         // Validar nome
@@ -45,7 +45,7 @@ class ValidationMiddleware {
         }
 
         // Validar tipo de acesso
-        if (!tipoacesso) {
+        if (!nivelacesso) {
             errors.push('Tipo de acesso é obrigatório');
         }
 
@@ -56,80 +56,7 @@ class ValidationMiddleware {
         next();
     }
 
-    /**
-     * Valida dados de estágio
-     * @param {Object} req - Request object
-     * @param {Object} res - Response object
-     * @param {Function} next - Next middleware
-     */
-    static validateEstagio(req, res, next) {
-        const {
-            id_estagiario,
-            id_orientador,
-            id_empresa,
-            tipo_estagio,
-            data_inicio,
-            data_fim,
-            carga_horaria_semanal,
-            atividades_desenvolvidas
-        } = req.body;
-        const errors = [];
-
-        // Validar IDs obrigatórios
-        if (!id_estagiario || !ValidationMiddleware.isValidId(id_estagiario)) {
-            errors.push('Estagiário é obrigatório');
-        }
-        if (!id_orientador || !ValidationMiddleware.isValidId(id_orientador)) {
-            errors.push('Orientador é obrigatório');
-        }
-        if (!id_empresa || !ValidationMiddleware.isValidId(id_empresa)) {
-            errors.push('Empresa é obrigatória');
-        }
-
-        // Validar tipo de estágio
-        if (!tipo_estagio) {
-            errors.push('Tipo de estágio é obrigatório');
-        }
-
-        // Validar datas
-        if (!data_inicio) {
-            errors.push('Data de início é obrigatória');
-        } else if (!ValidationMiddleware.isValidDate(data_inicio)) {
-            errors.push('Data de início deve ter um formato válido');
-        }
-
-        if (data_fim && !ValidationMiddleware.isValidDate(data_fim)) {
-            errors.push('Data de fim deve ter um formato válido');
-        }
-
-        // Validar se data de fim é posterior à data de início
-        if (data_inicio && data_fim) {
-            const inicio = new Date(data_inicio);
-            const fim = new Date(data_fim);
-            if (fim <= inicio) {
-                errors.push('Data de fim deve ser posterior à data de início');
-            }
-        }
-
-        // Validar carga horária
-        if (carga_horaria_semanal) {
-            const carga = parseInt(carga_horaria_semanal);
-            if (isNaN(carga) || carga < 1 || carga > 40) {
-                errors.push('Carga horária semanal deve ser entre 1 e 40 horas');
-            }
-        }
-
-        // Validar atividades
-        if (!atividades_desenvolvidas || atividades_desenvolvidas.trim().length < 10) {
-            errors.push('Atividades desenvolvidas devem ter pelo menos 10 caracteres');
-        }
-
-        if (errors.length > 0) {
-            return ValidationMiddleware.handleValidationErrors(req, res, errors);
-        }
-
-        next();
-    }
+    // validateEstagio removido - Campo de Estágio
 
     /**
      * Valida dados de login

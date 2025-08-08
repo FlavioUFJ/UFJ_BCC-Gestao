@@ -5,10 +5,41 @@
 
 const express = require('express');
 const DatabaseHelper = require('../helpers/database-helper');
+const databaseConfig = require('../src/config/database');
 const router = express.Router();
+
+console.log('[SECURE-ROUTES] Arquivo secure-routes.js carregado');
+
+// Middleware para log de todas as requisições que chegam às rotas seguras
+router.use((req, res, next) => {
+    console.log(`[SECURE-ROUTES] Requisição recebida: ${req.method} ${req.path}`);
+    next();
+});
 
 // Instância do helper de banco de dados
 const dbHelper = new DatabaseHelper();
+
+// Rota de teste simples (sem autenticação)
+router.get('/test', (req, res) => {
+    console.log('[SECURE-ROUTES] Rota de teste /secure/test acessada');
+    res.json({ 
+        message: 'Rota de teste das rotas seguras funcionando', 
+        method: req.method, 
+        path: req.path,
+        fullUrl: req.originalUrl,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Rota de teste com middleware de autenticação
+router.get('/test-auth', requireAuth, (req, res) => {
+    console.log('[SECURE-ROUTES] Rota de teste com auth /secure/test-auth acessada');
+    res.json({ 
+        message: 'Rota de teste com autenticação funcionando', 
+        user: req.session.user,
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Middleware para extrair dados do usuário da sessão
 function getUserFromSession(req) {
@@ -18,14 +49,30 @@ function getUserFromSession(req) {
     
     return {
         id_pessoa: req.session.user.id_pessoa,
-        tipoacesso: req.session.user.tipoacesso,
+        nivelacesso: req.session.user.nivelacesso,
         nome: req.session.user.nome
     };
 }
 
 // Middleware de autenticação
 function requireAuth(req, res, next) {
+    console.log('=== DEBUG SESSÃO ===');
+    console.log('Session ID:', req.sessionID);
+    console.log('Session exists:', !!req.session);
+    console.log('Session user:', req.session ? req.session.user : 'No session');
+    console.log('Cookies:', req.headers.cookie);
+    console.log('Headers:', req.headers);
+    console.log('==================');
+    
     if (!req.session.user) {
+        // Verificar se é uma requisição AJAX/JSON
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1) || req.headers['content-type'] === 'application/json') {
+            return res.status(401).json({
+                success: false,
+                message: 'Usuário não autenticado. Faça login para continuar.',
+                redirect: '/auth/login'
+            });
+        }
         return res.redirect('/auth/login');
     }
     next();
@@ -42,55 +89,13 @@ router.get('/rotinas-seguras', requireAuth, async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        // Query que será filtrada automaticamente pelo controle de acesso
-        const query = `
-            SELECT 
-                ce.id_campo_estagio,
-                ce.numero_matricula,
-                pe.nome as nome_estagiario,
-                ce.tipo_estagio,
-                ce.semestre_ano,
-                ce.situacao,
-                ce.apolice_seguro,
-                ce.nome_seguradora,
-                ce.numero_processosei,
-                pe.email as email_estagiario,
-                po.nome as nome_orientador,
-                pc.nome as nome_concedente,
-                ce.numero_convenio,
-                ps.nome as nome_supervisor,
-                ps.email as email_supervisor,
-                ps.telefone as telefone_supervisor,
-                ce.supervisor_areaformacao,
-                ce.unidade_academica,
-                ce.data_inicio,
-                ce.data_fim,
-                ce.cargahoraria,
-                ce.valor_bolsa,
-                ce.valor_valetransporte,
-                ce.observacoes
-            FROM campo_estagio ce
-            LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-            LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-            LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
-            LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-            ORDER BY pe.nome
-        `;
-
-        // Executa query com controle de acesso automático
-        const campos_estagio = await dbHelper.select(query, [], user, 'campo_estagio');
+        // Funcionalidade de campo de estágio removida
+        const campos_estagio = [];
         
         // Verifica se usuário é admin para mostrar informações adicionais
         const isAdmin = await dbHelper.isAdmin(user);
         
-        // Converter datas ISO para formato brasileiro
-        const camposFormatados = campos_estagio.map(campo => {
-            return {
-                ...campo,
-                data_inicio_br: convertISOToBRDate(campo.data_inicio),
-                data_fim_br: convertISOToBRDate(campo.data_fim)
-            };
-        });
+        const camposFormatados = [];
 
         res.render('rotinas-seguras', {
             title: 'Rotinas com Controle de Acesso',
@@ -169,47 +174,8 @@ router.get('/pessoa/:id', requireAuth, async (req, res) => {
 
 /**
  * Rota para exibir formulário de novo campo de estágio
- * Permite acesso a usuários autenticados (não apenas admins)
  */
-router.get('/estagio/campo/novo', requireAuth, (req, res) => {
-    // Definir valores enum necessários para o formulário
-    const ENUM_VALUES = {
-        situacao: [
-            'Em edição',
-            'Aprovado'
-        ],
-        tipo_estagio: [
-            'Obrigatório',
-            'Não Obrigatório'
-        ]
-    };
-    
-    // Capturar a origem da requisição para o botão voltar dinâmico
-    const origem = req.query.origem || '/estagio/dashboard';
-    
-    // Capturar parâmetros de pessoa selecionada (se houver)
-    const pessoaSelecionada = {
-        id_pessoa: req.query.id_pessoa || null,
-        pessoa_nome: req.query.pessoa_nome || null
-    };
-    
-    res.render('campo-estagio-form', {
-        title: 'Cadastro de Campo de Estágio',
-        enumValues: ENUM_VALUES,
-        user: req.session.user,
-        origem: origem,
-        pessoaSelecionada: pessoaSelecionada,
-        currentPage: 'campo-estagio'
-    });
-});
-
-
-
-/**
- * Rota para criar novo campo de estágio
- * Demonstra controle de acesso em operações de inserção
- */
-router.post('/estagio/campo/criar', requireAuth, async (req, res) => {
+router.get('/estagios/campo/novo', requireAuth, async (req, res) => {
     try {
         const user = getUserFromSession(req);
         
@@ -217,144 +183,516 @@ router.post('/estagio/campo/criar', requireAuth, async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        const dadosEstagio = {
-            id_pessoa_curso: req.body.id_pessoa_curso,
-            tipo_estagio: req.body.tipo_estagio,
-            semestre_ano: req.body.semestre_ano,
-            situacao: req.body.situacao || 'Em edição',
-            id_pessoa_estagiario: req.body.id_pessoa_estagiario,
-            numero_matricula: req.body.numero_matricula,
-            periodo: req.body.periodo,
-            id_pessoa_orientador: req.body.id_pessoa_orientador,
-            id_pessoa_concedente: req.body.id_pessoa_concedente,
-            id_pessoa_supervisor: req.body.id_pessoa_supervisor,
-            unidade_academica: req.body.unidade_academica,
-            data_inicio: req.body.data_inicio,
-            data_fim: req.body.data_fim,
-            cargahoraria: req.body.cargahoraria,
-            numero_apolice: req.body.numero_apolice,
-            nome_seguradora: req.body.nome_seguradora,
-            dataultimaatualizacao: new Date().toISOString()
-        };
-
-        // Insere com validação automática de acesso
-        const result = await dbHelper.insert('campo_estagio', dadosEstagio, user);
-        
-        res.json({
-            success: true,
-            message: 'Campo de estágio criado com sucesso',
-            id: result.id
+        res.render('campo-estagio-form', {
+            title: 'Cadastro Campo de Estágio',
+            user: user,
+            isAdmin: await dbHelper.isAdmin(user),
+            currentPage: 'campo-estagio-novo',
+            isEdicao: false,
+            campoEstagio: null
         });
 
     } catch (error) {
-        console.error('Erro ao criar campo de estágio:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message
+        console.error('Erro ao carregar formulário de campo de estágio:', error);
+        res.status(500).render('error', {
+            title: 'Erro',
+            message: 'Erro ao carregar formulário',
+            error: error.message,
+            currentPage: 'error'
+        });
+    }
+});
+
+/**
+ * Rota para exibir formulário de edição de campo de estágio
+ */
+router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        const campoId = parseInt(req.params.id);
+        
+        if (!user) {
+            return res.redirect('/auth/login');
+        }
+
+        // Buscar dados do campo de estágio
+        const db = databaseConfig;
+        const query = `
+            SELECT 
+                ce.*,
+                pe.nome as nome_estagiario,
+                po.nome as nome_orientador,
+                pc.nome as nome_concedente,
+                ps.nome as nome_supervisor,
+                pcurso.nome as nome_curso
+            FROM campo_estagio ce
+            LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+            LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
+            LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+            LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+            LEFT JOIN pessoa pcurso ON ce.id_pessoa_curso = pcurso.id_pessoa
+            WHERE ce.id_campo_estagio = ?
+        `;
+        
+        const campoEstagio = await db.get(query, [campoId]);
+        
+        if (!campoEstagio) {
+            return res.status(404).render('error', {
+                title: 'Não encontrado',
+                message: 'Campo de estágio não encontrado',
+                currentPage: 'error'
+            });
+        }
+
+        res.render('campo-estagio-form', {
+            title: 'Editar Campo de Estágio',
+            user: user,
+            isAdmin: await dbHelper.isAdmin(user),
+            currentPage: 'campo-estagio-editar',
+            campoEstagio: campoEstagio,
+            isEdicao: true
+        });
+
+    } catch (error) {
+        console.error('Erro ao carregar formulário de edição:', error);
+        res.status(500).render('error', {
+            title: 'Erro',
+            message: 'Erro ao carregar formulário de edição',
+            error: error.message,
+            currentPage: 'error'
         });
     }
 });
 
 /**
  * Rota para atualizar campo de estágio
- * Demonstra controle de acesso em operações de atualização
  */
-router.put('/estagio/campo/:id', requireAuth, async (req, res) => {
+router.put('/estagios/campo/atualizar/:id', requireAuth, async (req, res) => {
     try {
         const user = getUserFromSession(req);
-        const estagioId = parseInt(req.params.id);
+        const campoId = parseInt(req.params.id);
         
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Não autenticado' });
+            return res.json({ success: false, message: 'Usuário não autenticado' });
         }
 
-        const dadosAtualizacao = {
-            tipo_estagio: req.body.tipo_estagio,
-            semestre_ano: req.body.semestre_ano,
-            situacao: req.body.situacao,
-            numero_matricula: req.body.numero_matricula,
-            periodo: req.body.periodo,
-            unidade_academica: req.body.unidade_academica,
-            data_inicio: req.body.data_inicio,
-            data_fim: req.body.data_fim,
-            cargahoraria: req.body.cargahoraria,
-            dataultimaatualizacao: new Date().toISOString()
-        };
+        const {
+            situacao,
+            numero_processosei,
+            apolice_seguro,
+            nome_seguradora,
+            tipo_estagio,
+            data_inicio,
+            data_fim,
+            semestre_ano,
+            cargahoraria,
+            id_pessoa_curso,
+            id_pessoa_estagiario,
+            numero_matricula,
+            periodo,
+            id_pessoa_orientador,
+            id_pessoa_concedente,
+            numero_convenio,
+            id_pessoa_supervisor,
+            valor_bolsa,
+            valor_valetransporte,
+            observacoes
+        } = req.body;
 
-        // Remove campos undefined/null
-        Object.keys(dadosAtualizacao).forEach(key => {
-            if (dadosAtualizacao[key] === undefined || dadosAtualizacao[key] === null) {
-                delete dadosAtualizacao[key];
-            }
-        });
-
-        // Atualiza com validação automática de acesso
-        const result = await dbHelper.update(
-            'campo_estagio', 
-            dadosAtualizacao, 
-            { id_campo_estagio: estagioId }, 
-            user
-        );
+        // Converter datas do formato brasileiro para ISO
+        let dataInicioISO = null;
+        let dataFimISO = null;
         
-        if (result.changes === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Registro não encontrado ou você não tem permissão para editá-lo'
-            });
+        if (data_inicio) {
+            const partes = data_inicio.split('/');
+            if (partes.length === 3) {
+                dataInicioISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+        }
+        
+        if (data_fim) {
+            const partes = data_fim.split('/');
+            if (partes.length === 3) {
+                dataFimISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
         }
 
-        res.json({
-            success: true,
-            message: 'Campo de estágio atualizado com sucesso'
+        const db = databaseConfig;
+        
+        const sql = `
+            UPDATE campo_estagio SET
+                situacao = ?,
+                numero_processosei = ?,
+                apolice_seguro = ?,
+                nome_seguradora = ?,
+                tipo_estagio = ?,
+                data_inicio = ?,
+                data_fim = ?,
+                semestre_ano = ?,
+                cargahoraria = ?,
+                id_pessoa_curso = ?,
+                id_pessoa_estagiario = ?,
+                numero_matricula = ?,
+                periodo = ?,
+                id_pessoa_orientador = ?,
+                id_pessoa_concedente = ?,
+                numero_convenio = ?,
+                id_pessoa_supervisor = ?,
+                valor_bolsa = ?,
+                valor_valetransporte = ?,
+                observacoes = ?
+            WHERE id_campo_estagio = ?
+        `;
+        
+        const params = [
+            situacao || 'Em Edição',
+            numero_processosei || null,
+            apolice_seguro || null,
+            nome_seguradora || null,
+            tipo_estagio || null,
+            dataInicioISO,
+            dataFimISO,
+            semestre_ano || null,
+            cargahoraria || null,
+            id_pessoa_curso || null,
+            id_pessoa_estagiario || null,
+            numero_matricula || null,
+            periodo || null,
+            id_pessoa_orientador || null,
+            id_pessoa_concedente || null,
+            numero_convenio || null,
+            id_pessoa_supervisor || null,
+            valor_bolsa || null,
+            valor_valetransporte || null,
+            observacoes || null,
+            campoId
+        ];
+
+        await db.run(sql, params);
+        
+        res.json({ 
+            success: true, 
+            message: 'Campo de estágio atualizado com sucesso!'
         });
 
     } catch (error) {
         console.error('Erro ao atualizar campo de estágio:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message
+        res.json({ 
+            success: false, 
+            message: 'Erro ao atualizar campo de estágio: ' + error.message 
         });
     }
 });
 
 /**
  * Rota para excluir campo de estágio
- * Demonstra controle de acesso em operações de exclusão
  */
-router.delete('/estagio/campo/:id', requireAuth, async (req, res) => {
+router.delete('/estagios/campo/excluir/:id', requireAuth, async (req, res) => {
     try {
         const user = getUserFromSession(req);
-        const estagioId = parseInt(req.params.id);
+        const campoId = parseInt(req.params.id);
         
         if (!user) {
-            return res.status(401).json({ success: false, message: 'Não autenticado' });
+            return res.json({ success: false, message: 'Usuário não autenticado' });
         }
 
-        // Exclui com validação automática de acesso
-        const result = await dbHelper.delete(
-            'campo_estagio', 
-            { id_campo_estagio: estagioId }, 
-            user
+        // Buscar dados do campo de estágio para verificar permissões
+        const db = databaseConfig;
+        const campoEstagio = await db.get(
+            'SELECT * FROM campo_estagio WHERE id_campo_estagio = ?',
+            [campoId]
         );
         
-        if (result.changes === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Registro não encontrado ou você não tem permissão para excluí-lo'
+        if (!campoEstagio) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Campo de estágio não encontrado' 
+            });
+        }
+
+        // Verificar permissões
+        const isAdmin = user.nivelacesso === 'Administrador';
+        const idUsuario = parseInt(user.id_pessoa);
+        
+        let podeExcluir = isAdmin;
+        
+        // Para não-administradores, verificar se o usuário está relacionado ao registro
+        if (!isAdmin) {
+            podeExcluir = (
+                campoEstagio.id_pessoa_estagiario === idUsuario ||
+                campoEstagio.id_pessoa_orientador === idUsuario ||
+                campoEstagio.id_pessoa_concedente === idUsuario ||
+                campoEstagio.id_pessoa_supervisor === idUsuario ||
+                campoEstagio.id_pessoa_curso === idUsuario
+            );
+        }
+        
+        if (!podeExcluir) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Você não tem permissão para excluir este registro' 
+            });
+        }
+
+        // Excluir o registro
+        await db.run('DELETE FROM campo_estagio WHERE id_campo_estagio = ?', [campoId]);
+        
+        res.json({ 
+            success: true, 
+            message: 'Campo de estágio excluído com sucesso!' 
+        });
+
+    } catch (error) {
+        console.error('Erro ao excluir campo de estágio:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao excluir campo de estágio: ' + error.message 
+        });
+    }
+});
+
+/**
+ * Rota para criar novo campo de estágio
+ */
+router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user) {
+            return res.json({ success: false, message: 'Usuário não autenticado' });
+        }
+
+        const {
+            situacao,
+            numero_processosei,
+            apolice_seguro,
+            nome_seguradora,
+            tipo_estagio,
+            data_inicio,
+            data_fim,
+            semestre_ano,
+            cargahoraria,
+            id_pessoa_curso,
+            id_pessoa_estagiario,
+            numero_matricula,
+            periodo,
+            id_pessoa_orientador,
+            id_pessoa_concedente,
+            numero_convenio,
+            id_pessoa_supervisor,
+            valor_bolsa,
+            valor_valetransporte,
+            observacoes
+        } = req.body;
+
+        // Debug: Log dos campos recebidos
+        console.log('[DEBUG] Campos recebidos:', {
+            situacao,
+            tipo_estagio,
+            semestre_ano,
+            cargahoraria,
+            id_pessoa_curso,
+            numero_matricula
+        });
+        
+        // Validação dos campos obrigatórios
+        if (!situacao || !tipo_estagio || !semestre_ano || !cargahoraria || !id_pessoa_curso || !numero_matricula) {
+            console.log('[DEBUG] Campos faltando:', {
+                situacao: !situacao,
+                tipo_estagio: !tipo_estagio,
+                semestre_ano: !semestre_ano,
+                cargahoraria: !cargahoraria,
+                id_pessoa_curso: !id_pessoa_curso,
+                numero_matricula: !numero_matricula
+            });
+            return res.json({ success: false, message: 'Campos obrigatórios não preenchidos' });
+        }
+
+        // Converter datas do formato brasileiro para ISO
+        let dataInicioISO = null;
+        let dataFimISO = null;
+        
+        if (data_inicio) {
+            const partes = data_inicio.split('/');
+            if (partes.length === 3) {
+                dataInicioISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+        }
+        
+        if (data_fim) {
+            const partes = data_fim.split('/');
+            if (partes.length === 3) {
+                dataFimISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+        }
+
+        const db = databaseConfig;
+        
+        const sql = `INSERT INTO campo_estagio (
+            situacao, numero_processosei, apolice_seguro, nome_seguradora,
+            tipo_estagio, data_inicio, data_fim, semestre_ano, cargahoraria,
+            id_pessoa_curso, id_pessoa_estagiario, numero_matricula, periodo,
+            id_pessoa_orientador, id_pessoa_concedente, numero_convenio,
+            id_pessoa_supervisor, valor_bolsa, valor_valetransporte,
+            observacoes, dataultimaatualizacao
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
+        
+        const params = [
+            situacao,
+            numero_processosei || null,
+            apolice_seguro || null,
+            nome_seguradora || null,
+            tipo_estagio,
+            dataInicioISO,
+            dataFimISO,
+            semestre_ano,
+            parseInt(cargahoraria),
+            parseInt(id_pessoa_curso),
+            id_pessoa_estagiario ? parseInt(id_pessoa_estagiario) : null,
+            numero_matricula,
+            periodo || null,
+            id_pessoa_orientador ? parseInt(id_pessoa_orientador) : null,
+            id_pessoa_concedente ? parseInt(id_pessoa_concedente) : null,
+            numero_convenio || null,
+            id_pessoa_supervisor ? parseInt(id_pessoa_supervisor) : null,
+            valor_bolsa ? parseFloat(valor_bolsa) : null,
+            valor_valetransporte ? parseFloat(valor_valetransporte) : null,
+            observacoes || null
+        ];
+
+        const result = await db.run(sql, params);
+        
+        res.json({ 
+            success: true, 
+            message: 'Campo de estágio cadastrado com sucesso!',
+            id: result.id
+        });
+
+    } catch (error) {
+        console.error('Erro ao criar campo de estágio:', error);
+        res.json({ 
+            success: false, 
+            message: 'Erro ao salvar campo de estágio: ' + error.message 
+        });
+    }
+});
+
+/**
+ * Rota para buscar parâmetros
+ * Permite acesso a usuários autenticados para carregar parâmetros do sistema
+ */
+router.get('/parametros/buscar', requireAuth, async (req, res) => {
+    try {
+        const { nome } = req.query;
+        
+        if (!nome) {
+            return res.json({ success: false, message: 'Nome do parâmetro é obrigatório' });
+        }
+
+        const db = databaseConfig;
+        
+        // Buscar parâmetro por identificador
+        const parametro = await db.get('SELECT * FROM parametro WHERE identificador = ?', [nome]);
+        
+        if (!parametro) {
+            return res.json({ success: false, message: 'Parâmetro não encontrado', parametros: [] });
+        }
+
+        // Buscar valores do parâmetro
+        const valores = await db.all('SELECT * FROM parametrovalor WHERE id_parametro = ?', [parametro.id_parametro]);
+        
+        // Formatar valores para o frontend
+        const valoresFormatados = {};
+        valores.forEach(valor => {
+            if (valor.identificadorvalor && valor.valor) {
+                valoresFormatados[valor.identificadorvalor] = valor.valor;
+            }
+        });
+
+        res.json({
+            success: true,
+            parametros: [{
+                ...parametro,
+                valores: valoresFormatados,
+                valor: valores.length > 0 ? valores.map(v => v.valor).join('|') : ''
+            }]
+        });
+        
+    } catch (error) {
+        console.error('Erro ao buscar parâmetros:', error);
+        res.json({ success: false, message: 'Erro ao buscar parâmetros', parametros: [] });
+    }
+});
+
+/**
+ * Rota para buscar valor específico de um parâmetro
+ * Permite acesso a usuários autenticados para carregar um valor específico
+ */
+router.get('/parametros/buscar-valor', requireAuth, async (req, res) => {
+    try {
+        const { identificador, identificadorValor } = req.query;
+        
+        if (!identificador || !identificadorValor) {
+            return res.json({ 
+                success: false, 
+                message: 'Identificador do parâmetro e identificador do valor são obrigatórios' 
+            });
+        }
+
+        const db = databaseConfig;
+        
+        // Buscar valor específico usando LEFT OUTER JOIN
+        const resultado = await db.get(`
+            SELECT p.identificador, pv.identificadorvalor, pv.valor 
+            FROM parametro p 
+            LEFT OUTER JOIN parametrovalor pv ON p.id_parametro = pv.id_parametro 
+            WHERE p.identificador LIKE ? AND pv.identificadorvalor LIKE ?
+        `, [`%${identificador}%`, `%${identificadorValor}%`]);
+        
+        if (!resultado || !resultado.valor) {
+            return res.json({ 
+                success: false, 
+                message: 'Valor do parâmetro não encontrado' 
             });
         }
 
         res.json({
             success: true,
-            message: 'Campo de estágio excluído com sucesso'
+            resultado: {
+                identificador: resultado.identificador,
+                identificadorvalor: resultado.identificadorvalor,
+                valor: resultado.valor
+            }
         });
-
+        
     } catch (error) {
-        console.error('Erro ao excluir campo de estágio:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message
+        console.error('Erro ao buscar valor específico do parâmetro:', error);
+        res.json({ 
+            success: false, 
+            message: 'Erro interno do servidor' 
         });
+    }
+});
+
+/**
+ * Rota para verificar nível de acesso do usuário
+ */
+router.get('/usuario/nivel-acesso', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user) {
+            return res.json({ success: false, message: 'Usuário não autenticado' });
+        }
+
+        res.json({
+            success: true,
+            nivelAcesso: user.nivelacesso || 'Usuário'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao verificar nível de acesso:', error);
+        res.json({ success: false, message: 'Erro ao verificar nível de acesso' });
     }
 });
 
@@ -362,7 +700,7 @@ router.delete('/estagio/campo/:id', requireAuth, async (req, res) => {
  * Rota para buscar pessoas
  * Permite acesso a usuários autenticados para preenchimento de formulários
  */
-router.get('/pessoas/buscar', requireAuth, (req, res) => {
+router.get('/pessoas/buscar', requireAuth, async (req, res) => {
     const { termo, categoria, pagina = 1, limite = 25 } = req.query;
     console.log('DEBUG - Parâmetros recebidos:', { termo, categoria, pagina, limite });
     
@@ -372,8 +710,16 @@ router.get('/pessoas/buscar', requireAuth, (req, res) => {
     if (termo && termo.trim() !== '') {
         // Se há termo de busca
         if (categoria && categoria !== 'todos') {
-            whereClause = 'WHERE categoria = ? AND (nome LIKE ? OR email LIKE ?)';
-            params = [categoria, `%${termo}%`, `%${termo}%`];
+            // Verificar se há múltiplas categorias separadas por vírgula
+            const categorias = categoria.split(',').map(c => c.trim()).filter(c => c);
+            if (categorias.length > 1) {
+                const placeholders = categorias.map(() => '?').join(',');
+                whereClause = `WHERE categoria IN (${placeholders}) AND (nome LIKE ? OR email LIKE ?)`;
+                params = [...categorias, `%${termo}%`, `%${termo}%`];
+            } else {
+                whereClause = 'WHERE categoria = ? AND (nome LIKE ? OR email LIKE ?)';
+                params = [categoria, `%${termo}%`, `%${termo}%`];
+            }
         } else {
             whereClause = 'WHERE nome LIKE ? OR email LIKE ?';
             params = [`%${termo}%`, `%${termo}%`];
@@ -381,8 +727,16 @@ router.get('/pessoas/buscar', requireAuth, (req, res) => {
     } else {
         // Se não há termo de busca, retornar todas as pessoas
         if (categoria && categoria !== 'todos') {
-            whereClause = 'WHERE categoria = ?';
-            params = [categoria];
+            // Verificar se há múltiplas categorias separadas por vírgula
+            const categorias = categoria.split(',').map(c => c.trim()).filter(c => c);
+            if (categorias.length > 1) {
+                const placeholders = categorias.map(() => '?').join(',');
+                whereClause = `WHERE categoria IN (${placeholders})`;
+                params = categorias;
+            } else {
+                whereClause = 'WHERE categoria = ?';
+                params = [categoria];
+            }
         } else {
             whereClause = '';
             params = [];
@@ -393,48 +747,53 @@ router.get('/pessoas/buscar', requireAuth, (req, res) => {
     const countSql = `SELECT COUNT(*) as total FROM pessoa ${whereClause}`;
     console.log('DEBUG - SQL count:', countSql);
     
-    const db = new (require('sqlite3').verbose().Database)('./database.db');
+    const databaseConfig = require('../src/config/database');
+    const db = databaseConfig;
     
-    db.get(countSql, params, (err, countResult) => {
-        if (err) {
-            console.error('Erro ao contar pessoas:', err);
-            return res.json({ success: false, message: 'Erro ao buscar pessoas' });
-        }
-        
+    try {
+        const countResult = await db.get(countSql, params);
         const total = countResult.total;
         const offset = (parseInt(pagina) - 1) * parseInt(limite);
         
         // Buscar os registros com paginação
-        const sql = `SELECT id_pessoa, nome, email, tipo, telefone, cnpj_cpf, categoria FROM pessoa ${whereClause} ORDER BY nome COLLATE NOCASE LIMIT ? OFFSET ?`;
+        const sql = `SELECT id_pessoa, nome, email, tipo, telefone, cnpj_cpf, categoria FROM pessoa ${whereClause} ORDER BY nome LIMIT ? OFFSET ?`;
         const finalParams = [...params, parseInt(limite), offset];
         
         console.log('DEBUG - SQL gerado:', sql);
         console.log('DEBUG - Parâmetros SQL:', finalParams);
         
-        db.all(sql, finalParams, (err, pessoas) => {
-            if (err) {
-                console.error('Erro ao buscar pessoas:', err);
-                return res.json({ success: false, message: 'Erro ao buscar pessoas' });
-            }
-            
-            console.log('DEBUG - Pessoas encontradas:', pessoas.length, 'de', total);
-            res.json({ 
-                success: true, 
-                pessoas: pessoas,
-                total: total,
-                pagina: parseInt(pagina),
-                limite: parseInt(limite)
-            });
+        const pessoas = await db.all(sql, finalParams);
+        
+        console.log('DEBUG - Pessoas encontradas:', pessoas.length, 'de', total);
+        res.json({ 
+            success: true, 
+            pessoas: pessoas,
+            total: total,
+            pagina: parseInt(pagina),
+            limite: parseInt(limite)
         });
-    });
+    } catch (err) {
+        console.error('Erro ao buscar pessoas:', err);
+        return res.json({ success: false, message: 'Erro ao buscar pessoas' });
+    }
 });
 
 /**
  * Rota para criar nova pessoa
  * Permite acesso a usuários autenticados para cadastro durante preenchimento de formulários
  */
-router.post('/pessoas/criar', requireAuth, (req, res) => {
-    const { nome, email, telefone, cnpj_cpf, tipo, categoria } = req.body;
+router.post('/pessoas/criar', requireAuth, async (req, res) => {
+    console.log('[DEBUG] Rota /pessoas/criar executada');
+    let { nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo } = req.body;
+    
+    // Limpar máscaras de formatação antes de salvar
+    if (telefone) {
+        telefone = telefone.replace(/\D/g, '');
+    }
+    
+    if (cnpj_cpf) {
+        cnpj_cpf = cnpj_cpf.replace(/\D/g, '');
+    }
     
     // Validação dos campos obrigatórios
     if (!nome || !tipo) {
@@ -445,43 +804,29 @@ router.post('/pessoas/criar', requireAuth, (req, res) => {
         return res.json({ success: false, message: 'Email é obrigatório' });
     }
     
-    const db = new (require('sqlite3').verbose().Database)('./database.db');
+    const db = databaseConfig;
     
-    // Verificar se já existe pessoa com mesmo email
-    db.get('SELECT id_pessoa FROM pessoa WHERE email = ?', [email], (err, existingPerson) => {
-        if (err) {
-            console.error('Erro ao verificar email:', err);
-            return res.json({ success: false, message: 'Erro ao verificar dados' });
-        }
+    try {
+        // Verificar se já existe pessoa com mesmo email
+        const existingPerson = await db.get('SELECT id_pessoa FROM pessoa WHERE email = ?', [email]);
         
         if (existingPerson) {
             return res.json({ success: false, message: 'Já existe uma pessoa cadastrada com este email' });
         }
         
         // Inserir nova pessoa
-        insertPessoa();
-    });
-    
-    function insertPessoa() {
-        const sql = `INSERT INTO pessoa (nome, email, telefone, cnpj_cpf, tipo, categoria, dataCadastro) 
-                     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
+        const sql = `INSERT INTO pessoa (nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo, dataCadastro) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
         
-        db.run(sql, [nome, email, telefone, cnpj_cpf, tipo, categoria], function(err) {
-            if (err) {
-                console.error('Erro ao criar pessoa:', err);
-                return res.json({ success: false, message: 'Erro ao salvar pessoa' });
-            }
-            
-            // Buscar a pessoa recém-criada para retornar os dados completos
-            db.get('SELECT * FROM pessoa WHERE id_pessoa = ?', [this.lastID], (err, pessoa) => {
-                if (err) {
-                    console.error('Erro ao buscar pessoa criada:', err);
-                    return res.json({ success: false, message: 'Pessoa criada, mas erro ao recuperar dados' });
-                }
-                
-                res.json({ success: true, pessoa: pessoa, message: 'Pessoa cadastrada com sucesso!' });
-            });
-        });
+        const result = await db.run(sql, [nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo || null]);
+        
+        // Buscar a pessoa recém-criada para retornar os dados completos
+        const pessoa = await db.get('SELECT * FROM pessoa WHERE id_pessoa = ?', [result.id]);
+        
+        res.json({ success: true, pessoa: pessoa, message: 'Pessoa cadastrada com sucesso!' });
+    } catch (err) {
+        console.error('Erro ao criar pessoa:', err);
+        return res.json({ success: false, message: 'Erro ao salvar pessoa' });
     }
 });
 
@@ -497,30 +842,8 @@ router.get('/relatorio-completo', requireAuth, async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        // Gera condições de acesso para JOINs complexos
-        const accessConditions = await dbHelper.getJoinAccessConditions(user, 'ce');
-        
-        const query = `
-            SELECT 
-                ce.id_campo_estagio,
-                pe.nome as estagiario,
-                po.nome as orientador,
-                pc.nome as concedente,
-                ps.nome as supervisor,
-                ce.tipo_estagio,
-                ce.situacao,
-                ce.data_inicio,
-                ce.data_fim
-            FROM campo_estagio ce
-            LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-            LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-            LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
-            LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-            WHERE ${accessConditions}
-            ORDER BY pe.nome
-        `;
-
-        const relatorio = await dbHelper.executeCustom(query, [], user, 'campo_estagio');
+        // Relatório de campo_estagio removido - Campo de Estágio
+        const relatorio = [];
         
         res.render('relatorio-completo', {
             title: 'Relatório Completo com Controle de Acesso',
@@ -562,4 +885,99 @@ function convertISOToBRDate(isoDate) {
     }
 }
 
+/**
+ * Rota para anexar plano assinado ao campo de estágio
+ */
+router.post('/estagios/campo/anexar-plano', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        const { campo_estagio_id } = req.body;
+        
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
+        }
+        
+        if (!campo_estagio_id) {
+            return res.status(400).json({ success: false, message: 'ID do campo de estágio é obrigatório' });
+        }
+        
+        // Verificar se os parâmetros necessários estão configurados
+        const db = databaseConfig;
+        
+        const parametroPastas = await db.get(
+            'SELECT * FROM parametro WHERE identificador = ?', 
+            ['Pastas dos Anexos']
+        );
+        
+        const parametroPlanos = await db.get(
+            'SELECT * FROM parametro WHERE identificador = ?', 
+            ['Planos Assinados']
+        );
+        
+        if (!parametroPastas || !parametroPlanos) {
+            return res.status(400).json({
+                success: false,
+                message: 'Parâmetros "Pastas dos Anexos" e "Planos Assinados" devem estar configurados'
+            });
+        }
+        
+        // Buscar valores dos parâmetros
+        const valorPastas = await db.get(
+            'SELECT valor FROM parametrovalor WHERE id_parametro = ? LIMIT 1',
+            [parametroPastas.id_parametro]
+        );
+        
+        const valorPlanos = await db.get(
+            'SELECT valor FROM parametrovalor WHERE id_parametro = ? LIMIT 1',
+            [parametroPlanos.id_parametro]
+        );
+        
+        if (!valorPastas || !valorPlanos) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valores dos parâmetros "Pastas dos Anexos" e "Planos Assinados" devem estar configurados'
+            });
+        }
+        
+        // Verificar se o campo de estágio existe
+        const campoEstagio = await db.get(
+            'SELECT * FROM campo_estagio WHERE id_campo_estagio = ?',
+            [campo_estagio_id]
+        );
+        
+        if (!campoEstagio) {
+            return res.status(404).json({ success: false, message: 'Campo de estágio não encontrado' });
+        }
+        
+        // Simular o salvamento do arquivo (implementação completa requer multer)
+        // Por enquanto, apenas atualizar o campo url_planoassinado com um caminho simulado
+        const nomeArquivo = `plano_assinado_${campo_estagio_id}_${Date.now()}.pdf`;
+        const caminhoArquivo = `${valorPastas.valor}/${valorPlanos.valor}/${nomeArquivo}`;
+        
+        // Atualizar o campo url_planoassinado
+        await db.run(
+            'UPDATE campo_estagio SET url_planoassinado = ? WHERE id_campo_estagio = ?',
+            [caminhoArquivo, campo_estagio_id]
+        );
+        
+        res.json({
+            success: true,
+            message: 'Plano assinado anexado com sucesso!',
+            caminho: caminhoArquivo
+        });
+        
+    } catch (error) {
+        console.error('Erro ao anexar plano assinado:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor: ' + error.message
+        });
+    }
+});
+
+// Importar e montar rotas de estágios
+const estagiosRoutes = require('../src/routes/estagios');
+router.use('/estagios', estagiosRoutes);
+
+console.log('[SECURE-ROUTES] Todas as rotas definidas com sucesso');
 module.exports = router;

@@ -50,7 +50,7 @@ const checks = [
     {
         file: 'routes/secure-routes.js',
         terms: [
-            'planos_atividade',
+            'campo_estagio_planoatividade',
             'relatorios_estagio',
             'total_planos',
             'total_relatorios',
@@ -61,7 +61,7 @@ const checks = [
     {
         file: 'middleware/access-control.js',
         terms: [
-            "'planos_atividade':",
+            "'campo_estagio_planoatividade':",
             "'relatorios_estagio':"
         ],
         description: 'Verificando remoção das configurações de controle de acesso'
@@ -69,7 +69,7 @@ const checks = [
     {
         file: 'CONTROLE-ACESSO.md',
         terms: [
-            'planos_atividade',
+            'campo_estagio_planoatividade',
             'relatorios_estagio'
         ],
         description: 'Verificando atualização da documentação'
@@ -103,7 +103,7 @@ if (allPassed) {
 }
 
 console.log('🔍 VERIFICAÇÕES ADICIONAIS RECOMENDADAS:');
-console.log('   - Buscar por "planos_atividade" em todo o projeto');
+console.log('   - Buscar por "campo_estagio_planoatividade" em todo o projeto');
 console.log('   - Buscar por "relatorios_estagio" em todo o projeto');
 console.log('   - Verificar logs de erro da aplicação');
 console.log('   - Testar todas as rotas principais\n');

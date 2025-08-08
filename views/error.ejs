@@ -81,6 +81,14 @@
         <% if (typeof status !== 'undefined') { %>
             <p class="text-muted mb-3">Código do erro: <%= status %></p>
         <% } %>
+        <% if (typeof status !== 'undefined' && status === 404) { %>
+            <div class="alert alert-info mt-3" style="font-size: 0.9rem; text-align: left;">
+                <strong>URL tentada:</strong> <code id="attempted-url"></code>
+            </div>
+            <script>
+                document.getElementById('attempted-url').textContent = window.location.pathname + window.location.search;
+            </script>
+        <% } %>
         <a href="/" class="btn-home">
             <i class="fas fa-home me-2"></i>
             Voltar ao início

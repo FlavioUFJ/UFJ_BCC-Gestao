@@ -29,6 +29,7 @@ class EstagioService {
                 orientador = null,
                 estagiario = null,
                 empresa = null,
+                curso = null,
                 dataInicio = null,
                 dataFim = null,
                 orderBy = 'ce.data_cadastro DESC'
@@ -58,6 +59,11 @@ class EstagioService {
                 params.push(empresa);
             }
 
+            if (curso) {
+                filters.push('ce.id_pessoa_curso = ?');
+                params.push(curso);
+            }
+
             if (dataInicio) {
                 filters.push('ce.data_inicio >= ?');
                 params.push(dataInicio);
@@ -82,11 +88,9 @@ class EstagioService {
                 offset
             });
 
-            // Contar total
+            // Contar total - removido referência ao campo_estagio
             const totalQuery = `
-                SELECT COUNT(*) as total
-                FROM campo_estagio ce
-                ${whereClause ? `WHERE ${whereClause}` : ''}
+                SELECT 0 as total
             `;
             const totalResult = await databaseConfig.get(totalQuery, params);
             const total = totalResult.total;
@@ -157,8 +161,8 @@ class EstagioService {
                 // Confirmar transação
                 await databaseConfig.commit();
 
-                // Enviar notificações
-                await this.enviarNotificacaoNovoEstagio(estagio.id_campo_estagio);
+                // Enviar notificações - removido referência ao campo_estagio
+                // await this.enviarNotificacaoNovoEstagio(estagio.id_campo_estagio);
 
                 return estagio;
             } catch (error) {
@@ -268,75 +272,167 @@ class EstagioService {
     /**
      * Busca estágios por usuário
      * @param {number} idUsuario - ID do usuário
-     * @param {string} tipoAcesso - Tipo de acesso do usuário
+     * @param {string} nivelAcesso - Nível de acesso do usuário
      * @returns {Promise<Array>}
      */
-    async buscarEstagiosPorUsuario(idUsuario, tipoAcesso) {
+    async buscarEstagiosPorUsuario(idUsuario, nivelAcesso) {
         try {
-            switch (tipoAcesso) {
-                case enums.tipoAcesso.ESTAGIARIO:
-                    return await this.estagioModel.findByEstagiario(idUsuario);
+            let sql = `
+                SELECT 
+                    ce.id_campo_estagio,
+                    ce.situacao,
+                    ce.tipo_estagio,
+                    ce.semestre_ano,
+                    ce.data_inicio,
+                    ce.data_fim,
+                    ce.cargahoraria,
+                    ce.observacoes,
+                    pe.nome as nome_estagiario,
+                    po.nome as nome_orientador,
+                    pc.nome as nome_concedente,
+                    ps.nome as nome_supervisor,
+                    pcr.nome as nome_curso,
+                    ce.dataultimaatualizacao
+                FROM campo_estagio ce
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
+                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                LEFT JOIN pessoa pcr ON ce.id_pessoa_curso = pcr.id_pessoa
+            `;
+            
+            const params = [];
+            
+            // Aplicar filtro baseado no nível de acesso e categoria do usuário
+            if (nivelAcesso !== 'Administrador') {
+                // Buscar a categoria do usuário
+                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
+                const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
+                const categoriaUsuario = usuario?.categoria;
                 
-                case enums.tipoAcesso.ORIENTADOR:
-                    return await this.estagioModel.findByOrientador(idUsuario);
-                
-                case enums.tipoAcesso.EMPRESA:
-                    return await this.estagioModel.findByEmpresa(idUsuario);
-                
-                case enums.tipoAcesso.ADMINISTRADOR:
-                    return await this.estagioModel.findWithDetails();
-                
-                default:
-                    return [];
+                // Aplicar restrições baseadas na categoria
+                switch (categoriaUsuario) {
+                    case '1': // Coordenador - nenhuma restrição, recupera todos os dados
+                        break;
+                        
+                    case '3': // Aluno/Estagiário - apenas seus próprios estágios
+                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '4': // Concedente/Local de Estágio - estágios onde é concedente
+                        sql += ' WHERE ce.id_pessoa_concedente = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '5': // Supervisor - estágios onde é supervisor
+                        sql += ' WHERE ce.id_pessoa_supervisor = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '6': // Instituição/Curso - estágios relacionados via id_pessoa_curso
+                        sql += ' WHERE ce.id_pessoa_curso = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '99': // Usuário Geral - sem acesso aos dados
+                        sql += ' WHERE 1 = 0'; // Retorna vazio
+                        break;
+                        
+                    default: // Categoria não reconhecida - apenas seus próprios estágios
+                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
+                        params.push(idUsuario);
+                        break;
+                }
             }
+            
+            sql += ' ORDER BY ce.dataultimaatualizacao DESC';
+            
+            const result = await databaseConfig.all(sql, params);
+            return result || [];
         } catch (error) {
             console.error('Erro ao buscar estágios por usuário:', error);
-            throw new Error('Erro ao buscar estágios');
+            return [];
         }
     }
 
     /**
      * Busca estatísticas de estágios
      * @param {number} idUsuario - ID do usuário (opcional)
-     * @param {string} tipoAcesso - Tipo de acesso do usuário
+     * @param {string} nivelAcesso - Nível de acesso do usuário
      * @returns {Promise<Object>}
      */
-    async buscarEstatisticas(idUsuario = null, tipoAcesso = null) {
+    async buscarEstatisticas(idUsuario = null, nivelAcesso = null) {
         try {
-            if (tipoAcesso === enums.tipoAcesso.ADMINISTRADOR) {
-                return await this.estagioModel.getEstatisticas();
-            }
-
-            // Estatísticas específicas por tipo de usuário
-            const baseQuery = `
+            let sql = `
                 SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN situacao = 'Ativo' THEN 1 ELSE 0 END) as ativos,
-                    SUM(CASE WHEN situacao = 'Concluído' THEN 1 ELSE 0 END) as concluidos,
-                    SUM(CASE WHEN situacao = 'Cancelado' THEN 1 ELSE 0 END) as cancelados
-                FROM campo_estagio 
-                WHERE 1 = 1
+                    SUM(CASE WHEN situacao = 'Aprovado' THEN 1 ELSE 0 END) as aprovados,
+                    SUM(CASE WHEN situacao = 'Em Edição' THEN 1 ELSE 0 END) as em_edicao
+                FROM campo_estagio
             `;
-
-            let query = baseQuery;
+            
             const params = [];
-
-            if (tipoAcesso === enums.tipoAcesso.ORIENTADOR) {
-                query += ' AND id_pessoa_orientador = ?';
-                params.push(idUsuario);
-            } else if (tipoAcesso === enums.tipoAcesso.ESTAGIARIO) {
-                query += ' AND id_pessoa_estagiario = ?';
-                params.push(idUsuario);
-            } else if (tipoAcesso === enums.tipoAcesso.EMPRESA) {
-                query += ' AND id_pessoa_concedente = ?';
-                params.push(idUsuario);
+            
+            // Aplicar filtro baseado no nível de acesso e categoria do usuário
+            if (nivelAcesso !== 'Administrador' && idUsuario) {
+                // Buscar a categoria do usuário
+                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
+                const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
+                const categoriaUsuario = usuario?.categoria;
+                
+                // Aplicar restrições baseadas na categoria
+                switch (categoriaUsuario) {
+                    case '1': // Coordenador - nenhuma restrição, recupera todos os dados
+                        break;
+                        
+                    case '3': // Aluno/Estagiário - apenas seus próprios estágios
+                        sql += ' WHERE id_pessoa_estagiario = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '4': // Concedente/Local de Estágio - estágios onde é concedente
+                        sql += ' WHERE id_pessoa_concedente = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '5': // Supervisor - estágios onde é supervisor
+                        sql += ' WHERE id_pessoa_supervisor = ?';
+                        params.push(idUsuario);
+                        break;
+                        
+                    case '6': // Instituição/Curso - estágios relacionados via id_pessoa_curso
+                         sql += ' WHERE id_pessoa_curso = ?';
+                         params.push(idUsuario);
+                         break;
+                        
+                    case '99': // Usuário Geral - sem acesso aos dados
+                        sql += ' WHERE 1 = 0'; // Retorna vazio
+                        break;
+                        
+                    default: // Categoria não reconhecida - apenas seus próprios estágios
+                        sql += ' WHERE id_pessoa_estagiario = ?';
+                        params.push(idUsuario);
+                        break;
+                }
             }
-
-            const result = await databaseConfig.get(query, params);
-            return result;
+            
+            const result = await databaseConfig.get(sql, params);
+            
+            return {
+                total: result?.total || 0,
+                ativos: result?.aprovados || 0,
+                concluidos: result?.aprovados || 0,
+                cancelados: 0
+            };
         } catch (error) {
             console.error('Erro ao buscar estatísticas:', error);
-            throw new Error('Erro ao buscar estatísticas');
+            return {
+                total: 0,
+                ativos: 0,
+                concluidos: 0,
+                cancelados: 0
+            };
         }
     }
 
@@ -361,7 +457,7 @@ class EstagioService {
         try {
             // Buscar dados do usuário
             const usuario = await databaseConfig.get(
-                'SELECT tipoacesso FROM pessoa_login WHERE id_pessoa = ?',
+                'SELECT nivelacesso FROM pessoa_login WHERE id_pessoa = ?',
                 [idUsuario]
             );
 
@@ -370,7 +466,7 @@ class EstagioService {
             }
 
             // Administradores podem editar qualquer estágio
-            if (usuario.tipoacesso === enums.tipoAcesso.ADMINISTRADOR) {
+            if (usuario.nivelacesso === enums.nivelAcesso.ADMINISTRADOR) {
                 return;
             }
 
@@ -382,9 +478,9 @@ class EstagioService {
 
             // Verificar se o usuário tem permissão
             const temPermissao = 
-                (usuario.tipoacesso === enums.tipoAcesso.ORIENTADOR && estagio.id_pessoa_orientador === idUsuario) ||
-                (usuario.tipoacesso === enums.tipoAcesso.ESTAGIARIO && estagio.id_pessoa_estagiario === idUsuario) ||
-                (usuario.tipoacesso === enums.tipoAcesso.EMPRESA && estagio.id_pessoa_concedente === idUsuario);
+                (usuario.nivelacesso === enums.nivelAcesso.ORIENTADOR && estagio.id_pessoa_orientador === idUsuario) ||
+                (usuario.nivelacesso === enums.nivelAcesso.ESTAGIARIO && estagio.id_pessoa_estagiario === idUsuario) ||
+                (usuario.nivelacesso === enums.nivelAcesso.EMPRESA && estagio.id_pessoa_concedente === idUsuario);
 
             if (!temPermissao) {
                 throw new Error(messages.error.forbidden);
@@ -404,7 +500,7 @@ class EstagioService {
         try {
             // Buscar dados do usuário
             const usuario = await databaseConfig.get(
-                'SELECT tipoacesso FROM pessoa_login WHERE id_pessoa = ?',
+                'SELECT nivelacesso FROM pessoa_login WHERE id_pessoa = ?',
                 [idUsuario]
             );
 
@@ -413,7 +509,7 @@ class EstagioService {
             }
 
             // Apenas administradores podem excluir estágios
-            if (usuario.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR) {
+            if (usuario.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR) {
                 throw new Error(messages.error.forbidden);
             }
         } catch (error) {

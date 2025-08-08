@@ -16,13 +16,14 @@ class ParametroController {
      */
     async index(req, res) {
         try {
-            const parametros = await this.parametroModel.findAll();
+            const parametros = await this.parametroModel.findAllWithValues();
             
-            res.render('admin/parametro', {
+            res.render('admin-parametro', {
                 title: 'Gerenciar Parâmetros',
-                parametros: parametros.data || [],
+                parametros: parametros || [],
                 user: req.session.user,
-                currentPage: 'parametro'
+                currentPage: 'parametro',
+                origem: req.query.origem || '/dashboard'
             });
         } catch (error) {
             console.error('Erro ao listar parâmetros:', error);
@@ -53,39 +54,81 @@ class ParametroController {
             }
 
             console.log('DEBUG: Chamando findWithValoresByIdentificador');
-            const parametro = await this.parametroModel.findWithValoresByIdentificador(identificador);
-            console.log('DEBUG: Resultado da busca:', parametro);
+            const resultados = await this.parametroModel.findWithValoresByIdentificador(identificador);
+            console.log('DEBUG: Resultado da busca:', resultados);
             
-            if (!parametro) {
+            if (!resultados || resultados.length === 0) {
                 return res.status(404).json({
                     success: false,
                     message: 'Parâmetro não encontrado'
                 });
             }
 
-            // Converter valores para o formato esperado pelo frontend
-            const valoresFormatados = {};
-            if (parametro.valores && parametro.valores.length > 0) {
-                parametro.valores.forEach(valor => {
-                    if (valor.identificadorvalor && valor.valor) {
-                        valoresFormatados[valor.identificadorvalor] = valor.valor;
-                    }
+            // Agrupar os resultados por parâmetro
+            const parametrosMap = new Map();
+            
+            resultados.forEach(row => {
+                if (!parametrosMap.has(row.identificador)) {
+                    parametrosMap.set(row.identificador, {
+                        identificador: row.identificador,
+                        valores: []
+                    });
+                }
+                
+                if (row.identificadorvalor && row.valor) {
+                    parametrosMap.get(row.identificador).valores.push({
+                        nome: row.identificadorvalor,
+                        valor: row.valor
+                    });
+                }
+            });
+
+            const parametros = Array.from(parametrosMap.values());
+
+            res.json({
+                success: true,
+                parametros: parametros
+            });
+        } catch (error) {
+            console.error('Erro ao buscar parâmetro:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    /**
+     * Busca um valor específico de um parâmetro (API)
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async buscarValorEspecifico(req, res) {
+        try {
+            const { identificador, identificadorValor } = req.query;
+            
+            if (!identificador || !identificadorValor) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Identificador e identificadorValor são obrigatórios'
+                });
+            }
+
+            const resultado = await this.parametroModel.findValorEspecifico(identificador, identificadorValor);
+            
+            if (!resultado) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Valor do parâmetro não encontrado'
                 });
             }
 
             res.json({
                 success: true,
-                parametro: {
-                    id_parametro: parametro.id_parametro,
-                    identificador: parametro.identificador,
-                    descricao: parametro.descricao,
-                    modulo: parametro.modulo,
-                    quantidadevalor: parametro.quantidadevalor,
-                    valores: valoresFormatados
-                }
+                resultado: resultado
             });
         } catch (error) {
-            console.error('Erro ao buscar parâmetro:', error);
+            console.error('Erro ao buscar valor específico do parâmetro:', error);
             res.status(500).json({
                 success: false,
                 message: 'Erro interno do servidor'

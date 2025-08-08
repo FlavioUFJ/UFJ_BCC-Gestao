@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS `pessoa` (
   `categoria` ENUM('1', '2', '3', '4', '5', '6', '99') NOT NULL COMMENT 'Infomar a categoria da pessoa:\n1- Coordenador\n2- Professor Orientador\n3- Aluno/Estagiário\n4- Concedente/Local de Estágio\n5- Supervisor\n6- Curso/Instituição de Ensino\n99 - Usuário Geral',
   `telefone` VARCHAR(14) NOT NULL,
   `email` VARCHAR(160) NOT NULL,
-  `dataCadastro` DATETIME NOT NULL DEFAULT now(),
+  `dataCadastro` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ultimoContato` DATETIME NULL,
-  `dataultimaatualizacao` DATETIME NOT NULL DEFAULT on update DATETIME,
+  `dataultimaatualizacao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_pessoa`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE)
 ENGINE = InnoDB;

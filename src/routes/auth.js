@@ -68,4 +68,47 @@ router.get('/reset-password/:token', requireGuest, (req, res, next) => {
 // POST /auth/reset-password/:token - Processar redefinição de senha
 router.post('/reset-password/:token', requireGuest, (req, res) => authController.resetPassword(req, res));
 
+// ===== ROTA DE TESTE =====
+// GET /test-form - Página de teste
+router.get('/test-form', (req, res) => {
+    res.render('test-form', {
+        title: 'Teste de Formulário',
+        layout: false
+    });
+});
+
+// POST /test-form - Processar teste
+router.post('/test-form', (req, res) => {
+    console.log('Dados recebidos no teste:', req.body);
+    res.json({
+        success: true,
+        message: 'Formulário de teste funcionando!',
+        data: req.body
+    });
+});
+
+// Rota de teste para login simples
+router.get('/simple-login', (req, res) => {
+    res.render('simple-login', {
+        title: 'Login Simples - Teste',
+        layout: 'layout'
+    });
+});
+
+// Rota de teste para processar login simples
+router.post('/test-login', (req, res) => {
+    console.log('=== TESTE LOGIN - Dados recebidos ===');
+    console.log('Body:', req.body);
+    console.log('Headers:', req.headers);
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('=====================================');
+    
+    res.json({ 
+        success: true, 
+        message: 'Rota de teste do login funcionou!', 
+        data: req.body 
+    });
+});
+
 module.exports = router;

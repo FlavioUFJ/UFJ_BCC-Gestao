@@ -517,7 +517,7 @@ class FormValidator {
         // Campos obrigatórios
         this.required('nome', data.nome, 'Nome');
         this.required('email', data.email, 'E-mail');
-        this.required('tipoacesso', data.tipoacesso, 'Tipo de Acesso');
+        this.required('nivelacesso', data.nivelacesso, 'Nível de Acesso');
 
         // Validações de formato
         this.email('email', data.email, 'E-mail');
@@ -525,11 +525,11 @@ class FormValidator {
         this.maxLength('email', data.email, 100, 'E-mail');
 
         // Validar tipo de acesso
-        const tiposValidos = Object.values(enums.tipoAcesso);
-        this.inList('tipoacesso', data.tipoacesso, tiposValidos, 'Tipo de Acesso');
+        const tiposValidos = Object.values(enums.nivelAcesso);
+        this.inList('nivelacesso', data.nivelacesso, tiposValidos, 'Nível de Acesso');
 
         // Validar documento baseado no tipo
-        if (data.tipoacesso === enums.tipoAcesso.EMPRESA) {
+        if (data.nivelacesso === enums.nivelAcesso.EMPRESA) {
             if (data.documento) {
                 this.cnpj('documento', data.documento, 'CNPJ');
             }
@@ -569,58 +569,7 @@ class FormValidator {
         return !this.hasErrors();
     }
 
-    /**
-     * Valida formulário de estágio
-     * @param {Object} data - Dados do formulário
-     * @returns {boolean}
-     */
-    validateEstagio(data) {
-        this.clear();
-
-        // Campos obrigatórios
-        this.required('id_orientador', data.id_orientador, 'Orientador');
-        this.required('id_estagiario', data.id_estagiario, 'Estagiário');
-        this.required('id_empresa', data.id_empresa, 'Empresa');
-        this.required('tipo_estagio', data.tipo_estagio, 'Tipo de Estágio');
-        this.required('data_inicio', data.data_inicio, 'Data de Início');
-        this.required('carga_horaria_semanal', data.carga_horaria_semanal, 'Carga Horária Semanal');
-        this.required('descricao_atividades', data.descricao_atividades, 'Descrição das Atividades');
-
-        // Validações de formato
-        this.date('data_inicio', data.data_inicio, 'Data de Início');
-        this.futureDate('data_inicio', data.data_inicio, 'Data de Início');
-        
-        if (data.data_fim) {
-            this.date('data_fim', data.data_fim, 'Data de Fim');
-            this.dateAfter('data_fim', data.data_fim, data.data_inicio, 'Data de Fim', 'Data de Início');
-        }
-
-        // Validar tipo de estágio
-        const tiposValidos = Object.values(enums.tipoEstagio);
-        this.inList('tipo_estagio', data.tipo_estagio, tiposValidos, 'Tipo de Estágio');
-
-        // Validar carga horária
-        this.numeric('carga_horaria_semanal', data.carga_horaria_semanal, 'Carga Horária Semanal');
-        this.integer('carga_horaria_semanal', data.carga_horaria_semanal, 'Carga Horária Semanal');
-        this.minValue('carga_horaria_semanal', data.carga_horaria_semanal, 1, 'Carga Horária Semanal');
-        this.maxValue('carga_horaria_semanal', data.carga_horaria_semanal, 44, 'Carga Horária Semanal');
-
-        // Validar descrições
-        this.maxLength('descricao_atividades', data.descricao_atividades, 1000, 'Descrição das Atividades');
-        this.minLength('descricao_atividades', data.descricao_atividades, 10, 'Descrição das Atividades');
-
-        if (data.observacoes) {
-            this.maxLength('observacoes', data.observacoes, 500, 'Observações');
-        }
-
-        // Validar valor da bolsa se fornecido
-        if (data.valor_bolsa) {
-            this.numeric('valor_bolsa', data.valor_bolsa, 'Valor da Bolsa');
-            this.minValue('valor_bolsa', data.valor_bolsa, 0, 'Valor da Bolsa');
-        }
-
-        return !this.hasErrors();
-    }
+    // validateEstagio removido - Campo de Estágio
 
     /**
      * Valida formulário de login

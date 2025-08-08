@@ -72,6 +72,9 @@ const parametroController = new ParametroController();
 // GET /parametros/buscar - Buscar parâmetros (usado pelo frontend)
 router.get('/buscar', (req, res) => parametroController.buscar(req, res));
 
+// GET /parametros/buscar-valor - Buscar valor específico de um parâmetro
+router.get('/buscar-valor', (req, res) => parametroController.buscarValorEspecifico(req, res));
+
 // Middleware de autenticação para todas as rotas protegidas
 router.use(requireAuth);
 

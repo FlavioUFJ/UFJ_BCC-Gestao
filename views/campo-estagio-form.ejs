@@ -79,7 +79,7 @@
                                     <label for="situacao" class="form-label required">Situação</label>
                                     <select class="form-control" id="situacao" name="situacao" required>
                                         <option value="Em Edição" selected>Em Edição</option>
-                                        <option value="Aprovado">Aprovado</option>
+                                        <option value="Cadastrado">Cadastrado</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -313,7 +313,7 @@
         }
 
         function carregarParametrosSeguro() {
-            fetch('/secure/parametros/buscar?nome=Apólice de Seguro', {
+            fetch('/parametro/buscar?nome=Apólice de Seguro', {
                 method: 'GET',
                 credentials: 'include'
             })

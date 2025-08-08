@@ -1569,10 +1569,10 @@
         
         try {
             // Verificar se os parâmetros necessários estão configurados
-            const response = await fetch('/secure/parametros/buscar?nome=Pastas dos Anexos');
+            const response = await fetch('/parametro/buscar?nome=Pastas dos Anexos');
             const parametroPastas = await response.json();
             
-            const response2 = await fetch('/secure/parametros/buscar?nome=Planos Assinados');
+            const response2 = await fetch('/parametro/buscar?nome=Planos Assinados');
             const parametroPlanos = await response2.json();
             
             if (!parametroPastas.success || !parametroPastas.data || 
@@ -1810,7 +1810,7 @@
     async function carregarLinkWhatsApp() {
         try {
             console.log('Iniciando carregamento do link do WhatsApp...');
-            const url = '/secure/parametros/buscar-valor?identificador=' + encodeURIComponent('Grupo WhatsApp') + '&identificadorValor=' + encodeURIComponent('Link do Estágio');
+            const url = '/parametro/buscar-valor?identificador=' + encodeURIComponent('Grupo WhatsApp') + '&identificadorValor=' + encodeURIComponent('Link do Estágio');
             console.log('URL da requisição:', url);
             
             const response = await fetch(url);

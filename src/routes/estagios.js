@@ -25,7 +25,7 @@ router.get('/dashboard', (req, res) => estagioController.estagioModuleDashboard(
 
 // GET /estagios/create - Formulário de criação (admin/orientador)
 router.get('/create', 
-    requirePermissions([enums.tipoAcesso.ADMINISTRADOR, enums.tipoAcesso.ORIENTADOR]),
+    requirePermissions([enums.nivelAcesso.ADMINISTRADOR, enums.nivelAcesso.ORIENTADOR]),
     (req, res) => estagioController.create(req, res)
 );
 
@@ -39,7 +39,7 @@ router.get('/:id/edit', (req, res) => estagioController.edit(req, res));
 
 // POST /estagios - Criar novo estágio (admin/orientador)
 router.post('/', 
-    requirePermissions([enums.tipoAcesso.ADMINISTRADOR, enums.tipoAcesso.ORIENTADOR]),
+    requirePermissions([enums.nivelAcesso.ADMINISTRADOR, enums.nivelAcesso.ORIENTADOR]),
     (req, res) => estagioController.store(req, res)
 );
 
@@ -51,13 +51,13 @@ router.patch('/:id', (req, res) => estagioController.update(req, res));
 
 // PATCH /estagios/:id/status - Alterar status do estágio (admin/orientador)
 router.patch('/:id/status', 
-    requirePermissions([enums.tipoAcesso.ADMINISTRADOR, enums.tipoAcesso.ORIENTADOR]),
+    requirePermissions([enums.nivelAcesso.ADMINISTRADOR, enums.nivelAcesso.ORIENTADOR]),
     (req, res) => estagioController.updateStatus(req, res)
 );
 
 // DELETE /estagios/:id - Excluir estágio (apenas admin)
 router.delete('/:id', 
-    requirePermissions([enums.tipoAcesso.ADMINISTRADOR]),
+    requirePermissions([enums.nivelAcesso.ADMINISTRADOR]),
     (req, res) => estagioController.destroy(req, res)
 );
 

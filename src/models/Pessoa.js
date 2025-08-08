@@ -20,8 +20,11 @@ class Pessoa extends BaseModel {
             'cidade',
             'estado',
             'cep',
-            'tipo_pessoa',
-            'ativo'
+            'tipo',
+            'categoria',
+            'cnpj_cpf',
+            'ativo',
+            'id_pessoaVinculo'
         ];
         
         this.hidden = [];
@@ -51,8 +54,9 @@ class Pessoa extends BaseModel {
             cep: {
                 maxLength: 10
             },
-            tipo_pessoa: {
-                required: true
+            tipo: {
+                required: true,
+                enum: ['F', 'J', 'N']
             }
         };
     }
@@ -65,7 +69,7 @@ class Pessoa extends BaseModel {
     async findWithLogin(id) {
         try {
             const query = `
-                SELECT p.*, pl.tipoacesso, pl.status as login_ativo
+                SELECT p.*, pl.nivelacesso, pl.status as login_ativo
                 FROM pessoa p
                 LEFT JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
                 WHERE p.id_pessoa = ?
@@ -106,7 +110,7 @@ class Pessoa extends BaseModel {
     async authenticate(email, senha) {
         try {
             const query = `
-                SELECT p.*, pl.senha, pl.tipoacesso, pl.status as login_ativo
+                SELECT p.*, pl.senha, pl.nivelacesso, pl.status as login_ativo
                 FROM pessoa p
                 INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
                 WHERE p.email = ? AND pl.status = 'Ativo'
@@ -142,7 +146,7 @@ class Pessoa extends BaseModel {
      */
     async createLogin(idPessoa, loginData) {
         try {
-            const { senha, tipoacesso = enums.tipoAcesso.ESTAGIARIO } = loginData;
+            const { senha, nivelacesso = enums.nivelAcesso.ESTAGIARIO } = loginData;
             
             // Verificar se a pessoa existe
             const pessoa = await this.findById(idPessoa);
@@ -167,11 +171,11 @@ class Pessoa extends BaseModel {
             
             // Inserir login
             const query = `
-                INSERT INTO pessoa_login (id_pessoa, senha, tipoacesso, status)
+                INSERT INTO pessoa_login (id_pessoa, senha, nivelacesso, status)
                 VALUES (?, ?, ?, 'Ativo')
             `;
             
-            await databaseConfig.run(query, [idPessoa, senhaHash, tipoacesso]);
+            await databaseConfig.run(query, [idPessoa, senhaHash, nivelacesso]);
             
             return true;
         } catch (error) {
@@ -231,21 +235,21 @@ class Pessoa extends BaseModel {
     }
 
     /**
-     * Busca pessoas por tipo de acesso
-     * @param {string} tipoAcesso - Tipo de acesso
+     * Busca pessoas por nível de acesso
+     * @param {string} nivelAcesso - Nível de acesso
      * @returns {Promise<Array>}
      */
-    async findByTipoAcesso(tipoAcesso) {
+    async findByNivelAcesso(nivelAcesso) {
         try {
             const query = `
-                SELECT p.*, pl.usuario, pl.tipoacesso
+                SELECT p.*, pl.usuario, pl.nivelacesso
                 FROM pessoa p
                 INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
-                WHERE pl.tipoacesso = ? AND pl.ativo = 1 AND p.ativo = 1
+                WHERE pl.nivelacesso = ? AND pl.ativo = 1 AND p.ativo = 1
                 ORDER BY p.nome
             `;
             
-            const results = await databaseConfig.all(query, [tipoAcesso]);
+            const results = await databaseConfig.all(query, [nivelAcesso]);
             return results.map(result => this.hideFields(result));
         } catch (error) {
             console.error('Erro ao buscar pessoas por tipo de acesso:', error);
@@ -258,7 +262,7 @@ class Pessoa extends BaseModel {
      * @returns {Promise<Array>}
      */
     async findOrientadores() {
-        return await this.findByTipoAcesso(enums.tipoAcesso.ORIENTADOR);
+        return await this.findByNivelAcesso(enums.nivelAcesso.ORIENTADOR);
     }
 
     /**
@@ -266,7 +270,7 @@ class Pessoa extends BaseModel {
      * @returns {Promise<Array>}
      */
     async findEstagiarios() {
-        return await this.findByTipoAcesso(enums.tipoAcesso.ESTAGIARIO);
+        return await this.findByNivelAcesso(enums.nivelAcesso.ESTAGIARIO);
     }
 
     /**
@@ -274,7 +278,7 @@ class Pessoa extends BaseModel {
      * @returns {Promise<Array>}
      */
     async findEmpresas() {
-        return await this.findByTipoAcesso(enums.tipoAcesso.EMPRESA);
+        return await this.findByNivelAcesso(enums.nivelAcesso.EMPRESA);
     }
 
     /**

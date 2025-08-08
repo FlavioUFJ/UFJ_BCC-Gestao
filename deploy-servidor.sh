@@ -133,20 +133,14 @@ fi
 # 7. Limpar e reinstalar dependências
 log "📦 Limpando e reinstalando dependências..."
 rm -rf node_modules package-lock.json
-npm cache clean --force
-npm install --production --no-audit --no-fund
+sudo npm cache clean --force
+sudo npm install --production --no-audit --no-fund
 
-# 8. Verificar se sqlite3 foi instalado (não deveria estar)
-if [ -d "node_modules/sqlite3" ]; then
-    warn "SQLite3 detectado, removendo..."
-    npm uninstall sqlite3
-    log "✅ SQLite3 removido"
-fi
 
 # 9. Verificar se mysql2 está instalado
 if ! npm list mysql2 > /dev/null 2>&1; then
     log "📦 Instalando mysql2..."
-    npm install mysql2 --production
+    sudo npm install mysql2 --production
 fi
 
 # 10. Testar configuração da aplicação
@@ -159,33 +153,33 @@ process.exit(0);
 
 # 11. Configurar permissões
 log "🔐 Configurando permissões..."
-chown -R nodejs:nodejs "$APP_DIR"
+chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
 
 # 12. Criar diretórios necessários
 log "📁 Criando diretórios necessários..."
 mkdir -p "$APP_DIR/logs" "$APP_DIR/uploads" "$APP_DIR/backups" "$APP_DIR/temp"
-chown -R nodejs:nodejs "$APP_DIR/logs" "$APP_DIR/uploads" "$APP_DIR/backups" "$APP_DIR/temp"
+chown -R www-data:www-data "$APP_DIR/logs" "$APP_DIR/uploads" "$APP_DIR/backups" "$APP_DIR/temp"
 
 # 13. Iniciar aplicação com PM2
 log "🚀 Iniciando aplicação com PM2..."
 if [ -f "$APP_DIR/ecosystem.config.js" ]; then
-    sudo -u nodejs pm2 start "$APP_DIR/ecosystem.config.js"
+    sudo pm2 start "$APP_DIR/ecosystem.config.js"
 else
     # Configuração PM2 padrão se não existir ecosystem.config.js
-    sudo -u nodejs pm2 start "$APP_DIR/server.js" --name "$APP_NAME" --env production
+    sudo pm2 start "$APP_DIR/server.js" --name "$APP_NAME" --env production
 fi
 
 # 14. Salvar configuração PM2
-sudo -u nodejs pm2 save
-sudo -u nodejs pm2 startup
+sudo pm2 save
+sudo pm2 startup
 
 # 15. Verificar se a aplicação está rodando
 log "✅ Verificando status da aplicação..."
 sleep 5
-if sudo -u nodejs pm2 describe "$APP_NAME" > /dev/null 2>&1; then
+if sudo pm2 describe "$APP_NAME" > /dev/null 2>&1; then
     log "✅ Aplicação está rodando com sucesso!"
-    sudo -u nodejs pm2 status
+    sudo pm2 status
 else
     error "❌ Falha ao iniciar a aplicação"
 fi

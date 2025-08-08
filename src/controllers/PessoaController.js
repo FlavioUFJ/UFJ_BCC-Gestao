@@ -36,7 +36,7 @@ class PessoaController {
 
             // Aplicar filtros
             if (tipo) {
-                options.where.tipoacesso = tipo;
+                options.where.nivelacesso = tipo;
             }
 
             if (ativo !== undefined) {
@@ -67,7 +67,7 @@ class PessoaController {
                     search,
                     ativo
                 },
-                tipoAcessoOptions: Object.values(enums.tipoAcesso),
+                nivelAcessoOptions: Object.values(enums.nivelAcesso),
                 currentPage: 'pessoas'
             });
         } catch (error) {
@@ -99,7 +99,7 @@ class PessoaController {
             res.render('pessoas/create', {
                 title: 'Nova Pessoa',
                 user: req.session.user,
-                tipoAcessoOptions: Object.values(enums.tipoAcesso),
+                nivelAcessoOptions: Object.values(enums.nivelAcesso),
                 currentPage: 'pessoas'
             });
         } catch (error) {
@@ -122,8 +122,17 @@ class PessoaController {
         try {
             const dadosPessoa = req.body;
             
+            // Limpar máscaras de formatação antes de salvar
+            if (dadosPessoa.telefone) {
+                dadosPessoa.telefone = dadosPessoa.telefone.replace(/\D/g, '');
+            }
+            
+            if (dadosPessoa.cnpj_cpf) {
+                dadosPessoa.cnpj_cpf = dadosPessoa.cnpj_cpf.replace(/\D/g, '');
+            }
+            
             // Validar dados obrigatórios
-            const camposObrigatorios = ['nome', 'email', 'tipoacesso'];
+            const camposObrigatorios = ['nome', 'email', 'nivelacesso'];
             for (const campo of camposObrigatorios) {
                 if (!dadosPessoa[campo]) {
                     throw new Error(`Campo ${campo} é obrigatório`);
@@ -242,7 +251,7 @@ class PessoaController {
 
             // Verificar permissão de edição
             const user = req.session.user;
-            if (user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR && 
+            if (user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR && 
                 user.id_pessoa !== parseInt(id)) {
                 throw new Error('Acesso negado');
             }
@@ -251,7 +260,7 @@ class PessoaController {
                 title: `Editar Pessoa - ${pessoa.nome}`,
                 user,
                 pessoa,
-                tipoAcessoOptions: Object.values(enums.tipoAcesso),
+                nivelAcessoOptions: Object.values(enums.nivelAcesso),
                 error: req.query.error || null,
                 currentPage: 'pessoas'
             });
@@ -281,8 +290,17 @@ class PessoaController {
             const dadosPessoa = req.body;
             const user = req.session.user;
 
+            // Limpar máscaras de formatação antes de salvar
+            if (dadosPessoa.telefone) {
+                dadosPessoa.telefone = dadosPessoa.telefone.replace(/\D/g, '');
+            }
+            
+            if (dadosPessoa.cnpj_cpf) {
+                dadosPessoa.cnpj_cpf = dadosPessoa.cnpj_cpf.replace(/\D/g, '');
+            }
+
             // Verificar permissão de edição
-            if (user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR && 
+            if (user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR && 
                 user.id_pessoa !== parseInt(id)) {
                 throw new Error('Acesso negado');
             }
@@ -308,13 +326,12 @@ class PessoaController {
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
                 return res.json({
                     success: true,
-                    message: messages.success.updated,
                     data: pessoaAtualizada
                 });
             }
 
             // Redirecionamento normal
-            res.redirect(`/pessoas/${id}?success=${encodeURIComponent(messages.success.updated)}`);
+            res.redirect(`/pessoas/${id}`);
         } catch (error) {
             console.error('Erro ao atualizar pessoa:', error);
             
@@ -347,7 +364,7 @@ class PessoaController {
             const { ativo } = req.body;
 
             // Verificar se é administrador
-            if (req.session.user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR) {
+            if (req.session.user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR) {
                 return res.status(403).json({
                     success: false,
                     message: messages.error.forbidden
@@ -389,7 +406,7 @@ class PessoaController {
             const { action, usuario, senha, ativo } = req.body;
 
             // Verificar se é administrador
-            if (req.session.user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR) {
+            if (req.session.user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR) {
                 return res.status(403).json({
                     success: false,
                     message: messages.error.forbidden
@@ -455,7 +472,7 @@ class PessoaController {
             const { id } = req.params;
 
             // Verificar se é administrador
-            if (req.session.user.tipoacesso !== enums.tipoAcesso.ADMINISTRADOR) {
+            if (req.session.user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR) {
                 return res.status(403).json({
                     success: false,
                     message: messages.error.forbidden
@@ -533,7 +550,7 @@ class PessoaController {
                     pessoas = await this.pessoaModel.findEmpresas();
                     break;
                 default:
-                    pessoas = await this.pessoaModel.findByTipoAcesso(tipo);
+                    pessoas = await this.pessoaModel.findByNivelAcesso(tipo);
             }
 
             // Filtrar por busca se fornecida

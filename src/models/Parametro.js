@@ -17,8 +17,9 @@ class Parametro extends BaseModel {
     async findByIdentificador(identificador) {
         try {
             const query = `
-                SELECT * FROM parametro 
-                WHERE identificador = ?
+                SELECT parametro.identificador 
+                FROM parametro 
+                WHERE parametro.identificador LIKE ?
             `;
             
             const result = await databaseConfig.get(query, [identificador]);
@@ -53,25 +54,55 @@ class Parametro extends BaseModel {
     /**
      * Busca parâmetro com seus valores por identificador
      * @param {string} identificador - Identificador do parâmetro
-     * @returns {Promise<Object|null>}
+     * @returns {Promise<Array>}
      */
     async findWithValoresByIdentificador(identificador) {
         try {
-            const parametro = await this.findByIdentificador(identificador);
+            const query = `
+                SELECT 
+                    parametro.identificador, 
+                    parametrovalor.identificadorvalor, 
+                    parametrovalor.valor 
+                FROM 
+                    parametro 
+                LEFT OUTER JOIN parametrovalor ON parametro.id_parametro = parametrovalor.id_parametro 
+                WHERE parametro.identificador LIKE ?
+            `;
             
-            if (!parametro) {
-                return null;
-            }
-
-            const valores = await this.findValores(parametro.id_parametro);
-            
-            return {
-                ...parametro,
-                valores: valores
-            };
+            const result = await databaseConfig.all(query, [identificador]);
+            return result || [];
         } catch (error) {
             console.error('Erro ao buscar parâmetro com valores:', error);
             throw new Error('Erro ao buscar parâmetro com valores');
+        }
+    }
+
+    /**
+     * Busca um valor específico de um parâmetro
+     * @param {string} identificador - Identificador do parâmetro
+     * @param {string} identificadorValor - Identificador do valor específico
+     * @returns {Promise<Object|null>}
+     */
+    async findValorEspecifico(identificador, identificadorValor) {
+        try {
+            const query = `
+                SELECT 
+                    parametro.identificador, 
+                    parametrovalor.identificadorvalor, 
+                    parametrovalor.valor 
+                FROM 
+                    parametro 
+                LEFT OUTER JOIN parametrovalor ON parametro.id_parametro = parametrovalor.id_parametro 
+                WHERE 
+                    parametro.identificador LIKE ? AND 
+                    parametrovalor.identificadorvalor LIKE ?
+            `;
+            
+            const result = await databaseConfig.get(query, [identificador, identificadorValor]);
+            return result || null;
+        } catch (error) {
+            console.error('Erro ao buscar valor específico do parâmetro:', error);
+            throw new Error('Erro ao buscar valor específico do parâmetro');
         }
     }
 
@@ -233,6 +264,87 @@ class Parametro extends BaseModel {
         } catch (error) {
             console.error('Erro ao excluir valor do parâmetro:', error);
             throw new Error('Erro ao excluir valor do parâmetro');
+        }
+    }
+
+    /**
+     * Busca parâmetros por módulo
+     * @param {string} modulo - Nome do módulo
+     * @returns {Promise<Array>}
+     */
+    async findByModulo(modulo) {
+        try {
+            const query = `
+                SELECT * FROM parametro 
+                WHERE modulo = ?
+            `;
+            
+            const result = await databaseConfig.all(query, [modulo]);
+            return result || [];
+        } catch (error) {
+            console.error('Erro ao buscar parâmetros por módulo:', error);
+            throw new Error('Erro ao buscar parâmetros por módulo');
+        }
+    }
+
+    /**
+     * Busca parâmetros por módulo com seus valores
+     * @param {string} modulo - Nome do módulo
+     * @returns {Promise<Array>}
+     */
+    async findByModuloWithValues(modulo) {
+        try {
+            const parametros = await this.findByModulo(modulo);
+            
+            if (!parametros || parametros.length === 0) {
+                return [];
+            }
+
+            // Para cada parâmetro, buscar seus valores
+            const parametrosComValores = await Promise.all(
+                parametros.map(async (parametro) => {
+                    const valores = await this.findValores(parametro.id_parametro);
+                    return {
+                        ...parametro,
+                        valores: valores || []
+                    };
+                })
+            );
+
+            return parametrosComValores;
+        } catch (error) {
+            console.error('Erro ao buscar parâmetros por módulo com valores:', error);
+            throw new Error('Erro ao buscar parâmetros por módulo com valores');
+        }
+    }
+
+    /**
+     * Busca todos os parâmetros com seus valores
+     * @returns {Promise<Array>}
+     */
+    async findAllWithValues() {
+        try {
+            const parametros = await this.findAll();
+            
+            if (!parametros || parametros.length === 0) {
+                return [];
+            }
+
+            // Para cada parâmetro, buscar seus valores
+            const parametrosComValores = await Promise.all(
+                parametros.map(async (parametro) => {
+                    const valores = await this.findValores(parametro.id_parametro);
+                    return {
+                        ...parametro,
+                        valores: valores || []
+                    };
+                })
+            );
+
+            return parametrosComValores;
+        } catch (error) {
+            console.error('Erro ao buscar parâmetros com valores:', error);
+            throw new Error('Erro ao buscar parâmetros com valores');
         }
     }
 }

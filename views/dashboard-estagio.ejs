@@ -1569,10 +1569,10 @@
         
         try {
             // Verificar se os parâmetros necessários estão configurados
-            const response = await fetch('/parametro/buscar?nome=Pastas dos Anexos');
+            const response = await fetch('/parametro/buscar?identificador=Pastas dos Anexos');
             const parametroPastas = await response.json();
             
-            const response2 = await fetch('/parametro/buscar?nome=Planos Assinados');
+            const response2 = await fetch('/parametro/buscar?identificador=Planos Assinados');
             const parametroPlanos = await response2.json();
             
             if (!parametroPastas.success || !parametroPastas.data || 

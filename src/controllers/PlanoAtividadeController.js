@@ -199,6 +199,15 @@ class PlanoAtividadeController {
                     message: 'Campos obrigatórios não preenchidos'
                 });
             }
+
+            // Validar campo estagiarioapto
+            if (!estagiarioapto || (estagiarioapto !== 'Sim' && estagiarioapto !== 'Não')) {
+                console.log('DEBUG: Campo estagiarioapto inválido:', estagiarioapto);
+                return res.status(400).json({
+                    success: false,
+                    message: 'É necessário informar se o estagiário está apto (Sim ou Não)'
+                });
+            }
             
             // Verificar se já existe um plano para este campo de estágio
             const planoExistente = await databaseConfig.get(

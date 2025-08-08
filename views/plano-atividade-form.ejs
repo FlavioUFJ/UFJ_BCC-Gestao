@@ -96,9 +96,9 @@
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="estagiarioapto" class="form-label">Estagiário Apto</label>
-                            <select class="form-select" id="estagiarioapto" name="estagiarioapto">
-                                <option value="" <%= !plano || !plano.estagiarioapto ? 'selected' : '' %>>Não informado</option>
+                            <label for="estagiarioapto" class="form-label">Estagiário Apto *</label>
+                            <select class="form-select" id="estagiarioapto" name="estagiarioapto" required>
+                                <option value="">Selecione uma opção</option>
                                 <option value="Sim" <%= plano && plano.estagiarioapto === 'Sim' ? 'selected' : '' %>>Sim</option>
                                 <option value="Não" <%= plano && plano.estagiarioapto === 'Não' ? 'selected' : '' %>>Não</option>
                             </select>
@@ -110,14 +110,14 @@
                         <div class="mb-3">
                             <label for="data_inicial" class="form-label">Data Inicial *</label>
                             <input type="date" class="form-control" id="data_inicial" name="data_inicial" 
-                                   value="<%= plano && plano.data_inicial ? new Date(plano.data_inicial).toISOString().split('T')[0] : (campoEstagio && campoEstagio.data_inicial ? new Date(campoEstagio.data_inicial).toISOString().split('T')[0] : '') %>" required>
+                                   value="<% if (plano && plano.data_inicial) { %><%= new Date(plano.data_inicial).toISOString().split('T')[0] %><% } else if (campoEstagio && campoEstagio.data_inicial && campoEstagio.data_inicial !== 'null' && campoEstagio.data_inicial.trim() !== '') { %><% try { %><%= new Date(campoEstagio.data_inicial).toISOString().split('T')[0] %><% } catch(e) { %><% } %><% } %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="data_final" class="form-label">Data Final *</label>
                             <input type="date" class="form-control" id="data_final" name="data_final" 
-                                   value="<%= plano && plano.data_final ? new Date(plano.data_final).toISOString().split('T')[0] : (campoEstagio && campoEstagio.data_final ? new Date(campoEstagio.data_final).toISOString().split('T')[0] : '') %>" required>
+                                   value="<% if (plano && plano.data_final) { %><%= new Date(plano.data_final).toISOString().split('T')[0] %><% } else if (campoEstagio && campoEstagio.data_final && campoEstagio.data_final !== 'null' && campoEstagio.data_final.trim() !== '') { %><% try { %><%= new Date(campoEstagio.data_final).toISOString().split('T')[0] %><% } catch(e) { %><% } %><% } %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -270,6 +270,15 @@
             if (!campoEstagioId) {
                 e.preventDefault();
                 alert('É necessário selecionar um Campo de Estágio antes de criar o Plano de Atividade.');
+                return false;
+            }
+
+            // Validar se o campo estagiarioapto foi preenchido
+            const estagiarioApto = document.getElementById('estagiarioapto').value;
+            if (!estagiarioApto || estagiarioApto === '') {
+                e.preventDefault();
+                alert('É necessário informar se o estagiário está apto para o estágio.');
+                document.getElementById('estagiarioapto').focus();
                 return false;
             }
         });

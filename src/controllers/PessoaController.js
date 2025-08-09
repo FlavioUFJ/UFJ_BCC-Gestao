@@ -330,8 +330,17 @@ class PessoaController {
                 });
             }
 
-            // Redirecionamento normal
-            res.redirect(`/pessoas/${id}`);
+            // Verificar se é atualização de perfil (quando vem da rota /pessoas/profile)
+            const isProfileUpdate = req.originalUrl.includes('/profile') || req.path.includes('/profile');
+            
+            if (isProfileUpdate) {
+                // Para perfil, redirecionar para a página de origem ou dashboard
+                const returnUrl = req.body.returnUrl || req.query.returnUrl || req.get('referer') || '/dashboard';
+                res.redirect(`${returnUrl}?success=${encodeURIComponent('Perfil atualizado com sucesso!')}`);
+            } else {
+                // Redirecionamento normal para outras atualizações
+                res.redirect(`/pessoas/${id}`);
+            }
         } catch (error) {
             console.error('Erro ao atualizar pessoa:', error);
             

@@ -27,6 +27,7 @@
                 <div class="card-body">
                     <form action="/pessoas/profile" method="POST" id="profileForm">
                         <input type="hidden" name="_method" value="PUT">
+                        <input type="hidden" name="returnUrl" value="<%= returnUrl %>">
                         
                         <div class="row">
                             <!-- Informações Básicas -->

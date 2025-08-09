@@ -57,6 +57,11 @@ class CampoEstagioService {
                     case '1': // Coordenador - nenhuma restrição, recupera todos os dados
                         break;
                         
+                    case '2': // Professor/Orientador - estágios onde é orientador
+                        sql += ' WHERE ce.id_pessoa_orientador = ?';
+                        params.push(idUsuario);
+                        break;
+                        
                     case '3': // Aluno/Estagiário - apenas seus próprios estágios
                         sql += ' WHERE ce.id_pessoa_estagiario = ?';
                         params.push(idUsuario);
@@ -127,6 +132,11 @@ class CampoEstagioService {
                 // Aplicar restrições baseadas na categoria
                 switch (categoriaUsuario) {
                     case '1': // Coordenador - nenhuma restrição, recupera todos os dados
+                        break;
+                        
+                    case '2': // Professor/Orientador - estágios onde é orientador
+                        sql += ' WHERE id_pessoa_orientador = ?';
+                        params.push(idUsuario);
                         break;
                         
                     case '3': // Aluno/Estagiário - apenas seus próprios estágios

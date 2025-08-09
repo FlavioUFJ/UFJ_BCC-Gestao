@@ -357,8 +357,17 @@ class PessoaController {
                 });
             }
 
-            // Redirecionamento com erro
-            res.redirect(`/pessoas/${req.params.id}/edit?error=${encodeURIComponent(errorMessage)}`);
+            // Verificar se é atualização de perfil para redirecionar adequadamente
+            const isProfileUpdate = req.originalUrl.includes('/profile') || req.path.includes('/profile');
+            
+            if (isProfileUpdate) {
+                // Para perfil, redirecionar para a página de origem ou dashboard com erro
+                const returnUrl = req.body.returnUrl || req.query.returnUrl || req.get('referer') || '/dashboard';
+                res.redirect(`${returnUrl}?error=${encodeURIComponent(errorMessage)}`);
+            } else {
+                // Redirecionamento com erro para outras atualizações
+                res.redirect(`/pessoas/${req.params.id}/edit?error=${encodeURIComponent(errorMessage)}`);
+            }
         }
     }
 

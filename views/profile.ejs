@@ -28,6 +28,8 @@
                     <form action="/pessoas/profile" method="POST" id="profileForm">
                         <input type="hidden" name="_method" value="PUT">
                         <input type="hidden" name="returnUrl" value="<%= returnUrl %>">
+                        <input type="hidden" name="tipo" value="<%= pessoa.tipo %>">
+                        <input type="hidden" name="categoria" value="<%= pessoa.categoria %>">
                         
                         <div class="row">
                             <!-- Informações Básicas -->

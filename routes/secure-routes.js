@@ -814,7 +814,19 @@ router.get('/pessoas/buscar', requireAuth, async (req, res) => {
  */
 router.post('/pessoas/criar', requireAuth, async (req, res) => {
     console.log('[DEBUG] Rota /pessoas/criar executada');
+    console.log('[DEBUG] Dados recebidos:', req.body);
     let { nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo } = req.body;
+    
+    // Log dos valores individuais para debug
+    console.log('[DEBUG] Valores extraídos:', {
+        nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo
+    });
+    
+    // Garantir que campos undefined sejam null
+    telefone = telefone || null;
+    cnpj_cpf = cnpj_cpf || null;
+    categoria = categoria || null;
+    id_pessoaVinculo = id_pessoaVinculo || null;
     
     // Limpar máscaras de formatação antes de salvar
     if (telefone) {
@@ -824,6 +836,10 @@ router.post('/pessoas/criar', requireAuth, async (req, res) => {
     if (cnpj_cpf) {
         cnpj_cpf = cnpj_cpf.replace(/\D/g, '');
     }
+    
+    console.log('[DEBUG] Valores após limpeza:', {
+        nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo
+    });
     
     // Validação dos campos obrigatórios
     if (!nome || !tipo) {
@@ -848,7 +864,11 @@ router.post('/pessoas/criar', requireAuth, async (req, res) => {
         const sql = `INSERT INTO pessoa (nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo, dataCadastro) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
         
-        const result = await db.run(sql, [nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo || null]);
+        const params = [nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo];
+        console.log('[DEBUG] SQL:', sql);
+        console.log('[DEBUG] Parâmetros:', params);
+        
+        const result = await db.run(sql, params);
         
         // Buscar a pessoa recém-criada para retornar os dados completos
         const pessoa = await db.get('SELECT * FROM pessoa WHERE id_pessoa = ?', [result.id]);

@@ -871,13 +871,16 @@ router.post('/pessoas/criar', requireAuth, async (req, res) => {
         const result = await db.run(sql, params);
         console.log('[DEBUG] Resultado da inserção:', result);
         
-        if (!result.id) {
-            console.error('[ERROR] ID não retornado na inserção:', result);
+        const ultimoId = result.insertId;
+        if (!ultimoId) {
+            console.error('[ERROR] insertId não retornado na inserção:', result);
             return res.json({ success: false, message: 'Erro ao obter ID da pessoa criada' });
         }
         
+        console.log('[DEBUG] Último ID inserido:', ultimoId);
+        
         // Buscar a pessoa recém-criada para retornar os dados completos
-        const pessoa = await db.get('SELECT * FROM pessoa WHERE id_pessoa = ?', [result.id]);
+        const pessoa = await db.get('SELECT * FROM pessoa WHERE id_pessoa = ?', [ultimoId]);
         console.log('[DEBUG] Pessoa encontrada:', pessoa);
         
         res.json({ success: true, pessoa: pessoa, message: 'Pessoa cadastrada com sucesso!' });

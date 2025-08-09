@@ -2308,8 +2308,34 @@
             }
         };
 
+        // Função para monitorar e prevenir adição da classe loading
+        function prevenirClasseLoading() {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const target = mutation.target;
+                        if (target === document.body && target.classList.contains('loading')) {
+                            // Verificar se algum modal está aberto
+                            const modalAberto = document.querySelector('.modal.show');
+                            if (modalAberto && modalAberto.id === 'modalImportarCsv') {
+                                console.log('Detectada adição da classe loading com modal aberto - removendo...');
+                                target.classList.remove('loading');
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+
         // Event listener único consolidado
         document.addEventListener('DOMContentLoaded', function() {
+            // Iniciar monitoramento da classe loading
+            prevenirClasseLoading();
             // Inicializar AdminRotinas
             if (typeof AdminRotinas !== 'undefined') AdminRotinas.init();
             
@@ -2328,7 +2354,7 @@
             // Inicializar ImportadorCsv
             if (typeof ImportadorCsv !== 'undefined') {
                 console.log('Inicializando ImportadorCsv...');
-                new ImportadorCsv();
+                window.importadorCsv = new ImportadorCsv();
             } else {
                 console.error('ImportadorCsv não está definido!');
             }
@@ -2341,10 +2367,18 @@
             if (linkImportarCsv) {
                 linkImportarCsv.addEventListener('click', (e) => {
                     e.preventDefault();
-                    // Remover classe loading do body antes de abrir o modal
+                    console.log('Link Importar CSV clicado');
+                    
+                    // Forçar remoção da classe loading
                     document.body.classList.remove('loading');
-                    const modal = new bootstrap.Modal(document.getElementById('modalImportarCsv'));
-                    modal.show();
+                    console.log('Classe loading removida do body');
+                    
+                    // Aguardar um pouco antes de abrir o modal
+                    setTimeout(() => {
+                        const modal = new bootstrap.Modal(document.getElementById('modalImportarCsv'));
+                        modal.show();
+                        console.log('Modal importar CSV exibido');
+                    }, 100);
                 });
             }
             
@@ -2355,6 +2389,18 @@
                     // Remover classe loading do body quando o modal for aberto
                     document.body.classList.remove('loading');
                     console.log('Modal importar CSV aberto - classe loading removida');
+                    
+                    // Garantir que o modal tenha pointer-events habilitados
+                    this.style.pointerEvents = 'auto';
+                    console.log('Pointer events habilitados no modal');
+                });
+                
+                // Adicionar evento para quando o modal for totalmente exibido
+                modalImportarCsv.addEventListener('shown.bs.modal', function() {
+                    // Dupla verificação para remover loading
+                    document.body.classList.remove('loading');
+                    this.style.pointerEvents = 'auto';
+                    console.log('Modal importar CSV totalmente exibido - verificações finais concluídas');
                 });
             }
         });

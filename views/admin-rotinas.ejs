@@ -153,6 +153,16 @@
             opacity: 0.6;
             pointer-events: none;
         }
+        
+        /* Garantir que modais não sejam afetados pela classe loading */
+        .modal {
+            pointer-events: auto !important;
+            z-index: 1055 !important;
+        }
+        
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
 
         .spinner {
             display: inline-block;
@@ -1237,24 +1247,19 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="font-size: 12px;">
                     <!-- Informações sobre a importação -->
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-info-circle me-2"></i>Instruções para Importação</h6>
+                    <div class="alert alert-info" style="font-size: 12px;">
+                        <h6 style="font-size: 14px;"><i class="fas fa-info-circle me-2"></i>Instruções para Importação</h6>
                         <ul class="mb-0">
-                            <li>O arquivo deve estar no formato <strong>.csv</strong></li>
-                            <li>A primeira linha deve conter os cabeçalhos das colunas</li>
                             <li>As colunas obrigatórias são: <strong>Tipo</strong>, <strong>Categoria</strong>, <strong>Nome</strong> e <strong>Email</strong></li>
                             <li>Colunas opcionais: <strong>Telefone</strong> e <strong>CPF/CNPJ</strong></li>
-                            <li>Use aspas duplas para campos que contenham vírgulas</li>
                         </ul>
                     </div>
                     
                     <!-- Arquivo modelo -->
                     <div class="mb-4">
-                        <h6><i class="fas fa-download me-2"></i>Arquivo Modelo</h6>
-                        <p class="text-muted mb-2">Baixe o arquivo modelo CSV para facilitar a importação:</p>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnBaixarModelo">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnBaixarModelo" style="font-size: 12px;">
                             <i class="fas fa-download me-2"></i>Baixar Modelo CSV
                         </button>
                     </div>
@@ -1262,17 +1267,17 @@
                     <!-- Formulário de upload -->
                     <form id="formImportarCsv" enctype="multipart/form-data">
                         <div class="mb-3">
-                            <label for="arquivoCsv" class="form-label">
+                            <label for="arquivoCsv" class="form-label" style="font-size: 12px;">
                                 <i class="fas fa-file-upload me-2"></i>Selecionar Arquivo
                             </label>
-                            <input type="file" class="form-control" id="arquivoCsv" name="arquivo" accept=".csv" required>
-                            <div class="form-text">Apenas arquivos .csv são aceitos</div>
+                            <input type="file" class="form-control" id="arquivoCsv" name="arquivo" accept=".csv" required style="font-size: 12px;">
+                            <div class="form-text" style="font-size: 10px;">Apenas arquivos .csv são aceitos</div>
                         </div>
                         
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="substituirDuplicados">
-                                <label class="form-check-label" for="substituirDuplicados">
+                                <label class="form-check-label" for="substituirDuplicados" style="font-size: 12px;">
                                     Substituir registros duplicados (baseado no email)
                                 </label>
                             </div>
@@ -1280,7 +1285,7 @@
                     </form>
                     
                     <!-- Área de progresso -->
-                    <div id="progressoImportacao" style="display: none;">
+                    <div id="progressoImportacao" style="display: none; font-size: 12px;">
                         <div class="mb-2">
                             <strong>Importando...</strong>
                         </div>
@@ -1290,11 +1295,11 @@
                     </div>
                     
                     <!-- Resultado da importação -->
-                    <div id="resultadoImportacao" style="display: none;"></div>
+                    <div id="resultadoImportacao" style="display: none; font-size: 12px;"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnImportar">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="font-size: 12px;">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnImportar" style="font-size: 12px;">
                         <i class="fas fa-upload me-2"></i>Importar CSV
                     </button>
                 </div>
@@ -2336,8 +2341,20 @@
             if (linkImportarCsv) {
                 linkImportarCsv.addEventListener('click', (e) => {
                     e.preventDefault();
+                    // Remover classe loading do body antes de abrir o modal
+                    document.body.classList.remove('loading');
                     const modal = new bootstrap.Modal(document.getElementById('modalImportarCsv'));
                     modal.show();
+                });
+            }
+            
+            // Garantir que o modal de importação CSV não seja bloqueado pela classe loading
+            const modalImportarCsv = document.getElementById('modalImportarCsv');
+            if (modalImportarCsv) {
+                modalImportarCsv.addEventListener('show.bs.modal', function() {
+                    // Remover classe loading do body quando o modal for aberto
+                    document.body.classList.remove('loading');
+                    console.log('Modal importar CSV aberto - classe loading removida');
                 });
             }
         });

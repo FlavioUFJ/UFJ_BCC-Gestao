@@ -748,6 +748,8 @@ class PessoaManager {
                 modal.hide();
             } else {
                 console.error('Erro ao cadastrar pessoa:', result.message);
+                // Exibir mensagem de erro ao usuário
+                alert('Erro ao cadastrar pessoa: ' + result.message);
             }
         } catch (error) {
             console.error('Erro ao cadastrar pessoa:', error);
@@ -756,6 +758,8 @@ class PessoaManager {
                 stack: error.stack,
                 name: error.name
             });
+            // Exibir mensagem de erro ao usuário
+            alert('Erro ao cadastrar pessoa: ' + error.message);
         } finally {
             // Resetar flag de submissão
             this.isSubmitting = false;

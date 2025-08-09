@@ -110,7 +110,7 @@ class PlanoAtividadeService {
                 }
             }
             
-            sql += ' ORDER BY pa.dataultimaatualizacao DESC, pa.data_cadastro DESC';
+            sql += ' ORDER BY pa.dataultimaatualizacao DESC';
             
             const result = await databaseConfig.all(sql, params);
             return result || [];
@@ -287,7 +287,7 @@ class PlanoAtividadeService {
                 LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
                 LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
                 WHERE pa.id_campo_estagio = ?
-                ORDER BY pa.dataultimaatualizacao DESC, pa.data_cadastro DESC
+                ORDER BY pa.dataultimaatualizacao DESC
             `;
             
             const result = await databaseConfig.all(sql, [idCampoEstagio]);

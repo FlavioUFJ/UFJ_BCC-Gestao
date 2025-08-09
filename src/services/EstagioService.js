@@ -32,7 +32,7 @@ class EstagioService {
                 curso = null,
                 dataInicio = null,
                 dataFim = null,
-                orderBy = 'ce.data_cadastro DESC'
+                orderBy = 'ce.dataultimaatualizacao DESC'
             } = options;
 
             // Construir filtros

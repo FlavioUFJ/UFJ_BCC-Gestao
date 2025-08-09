@@ -45,6 +45,12 @@ router.put('/profile', (req, res) => {
     pessoaController.update(req, res);
 });
 
+// POST /pessoas/profile - Atualizar perfil do usuário logado (compatibilidade com formulários HTML)
+router.post('/profile', (req, res) => {
+    req.params.id = req.session.user.id_pessoa;
+    pessoaController.update(req, res);
+});
+
 // PUT /pessoas/:id - Atualizar pessoa
 router.put('/:id', (req, res) => pessoaController.update(req, res));
 

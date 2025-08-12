@@ -557,12 +557,26 @@ class PlanoAtividadeController {
                 });
             }
 
-            // Verificar se pode ser editado
-            if (planoExistente.situacao === 'Aprovado sem Anexo' || planoExistente.situacao === 'Aprovado com Anexo') {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Plano de atividade aprovado não pode ser editado'
-                });
+            // Verificar se pode ser editado baseado no nível do usuário
+            const user = req.session.user;
+            const userNivelAcesso = user.nivelacesso;
+            
+            if (userNivelAcesso === 'Administrador') {
+                // Administradores só não podem editar "Aprovado com Anexo"
+                if (planoExistente.situacao === 'Aprovado com Anexo') {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Plano de atividade aprovado com anexo não pode ser editado'
+                    });
+                }
+            } else {
+                // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
+                if (planoExistente.situacao === 'Aprovado sem Anexo' || planoExistente.situacao === 'Aprovado com Anexo') {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Plano de atividade aprovado não pode ser editado'
+                    });
+                }
             }
 
             // Função para converter data DD/MM/YYYY para YYYY-MM-DD

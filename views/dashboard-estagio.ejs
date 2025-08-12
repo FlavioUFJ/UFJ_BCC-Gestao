@@ -542,18 +542,34 @@
                 }
             }
             
-            // Botão Editar - desabilitado se plano for "Aprovado" ou não existir plano
+            // Botão Editar - lógica diferenciada por nível de usuário
             const btnEditarPlano = document.getElementById('btnPlanAtiEditar');
             if (btnEditarPlano) {
-                const podeEditar = plano && plano.pa_situacao !== 'Aprovado sem Anexo' && plano.pa_situacao !== 'Aprovado com Anexo';
+                const userNivelAcesso = '<%= user.nivelacesso %>';
+                let podeEditar = false;
+                let motivoDesabilitado = '';
+                
+                if (!plano) {
+                    podeEditar = false;
+                    motivoDesabilitado = 'Nenhum plano de atividade selecionado';
+                } else if (userNivelAcesso === 'Administrador') {
+                    // Administradores só não podem editar "Aprovado com Anexo"
+                    podeEditar = plano.pa_situacao !== 'Aprovado com Anexo';
+                    if (!podeEditar) {
+                        motivoDesabilitado = 'Planos aprovados com anexo não podem ser editados';
+                    }
+                } else {
+                    // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
+                    podeEditar = plano.pa_situacao !== 'Aprovado sem Anexo' && plano.pa_situacao !== 'Aprovado com Anexo';
+                    if (!podeEditar) {
+                        motivoDesabilitado = 'Planos aprovados não podem ser editados';
+                    }
+                }
+                
                 btnEditarPlano.disabled = !podeEditar;
                 
                 if (!podeEditar) {
-                    if (!plano) {
-                        btnEditarPlano.title = 'Nenhum plano de atividade selecionado';
-                    } else {
-                        btnEditarPlano.title = 'Planos aprovados não podem ser editados';
-                    }
+                    btnEditarPlano.title = motivoDesabilitado;
                     btnEditarPlano.classList.remove('btn-outline-primary');
                     btnEditarPlano.classList.add('btn-outline-secondary');
                 } else {
@@ -1486,9 +1502,20 @@
             return;
         }
         
-        if (planoAtual.pa_situacao === 'Aprovado sem Anexo' || planoAtual.pa_situacao === 'Aprovado com Anexo') {
-            alert('Planos de atividade aprovados não podem ser editados.');
-            return;
+        const userNivelAcesso = '<%= user.nivelacesso %>';
+        
+        if (userNivelAcesso === 'Administrador') {
+            // Administradores só não podem editar "Aprovado com Anexo"
+            if (planoAtual.pa_situacao === 'Aprovado com Anexo') {
+                alert('Planos aprovados com anexo não podem ser editados.');
+                return;
+            }
+        } else {
+            // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
+            if (planoAtual.pa_situacao === 'Aprovado sem Anexo' || planoAtual.pa_situacao === 'Aprovado com Anexo') {
+                alert('Planos de atividade aprovados não podem ser editados.');
+                return;
+            }
         }
         
         // Redirecionar para formulário de edição

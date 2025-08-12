@@ -97,12 +97,11 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="situacao" class="form-label">Situação *</label>
-                            <select class="form-select" id="situacao" name="situacao" required disabled>
-                                <option value="Em edição" selected>Em edição</option>
-                                <option value="Aprovado">Aprovado</option>
-                                <option value="Reprovado">Reprovado</option>
+                            <select class="form-select" id="situacao" name="situacao" required>
+                                <option value="Em edição" <%= (plano && plano.pa_situacao === 'Em edição') || !plano ? 'selected' : '' %>>Em edição</option>
+                                <option value="Aprovado" <%= plano && plano.pa_situacao === 'Aprovado' ? 'selected' : '' %>>Aprovado</option>
+                                <option value="Reprovado" <%= plano && plano.pa_situacao === 'Reprovado' ? 'selected' : '' %>>Reprovado</option>
                             </select>
-                            <input type="hidden" name="situacao" value="Em edição">
                         </div>
                     </div>
 

@@ -7,6 +7,7 @@ const express = require('express');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const expressLayouts = require('express-ejs-layouts');
+const methodOverride = require('method-override');
 const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -130,16 +131,22 @@ class App {
         }));
 
         // Rate limiting
-        const limiter = rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutos
-            max: this.environment === 'production' ? 100 : 1000, // Limite de requests
-            message: {
-                error: 'Muitas tentativas. Tente novamente em 15 minutos.',
-                code: 'RATE_LIMIT_EXCEEDED'
-            },
-            standardHeaders: true,
-            legacyHeaders: false
-        });
+		const limiter = rateLimit({
+			windowMs: 15 * 60 * 1000, // 15 minutos
+			max: this.environment === 'production' ? 1000 : 2000, // Aumentar para 500
+			message: {
+				error: 'Muitas tentativas. Tente novamente em 15 minutos.',
+				code: 'RATE_LIMIT_EXCEEDED'
+			},
+			standardHeaders: true,
+			legacyHeaders: false,
+			// Adicionar skip para IPs confiáveis
+			skip: (req) => {
+				// Lista de IPs confiáveis (opcional)
+				const trustedIPs = ['127.0.0.1', '::1'];
+				return trustedIPs.includes(req.ip);
+			}
+		});
         this.app.use(limiter);
 
         // Rate limiting específico para login - TEMPORARIAMENTE DESABILITADO PARA DEBUG
@@ -171,6 +178,17 @@ class App {
         // Parsing
         this.app.use(express.json({ limit: '10mb' }));
         this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+        
+        // Method Override para suportar PUT/DELETE em formulários HTML
+        this.app.use(methodOverride('_method'));
+        this.app.use(methodOverride(function (req, res) {
+            if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+                // look in urlencoded POST bodies and delete it
+                var method = req.body._method;
+                delete req.body._method;
+                return method;
+            }
+        }));
 
         // Arquivos estáticos
         this.app.use('/public', express.static(path.join(__dirname, 'public'), {

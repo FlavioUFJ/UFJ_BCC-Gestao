@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - CoordenAI - Gestão Inteligente</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        .form-header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-header h2 {
+            color: #007bff;
+            margin: 0;
+        }
+        
+        .btn-group-actions {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .alert {
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-graduation-cap me-2"></i>CoordenAI - Gestão Inteligente
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="<%= origem %>">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-2"></i>Sair
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>
+                    <i class="fas fa-<%= isEdit ? 'edit' : 'plus' %> me-2"></i>
+                    <%= title %>
+                </h2>
+            </div>
+            
+            <!-- Alertas -->
+            <div id="alertContainer"></div>
+            
+            <form id="pessoaForm">
+                <input type="hidden" id="pessoaId" value="<%= pessoa ? pessoa.id_pessoa : '' %>">
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">Tipo <span class="required">*</span></label>
+                            <select class="form-select" id="tipo" name="tipo" required>
+                                <option value="">Selecione...</option>
+                                <option value="F" <%= pessoa && pessoa.tipo === 'F' ? 'selected' : '' %>>Pessoa Física</option>
+                                <option value="J" <%= pessoa && pessoa.tipo === 'J' ? 'selected' : '' %>>Pessoa Jurídica</option>
+                                <option value="N" <%= pessoa && pessoa.tipo === 'N' ? 'selected' : '' %>>Não Informada</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome <span class="required">*</span></label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   value="<%= pessoa ? pessoa.nome : '' %>" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Categorias <span class="required">*</span></label>
+                            <div class="border rounded p-2">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Coordenador" id="catCoordenador"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Coordenador') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catCoordenador">Coordenador</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Professor" id="catProfessor"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Professor') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catProfessor">Professor/Orientador</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Aluno" id="catAluno"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Aluno') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catAluno">Aluno/Estagiário</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Concedente" id="catConcedente"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Concedente') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catConcedente">Concedente</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Supervisor" id="catSupervisor"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Supervisor') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catSupervisor">Supervisor</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Usuário Geral" id="catUsuarioGeral"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Usuário Geral') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catUsuarioGeral">Usuário Geral</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="categoria" name="categoria">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-mail <span class="required">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="<%= pessoa ? pessoa.email : '' %>" required>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="cpfCnpj" class="form-label">CPF/CNPJ</label>
+                            <input type="text" class="form-control" id="cpfCnpj" name="cpfCnpj" 
+                                   value="<%= pessoa ? pessoa.cnpj_cpf : '' %>">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone" 
+                                   value="<%= pessoa ? pessoa.telefone : '' %>">
+                        </div>
+                    </div>
+                    
+
+                </div>
+                
+                <div class="btn-group-actions d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='<%= origem %>'">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Voltar
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>
+                            <%= isEdit ? 'Atualizar' : 'Salvar' %>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Debug: Verificar dados da pessoa
+        <% if (typeof pessoa !== 'undefined' && pessoa) { %>
+        console.log('Dados da pessoa:', <%- JSON.stringify(pessoa) %>);
+        <% } %>
+        
+        const PessoaForm = {
+            init() {
+                this.setupEventListeners();
+                this.setupFormValidation();
+                this.setupCategoriaHandling();
+                this.preencherDadosEdicao();
+            },
+            
+            setupEventListeners() {
+                document.getElementById('pessoaForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.savePessoa();
+                });
+            },
+            
+            setupCategoriaHandling() {
+                const checkboxes = document.querySelectorAll('.categoria-checkbox');
+                
+                // Adicionar event listeners aos checkboxes
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', () => {
+                        this.updateCategoriaField();
+                        this.aplicarRegrasIncompatibilidade();
+                    });
+                });
+                
+                // Configurar regras de incompatibilidade
+                this.configurarIncompatibilidadeCategorias();
+                
+                // Inicializar o campo hidden com valores já selecionados
+                this.updateCategoriaField();
+                
+                // Aplicar regras iniciais se houver categorias pré-selecionadas
+                this.aplicarRegrasIncompatibilidade();
+            },
+            
+            preencherDadosEdicao() {
+                <% if (typeof isEdit !== 'undefined' && isEdit && typeof pessoa !== 'undefined' && pessoa) { %>
+                // Preencher checkboxes de categoria baseado nos dados da pessoa
+                if (<%- JSON.stringify(pessoa.categoria) %>) {
+                    const categorias = '<%- pessoa.categoria %>'.split(',');
+                    console.log('Categorias da pessoa:', categorias);
+                    
+                    // Mapear valores do banco para valores dos checkboxes
+                    const categoriaMap = {
+                        '1': 'Coordenador',
+                        '2': 'Professor',
+                        '3': 'Aluno',
+                        '4': 'Concedente',
+                        '5': 'Supervisor',
+                        '99': 'Usuário Geral'
+                    };
+                    
+                    categorias.forEach(catId => {
+                        const catValue = categoriaMap[catId.trim()];
+                        if (catValue) {
+                            const checkbox = document.querySelector(`input[value="${catValue}"]`);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                console.log('Checkbox marcado:', catValue);
+                            }
+                        }
+                    });
+                    
+                    // Atualizar campo oculto
+                    this.updateCategoriaField();
+                }
+                <% } %>
+            },
+            
+            updateCategoriaField() {
+                const checkboxes = document.querySelectorAll('.categoria-checkbox');
+                const hiddenInput = document.getElementById('categoria');
+                const selectedCategories = [];
+                
+                // Mapeamento de nomes para números (conforme banco de dados)
+                const categoriaToNumber = {
+                    'Coordenador': '1',
+                    'Professor': '2',
+                    'Aluno': '3',
+                    'Concedente': '4',
+                    'Supervisor': '5',
+                    'Usuário Geral': '99'
+                };
+                
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const numeroCategoria = categoriaToNumber[checkbox.value];
+                        if (numeroCategoria) {
+                            selectedCategories.push(numeroCategoria);
+                        }
+                    }
+                });
+                
+                hiddenInput.value = selectedCategories.join(',');
+            },
+            
+            configurarIncompatibilidadeCategorias() {
+                // Definir regras de incompatibilidade
+                this.incompatibilidades = {
+                    'Coordenador': ['Aluno', 'Concedente', 'Usuário Geral'],
+                    'Professor': ['Aluno', 'Concedente', 'Usuário Geral'],
+                    'Aluno': ['Coordenador', 'Professor', 'Concedente', 'Supervisor', 'Usuário Geral'],
+                    'Concedente': ['Coordenador', 'Aluno', 'Professor'],
+                    'Supervisor': ['Coordenador', 'Aluno', 'Professor'],
+                    'Usuário Geral': ['Coordenador', 'Professor', 'Aluno', 'Concedente', 'Supervisor']
+                };
+            },
+            
+            aplicarRegrasIncompatibilidade() {
+                const checkboxes = document.querySelectorAll('.categoria-checkbox');
+                
+                // Primeiro, limpar todas as regras
+                this.limparRegrasIncompatibilidade();
+                
+                // Verificar quais categorias estão selecionadas
+                const categoriasAtivas = [];
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        categoriasAtivas.push(checkbox.value);
+                    }
+                });
+                
+                // Aplicar regras de incompatibilidade
+                categoriasAtivas.forEach(categoriaAtiva => {
+                    if (this.incompatibilidades[categoriaAtiva]) {
+                        this.incompatibilidades[categoriaAtiva].forEach(categoriaIncompativel => {
+                            const checkbox = document.querySelector(`.categoria-checkbox[value="${categoriaIncompativel}"]`);
+                            if (checkbox && !checkbox.checked) {
+                                checkbox.disabled = true;
+                                checkbox.parentElement.style.opacity = '0.5';
+                            }
+                        });
+                    }
+                });
+            },
+            
+            limparRegrasIncompatibilidade() {
+                const checkboxes = document.querySelectorAll('.categoria-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.disabled = false;
+                    checkbox.parentElement.style.opacity = '1';
+                });
+            },
+            
+            setupFormValidation() {
+                // Função para aplicar máscara de CPF/CNPJ
+                const aplicarMascaraCpfCnpj = (input) => {
+                    let value = input.value.replace(/\D/g, '');
+                    
+                    if (value.length <= 11) {
+                        // CPF: 000.000.000-00
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    } else {
+                        // CNPJ: 00.000.000/0000-00
+                        value = value.replace(/(\d{2})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d)/, '$1/$2');
+                        value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+                    }
+                    
+                    input.value = value;
+                };
+                
+                // Função para aplicar máscara de telefone
+                const aplicarMascaraTelefone = (input) => {
+                    let value = input.value.replace(/\D/g, '');
+                    
+                    if (value.length <= 10) {
+                        // Telefone fixo: (00) 0000-0000
+                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                    } else {
+                        // Celular: (00) 00000-0000
+                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                    }
+                    
+                    input.value = value;
+                };
+                
+                // Máscara para CPF/CNPJ
+                const cpfCnpjInput = document.getElementById('cpfCnpj');
+                if (cpfCnpjInput) {
+                    // Aplicar máscara ao valor já existente
+                    if (cpfCnpjInput.value) {
+                        aplicarMascaraCpfCnpj(cpfCnpjInput);
+                    }
+                    
+                    // Aplicar máscara durante a digitação
+                    cpfCnpjInput.addEventListener('input', (e) => {
+                        aplicarMascaraCpfCnpj(e.target);
+                    });
+                }
+                
+                // Máscara para telefone
+                const telefoneInput = document.getElementById('telefone');
+                if (telefoneInput) {
+                    // Aplicar máscara ao valor já existente
+                    if (telefoneInput.value) {
+                        aplicarMascaraTelefone(telefoneInput);
+                    }
+                    
+                    // Aplicar máscara durante a digitação
+                    telefoneInput.addEventListener('input', (e) => {
+                        aplicarMascaraTelefone(e.target);
+                    });
+                }
+            },
+            
+            async savePessoa() {
+                const pessoaId = document.getElementById('pessoaId').value;
+                
+                // Validar se pelo menos uma categoria foi selecionada
+                const categoriaValue = document.getElementById('categoria').value;
+                if (!categoriaValue || categoriaValue.trim() === '') {
+                    this.showAlert('Por favor, selecione pelo menos uma categoria.', 'warning');
+                    return;
+                }
+                
+                // Limpar máscara do CPF/CNPJ (manter apenas números)
+                const cpfCnpjValue = document.getElementById('cpfCnpj').value;
+                const cpfCnpjLimpo = cpfCnpjValue ? cpfCnpjValue.replace(/\D/g, '') : '';
+                
+                const data = {
+                    tipo: document.getElementById('tipo').value,
+                    nome: document.getElementById('nome').value,
+                    email: document.getElementById('email').value,
+                    cnpj_cpf: cpfCnpjLimpo,
+                    categoria: categoriaValue,
+                    telefone: document.getElementById('telefone').value
+                };
+                
+                try {
+                    const url = pessoaId ? `/pessoas/${pessoaId}` : '/pessoas';
+                    const method = pessoaId ? 'PUT' : 'POST';
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    // Verificar se a resposta é JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Resposta não é JSON - possível redirecionamento');
+                    }
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showAlert(pessoaId ? 'Pessoa atualizada com sucesso!' : 'Pessoa criada com sucesso!', 'success');
+                        
+                        // Não fechar a aba automaticamente - deixar o usuário decidir
+                        // setTimeout(() => {
+                        //     window.close();
+                        // }, 2000);
+                    } else {
+                        this.showAlert('Erro ao salvar pessoa: ' + result.message, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showAlert('Erro ao salvar pessoa: ' + error.message, 'danger');
+                }
+            },
+            
+            showAlert(message, type) {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                alertContainer.innerHTML = alertHtml;
+                
+                // Auto-remover após 5 segundos
+                setTimeout(() => {
+                    const alert = alertContainer.querySelector('.alert');
+                    if (alert) {
+                        alert.remove();
+                    }
+                }, 5000);
+            }
+        };
+        
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            PessoaForm.init();
+        });
+    </script>
+</body>
+</html>

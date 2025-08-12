@@ -103,43 +103,65 @@ class PessoaManager {
                                     <form id="formCadastrarPessoa" class="mt-3">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <label for="tipo" class="form-label">Tipo *</label>
+                                                <label for="tipo" class="form-label">Tipo: *</label>
                                                 <select class="form-select" id="tipo" name="tipo" required>
                                                     <option value="">Selecione...</option>
-                                                    <option value="Pessoa Física">Pessoa Física</option>
-                                                    <option value="Pessoa Jurídica">Pessoa Jurídica</option>
-                                                    <option value="Não Informada">Não Informada</option>
+                                                    <option value="Pessoa Física">Física</option>
+                                                    <option value="Pessoa Jurídica">Jurídica</option>
+                                                    <option value="Não Informada">Não informado</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-6">
-                                                <label for="categoria" class="form-label">Categoria</label>
-                                                <select class="form-select" id="categoria" name="categoria">
-                                                    <option value="">Selecione...</option>
-                                                    <option value="Coordenador">Coordenador</option>
-                                                    <option value="Professor Orientador">Professor Orientador</option>
-                                                    <option value="Aluno/Estagiário">Aluno/Estagiário</option>
-                                                    <option value="Concedente/Local de Estágio">Concedente/Local de Estágio</option>
-                                                    <option value="Supervisor">Supervisor</option>
-                                                    <option value="Curso/Instituição de Ensino">Curso/Instituição de Ensino</option>
-                                                    <option value="Usuário Geral">Usuário Geral</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-3">
                                             <div class="col-md-6">
                                                 <label for="nome" class="form-label">Nome *</label>
                                                 <input type="text" class="form-control" id="nome" name="nome" required>
                                             </div>
-                                            <div class="col-md-6">
-                                                <label for="cnpj_cpf" class="form-label">CPF/CNPJ</label>
-                                                <input type="text" class="form-control" id="cnpj_cpf" name="cnpj_cpf">
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-12">
+                                                <label class="form-label">Categoria *</label>
+                                                <div class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="1" id="categoria1" name="categorias">
+                                                        <label class="form-check-label" for="categoria1">Coordenador</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="2" id="categoria2" name="categorias">
+                                                        <label class="form-check-label" for="categoria2">Professor Orientador</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="3" id="categoria3" name="categorias">
+                                                        <label class="form-check-label" for="categoria3">Aluno/Estagiário</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="4" id="categoria4" name="categorias">
+                                                        <label class="form-check-label" for="categoria4">Concedente/Local de Estágio</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="5" id="categoria5" name="categorias">
+                                                        <label class="form-check-label" for="categoria5">Supervisor</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="6" id="categoria6" name="categorias">
+                                                        <label class="form-check-label" for="categoria6">Instituição/Curso</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="99" id="categoria99" name="categorias">
+                                                        <label class="form-check-label" for="categoria99">Usuário Geral</label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="row mt-3">
                                             <div class="col-md-6">
+                                                <label for="cnpj_cpf" class="form-label">CPF/CNPJ</label>
+                                                <input type="text" class="form-control" id="cnpj_cpf" name="cnpj_cpf">
+                                            </div>
+                                            <div class="col-md-6">
                                                 <label for="email" class="form-label">Email *</label>
                                                 <input type="email" class="form-control" id="email" name="email" required>
                                             </div>
+                                        </div>
+                                        <div class="row mt-3">
                                             <div class="col-md-6">
                                                 <label for="telefone" class="form-label">Telefone</label>
                                                 <input type="text" class="form-control" id="telefone" name="telefone">
@@ -248,6 +270,9 @@ class PessoaManager {
                 this.abrirBuscarPessoaVinculo();
             });
         }
+        
+        // Configurar regras de incompatibilidade de categorias
+        this.configurarIncompatibilidadeCategorias();
     }
     
     bindVinculoEvents() {
@@ -330,9 +355,13 @@ class PessoaManager {
         this.currentCallback = callback;
         this.currentConfig = config;
         
+        // Limpar regras de incompatibilidade ao abrir o modal
+        this.limparRegrasIncompatibilidade();
+        
         // Configurações padrão
         const defaultConfig = {
             showBuscarTab: true,
+            showCadastrarTab: true,
             cadastrarTabTitle: 'Cadastrar Nova',
             submitButtonText: 'Salvar',
             modalTitle: 'Buscar ou Cadastrar Pessoa',
@@ -375,6 +404,13 @@ class PessoaManager {
             buscarTab.style.visibility = 'visible';
             cadastrarTab.style.visibility = 'visible';
             
+            // Configurar visibilidade da aba cadastrar
+            if (this.config.showCadastrarTab) {
+                cadastrarTab.style.display = 'block';
+            } else {
+                cadastrarTab.style.display = 'none';
+            }
+            
             // Configurar visibilidade da aba buscar
             if (this.config.showBuscarTab) {
                 buscarTab.style.display = 'block';
@@ -384,10 +420,22 @@ class PessoaManager {
                 cadastrarPane.classList.remove('show', 'active');
             } else {
                 buscarTab.style.display = 'none';
-                cadastrarTab.classList.add('active');
-                buscarTab.classList.remove('active');
-                cadastrarPane.classList.add('show', 'active');
-                buscarPane.classList.remove('show', 'active');
+                // Se a aba buscar está oculta e a aba cadastrar está visível, ativar a aba cadastrar
+                if (this.config.showCadastrarTab) {
+                    cadastrarTab.classList.add('active');
+                    buscarTab.classList.remove('active');
+                    cadastrarPane.classList.add('show', 'active');
+                    buscarPane.classList.remove('show', 'active');
+                }
+            }
+            
+            // Se ambas as abas estão ocultas, mostrar apenas buscar
+            if (!this.config.showBuscarTab && !this.config.showCadastrarTab) {
+                buscarTab.style.display = 'block';
+                buscarTab.classList.add('active');
+                cadastrarTab.classList.remove('active');
+                buscarPane.classList.add('show', 'active');
+                cadastrarPane.classList.remove('show', 'active');
             }
             
             // Configurar título da aba cadastrar
@@ -482,20 +530,24 @@ class PessoaManager {
         document.getElementById('telefone').value = personData.telefone || '';
         document.getElementById('cnpj_cpf').value = personData.cnpj_cpf || '';
         
-        // Mapear categoria do banco para o valor do select
-        const categoriaReverseMap = {
-            '1': 'Coordenador',
-            '2': 'Professor Orientador',
-            '3': 'Aluno/Estagiário',
-            '4': 'Concedente/Local de Estágio',
-            '5': 'Supervisor',
-            '6': 'Curso/Instituição de Ensino',
-            '99': 'Usuário Geral'
-        };
+        // Limpar todos os checkboxes de categoria primeiro
+        const checkboxes = document.querySelectorAll('input[name="categorias"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
         
-        const categoriaSelect = document.getElementById('categoria');
-        if (categoriaSelect && personData.categoria) {
-            categoriaSelect.value = categoriaReverseMap[personData.categoria] || '';
+        // Processar categorias múltiplas
+        if (personData.categoria) {
+            // Dividir por vírgula (formato: 1,2,5)
+            const categoriasArray = personData.categoria.toString().split(',').map(cat => cat.trim());
+            
+            // Marcar os checkboxes correspondentes
+            categoriasArray.forEach(categoriaId => {
+                const checkbox = document.querySelector(`input[name="categorias"][value="${categoriaId}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                }
+            });
         }
         
         // Mapear tipo do banco para o valor do select
@@ -512,6 +564,19 @@ class PessoaManager {
         
         // Armazenar o ID da pessoa para uso na atualização
         this.editingPersonId = personData.id_pessoa;
+        
+        // Aplicar regras de incompatibilidade após carregar os dados
+        setTimeout(() => {
+            const regrasIncompatibilidade = {
+                '1': ['3', '4', '99'], // Coordenador desabilita: Aluno/Estagiário, Concedente, Usuário Geral
+                '2': ['3', '4', '99'], // Professor/Orientador desabilita: Aluno/Estagiário, Concedente, Usuário Geral
+                '3': ['1', '2', '4', '5', '6', '99'], // Aluno/Estagiário desabilita: todas as outras
+                '4': ['1', '2', '3'], // Concedente desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador
+                '5': ['1', '2', '3'], // Supervisor desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador
+                '99': ['1', '2', '3', '4', '5', '6'] // Usuário Geral desabilita: todas as outras
+            };
+            this.aplicarRegrasIncompatibilidade(regrasIncompatibilidade);
+        }, 100);
     }
     
     async buscarPessoas() {
@@ -525,8 +590,13 @@ class PessoaManager {
         
         try {
             const response = await fetch(`/secure/pessoas/buscar?termo=${encodeURIComponent(termo)}&categoria=${categoria}`, {
-            credentials: 'include'
-        });
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
             const data = await response.json();
             
             if (data.success) {
@@ -561,7 +631,14 @@ class PessoaManager {
         
         let html = '<div class="list-group">';
         pessoas.forEach((pessoa, index) => {
-            const categoriaNome = categoriaNomes[pessoa.categoria] || 'Sem categoria';
+            // Tratar categorias múltiplas
+            let categoriaNome = 'Sem categoria';
+            if (pessoa.categoria) {
+                const categorias = pessoa.categoria.split(',').map(c => c.trim());
+                const nomesCategorias = categorias.map(cat => categoriaNomes[cat] || cat).filter(nome => nome);
+                categoriaNome = nomesCategorias.length > 0 ? nomesCategorias.join(', ') : 'Sem categoria';
+            }
+            
             html += `
                 <div class="list-group-item list-group-item-action pessoa-item" style="cursor: pointer;" data-pessoa-id="${pessoa.id_pessoa}" data-pessoa-nome="${pessoa.nome}" data-index="${index}">  
                     <div class="d-flex w-100 justify-content-between">
@@ -644,6 +721,23 @@ class PessoaManager {
         const formData = new FormData(document.getElementById('formCadastrarPessoa'));
         const data = Object.fromEntries(formData.entries());
         
+        // Coletar categorias selecionadas dos checkboxes
+        const categoriasSelecionadas = [];
+        const checkboxes = document.querySelectorAll('input[name="categorias"]:checked');
+        checkboxes.forEach(checkbox => {
+            categoriasSelecionadas.push(checkbox.value);
+        });
+        
+        // Validar se pelo menos uma categoria foi selecionada
+        if (categoriasSelecionadas.length === 0) {
+            alert('Por favor, selecione pelo menos uma categoria.');
+            this.isSubmitting = false;
+            return;
+        }
+        
+        // Construir string de categorias no formato: 1,2,5
+        data.categoria = categoriasSelecionadas.join(',');
+        
         // Limpar máscaras de formatação antes de enviar
         if (data.telefone) {
             data.telefone = this.limparMascaraTelefone(data.telefone);
@@ -665,23 +759,8 @@ class PessoaManager {
             'Não Informada': 'N'
         };
         
-        // Mapear os valores da categoria para os códigos esperados pelo banco
-        const categoriaMap = {
-            'Coordenador': '1',
-            'Professor Orientador': '2',
-            'Aluno/Estagiário': '3',
-            'Concedente/Local de Estágio': '4',
-            'Supervisor': '5',
-            'Curso/Instituição de Ensino': '6',
-            'Usuário Geral': '99'
-        };
-        
         if (data.tipo && tipoMap[data.tipo]) {
             data.tipo = tipoMap[data.tipo];
-        }
-        
-        if (data.categoria && categoriaMap[data.categoria]) {
-            data.categoria = categoriaMap[data.categoria];
         }
         
         try {
@@ -822,8 +901,13 @@ class PessoaManager {
             const categoria = document.getElementById('categoriaBusca').value;
             console.log('DEBUG Frontend - carregarTodasPessoas categoria:', categoria);
             const response = await fetch(`/secure/pessoas/buscar?termo=&categoria=${categoria}`, {
-            credentials: 'include'
-        });
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
             const data = await response.json();
             
             if (data.success) {
@@ -944,8 +1028,13 @@ class PessoaManager {
         
         try {
             const response = await fetch(`/secure/pessoas/buscar?termo=${encodeURIComponent(termo)}&categoria=${categoria}`, {
-            credentials: 'include'
-        });
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
             const data = await response.json();
             
             if (data.success) {
@@ -965,6 +1054,11 @@ class PessoaManager {
         
         try {
             const response = await fetch(`/secure/pessoas/buscar?categoria=${categoria}&pagina=${this.currentPageVinculo || 1}&limite=10`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
                 credentials: 'include'
             });
             const data = await response.json();
@@ -991,7 +1085,23 @@ class PessoaManager {
         
         let html = '<div class="list-group">';
         pessoas.forEach(pessoa => {
-            const categoriaTexto = this.getCategoriaTexto(pessoa.categoria);
+            // Tratar categorias múltiplas para vínculo
+            let categoriaTexto = 'Sem categoria';
+            if (pessoa.categoria) {
+                const categoriaNomes = {
+                    '1': 'Coordenador',
+                    '2': 'Professor Orientador',
+                    '3': 'Aluno/Estagiário',
+                    '4': 'Concedente/Local de Estágio',
+                    '5': 'Supervisor',
+                    '6': 'Curso/Instituição de Ensino',
+                    '99': 'Usuário Geral'
+                };
+                const categorias = pessoa.categoria.split(',').map(c => c.trim());
+                const nomesCategorias = categorias.map(cat => categoriaNomes[cat] || cat).filter(nome => nome);
+                categoriaTexto = nomesCategorias.length > 0 ? nomesCategorias.join(', ') : 'Sem categoria';
+            }
+            
             html += `
                 <div class="list-group-item list-group-item-action" style="cursor: pointer;" onclick="pessoaManager.selecionarPessoaVinculo(${pessoa.id_pessoa}, '${pessoa.nome.replace(/'/g, "\\'")}')">  
                     <div class="d-flex w-100 justify-content-between">
@@ -1163,6 +1273,62 @@ class PessoaManager {
             });
             categoriaBusca.value = 'todos';
         }
+    }
+    
+    // Configurar regras de incompatibilidade entre categorias
+    configurarIncompatibilidadeCategorias() {
+        // Definir regras de incompatibilidade
+        const regrasIncompatibilidade = {
+            '1': ['3', '4', '99'], // Coordenador desabilita: Aluno/Estagiário, Concedente, Usuário Geral
+            '2': ['3', '4', '99'], // Professor/Orientador desabilita: Aluno/Estagiário, Concedente, Usuário Geral
+            '3': ['1', '2', '4', '5', '6', '99'], // Aluno/Estagiário desabilita: todas as outras
+            '4': ['1', '2', '3'], // Concedente desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador
+            '5': ['1', '2', '3'], // Supervisor desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador
+            '99': ['1', '2', '3', '4', '5', '6'] // Usuário Geral desabilita: todas as outras
+        };
+        
+        // Adicionar event listeners para todos os checkboxes de categoria
+        const checkboxes = document.querySelectorAll('input[name="categorias"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                this.aplicarRegrasIncompatibilidade(regrasIncompatibilidade);
+            });
+        });
+    }
+    
+    // Aplicar regras de incompatibilidade
+    aplicarRegrasIncompatibilidade(regras) {
+        const checkboxes = document.querySelectorAll('input[name="categorias"]');
+        
+        // Primeiro, habilitar todos os checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = false;
+            checkbox.parentElement.style.opacity = '1';
+        });
+        
+        // Depois, aplicar as regras de desabilitação
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked && regras[checkbox.value]) {
+                // Desabilitar categorias incompatíveis
+                regras[checkbox.value].forEach(valorIncompativel => {
+                    const checkboxIncompativel = document.querySelector(`input[name="categorias"][value="${valorIncompativel}"]`);
+                    if (checkboxIncompativel && !checkboxIncompativel.checked) {
+                        checkboxIncompativel.disabled = true;
+                        checkboxIncompativel.parentElement.style.opacity = '0.5';
+                    }
+                });
+            }
+        });
+    }
+    
+    // Limpar regras de incompatibilidade (habilitar todos os checkboxes)
+    limparRegrasIncompatibilidade() {
+        const checkboxes = document.querySelectorAll('input[name="categorias"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = false;
+            checkbox.parentElement.style.opacity = '1';
+            checkbox.checked = false;
+        });
     }
     
     // Função utilitária para debounce

@@ -126,7 +126,7 @@ class AuthService {
                 const pessoa = await this.pessoaModel.create({
                     ...userData,
                     ativo: 1,
-                    data_cadastro: new Date().toISOString()
+                    data_cadastro: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 });
 
                 // Criar login
@@ -254,7 +254,7 @@ class AuthService {
         try {
             const query = `
                 SELECT m.nome, m.url, m.icone
-                FROM usuario_modulos um
+                FROM pessoa_modulos um
                 INNER JOIN modulos m ON um.id_modulo = m.id_modulo
                 WHERE um.id_pessoa = ? AND um.ativo = 1 AND m.ativo = 1
                 ORDER BY m.ordem
@@ -289,7 +289,7 @@ class AuthService {
             // Verificar permissão específica
             const query = `
                 SELECT COUNT(*) as count
-                FROM usuario_modulos um
+                FROM pessoa_modulos um
                 INNER JOIN modulos m ON um.id_modulo = m.id_modulo
                 WHERE um.id_pessoa = ? AND m.nome = ? AND um.ativo = 1 AND m.ativo = 1
             `;

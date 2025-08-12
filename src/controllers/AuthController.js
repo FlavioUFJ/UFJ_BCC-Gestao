@@ -72,6 +72,13 @@ class AuthController {
             
             const user = await databaseConfig.get(query, [email]);
             
+            console.log('DEBUG - Email buscado:', email);
+            console.log('DEBUG - Usuário encontrado:', user ? 'SIM' : 'NÃO');
+            if (user) {
+                console.log('DEBUG - Status do login:', user.login_ativo);
+                console.log('DEBUG - Nome do usuário:', user.nome);
+            }
+            
             if (!user) {
                 throw new Error('Credenciais inválidas.');
             }
@@ -249,7 +256,6 @@ class AuthController {
                 nome,
                 email,
                 telefone,
-                endereco,
                 cidade,
                 estado,
                 cep,
@@ -279,7 +285,6 @@ class AuthController {
                 nome,
                 email,
                 telefone,
-                endereco,
                 cidade,
                 estado,
                 cep,

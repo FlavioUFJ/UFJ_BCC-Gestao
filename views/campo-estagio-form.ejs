@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro Campo de Estágio - Sistema de Gestão BCC UFJ</title>
+    <title>Cadastro Campo de Estágio - CoordenAI - Gestão Inteligente</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -66,9 +66,14 @@
                             <h4 class="text-white mb-0">
                                 <i class="fas fa-building me-2"></i>Cadastro Campo de Estágio
                             </h4>
-                            <a href="/estagios/dashboard" class="btn btn-light btn-sm">
-                                <i class="fas fa-arrow-left me-1"></i>Voltar
-                            </a>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-success btn-sm" id="btnSalvarCabecalho" onclick="salvarCampoEstagio()">
+                                    <i class="fas fa-save me-1"></i>Salvar
+                                </button>
+                                <a href="/estagios/dashboard" class="btn btn-light btn-sm">
+                                    <i class="fas fa-arrow-left me-1"></i>Voltar
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -79,7 +84,8 @@
                                     <label for="situacao" class="form-label required">Situação</label>
                                     <select class="form-control" id="situacao" name="situacao" required>
                                         <option value="Em Edição" selected>Em Edição</option>
-                                        <option value="Cadastrado">Cadastrado</option>
+                                        <option value="Concluído">Concluído</option>
+                                        <option value="Finalizado">Finalizado</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -506,7 +512,7 @@
             if (campo.observacoes) document.getElementById('observacoes').value = campo.observacoes;
             
             // Atualizar título da página
-            document.title = 'Editar Campo de Estágio - Sistema de Gestão BCC UFJ';
+            document.title = 'Editar Campo de Estágio - CoordenAI - Gestão Inteligente';
             const cardTitle = document.querySelector('.card-header h4');
             if (cardTitle) {
                 cardTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Campo de Estágio';
@@ -576,6 +582,9 @@
 
         function abrirBuscaPessoa(hiddenInputId, nomeInputId, categoria) {
             if (window.pessoaManager) {
+                // Verificar se o usuário é Administrador para habilitar a aba "Cadastrar Nova"
+                const isAdministrador = '<%= user.nivelacesso %>' === 'Administrador';
+                
                 window.pessoaManager.abrirModal(hiddenInputId, function(id, nome) {
                     document.getElementById(hiddenInputId).value = id;
                     document.getElementById(nomeInputId).value = nome;
@@ -583,7 +592,7 @@
                     categoriaAutomatica: categoria,
                     showTabs: true,
                     showBuscarTab: true,
-                    showCadastrarTab: false
+                    showCadastrarTab: isAdministrador // Só mostra aba "Cadastrar Nova" se for Administrador
                 });
             }
         }
@@ -925,7 +934,7 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    mostrarAlerta('Campo de estágio cadastrado com sucesso!', 'success');
+                    mostrarAlerta('Campo de estágio salvo com sucesso!', 'success');
                     setTimeout(() => {
                         window.location.href = '/estagios/dashboard';
                     }, 1500);

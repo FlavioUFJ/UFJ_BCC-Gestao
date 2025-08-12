@@ -16,7 +16,6 @@ class Pessoa extends BaseModel {
             'nome',
             'email',
             'telefone',
-            'endereco',
             'cidade',
             'estado',
             'cep',
@@ -41,9 +40,6 @@ class Pessoa extends BaseModel {
             },
             telefone: {
                 maxLength: 20
-            },
-            endereco: {
-                maxLength: validation.text.mediumText
             },
             cidade: {
                 maxLength: 100
@@ -306,6 +302,14 @@ class Pessoa extends BaseModel {
         
         if (data.estado && data.estado.length !== 2) {
             throw new Error('Estado deve ter 2 caracteres (sigla)');
+        }
+        
+        // Validar formato de categoria (números separados por vírgula)
+        if (data.categoria && data.categoria !== '') {
+            const categoriaStr = String(data.categoria).trim();
+            if (categoriaStr && !/^\d+(,\d+)*$/.test(categoriaStr)) {
+                throw new Error('Categoria deve conter apenas números separados por vírgula (ex: 1,2,5)');
+            }
         }
     }
 }

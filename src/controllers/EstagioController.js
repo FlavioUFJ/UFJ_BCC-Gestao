@@ -628,7 +628,7 @@ class EstagioController {
                     m.id_modulo 
                 FROM 
                     pessoa AS p 
-                INNER JOIN usuario_modulos AS pm ON pm.id_pessoa = p.id_pessoa 
+                INNER JOIN pessoa_modulos AS pm ON pm.id_pessoa = p.id_pessoa 
                 INNER JOIN modulos AS m ON pm.id_modulo = m.id_modulo 
                 WHERE 
                     p.id_pessoa = ? AND pm.ativo = 1

@@ -42,4 +42,7 @@ router.put('/:id', (req, res) => planoAtividadeController.update(req, res));
 // GET /planos-atividade/:id/pdf - Gerar PDF do plano
 router.get('/:id/pdf', (req, res) => planoAtividadeController.gerarPDF(req, res));
 
+// POST /planos-atividade/anexar-documento - Anexar documento PDF ao plano
+router.post('/anexar-documento', (req, res) => planoAtividadeController.anexarDocumento(req, res));
+
 module.exports = router;

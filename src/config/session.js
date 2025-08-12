@@ -26,6 +26,12 @@ class SessionConfig {
             expiration: 86400000, // 24 horas
             createDatabaseTable: true,
             charset: 'utf8mb4_bin',
+			// Configurações adicionais para produção
+			connectionLimit: 10,        // Pool dedicado para sessões
+			acquireTimeout: 30000,      // 30s timeout
+			reconnect: true,
+					
+			
             schema: {
                 tableName: 'sessions',
                 columnNames: {

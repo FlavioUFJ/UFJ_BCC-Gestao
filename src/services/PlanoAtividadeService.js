@@ -62,52 +62,16 @@ class PlanoAtividadeService {
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso e categoria do usuário
+            // Aplicar filtro baseado no nível de acesso
             if (nivelAcesso !== 'Administrador') {
-                // Buscar a categoria do usuário
-                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-                const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
-                const categoriaUsuario = usuario?.categoria;
-                
-                // Aplicar restrições baseadas na categoria
-                switch (categoriaUsuario) {
-                    case '1': // Coordenador - nenhuma restrição, recupera todos os dados
-                        break;
-                        
-                    case '2': // Professor Orientador - apenas planos onde é orientador
-                        sql += ' WHERE ce.id_pessoa_orientador = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '3': // Aluno/Estagiário - apenas seus próprios planos
-                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '4': // Concedente/Local de Estágio - planos onde é concedente
-                        sql += ' WHERE ce.id_pessoa_concedente = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '5': // Supervisor - planos onde é supervisor
-                        sql += ' WHERE ce.id_pessoa_supervisor = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '6': // Instituição/Curso - planos relacionados via id_pessoa_curso
-                        sql += ' WHERE ce.id_pessoa_curso = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '99': // Usuário Geral - sem acesso aos dados
-                        sql += ' WHERE 1 = 0'; // Retorna vazio
-                        break;
-                        
-                    default: // Categoria não reconhecida - apenas seus próprios planos
-                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
-                        params.push(idUsuario);
-                        break;
-                }
+                // Para usuários não-administradores, mostrar apenas registros onde
+                // o ID da pessoa aparece em qualquer uma das 4 chaves estrangeiras:
+                // orientador, supervisor, estagiário ou concedente
+                sql += ` WHERE (ce.id_pessoa_orientador = ? OR 
+                               ce.id_pessoa_supervisor = ? OR 
+                               ce.id_pessoa_estagiario = ? OR 
+                               ce.id_pessoa_concedente = ?)`;
+                params.push(idUsuario, idUsuario, idUsuario, idUsuario);
             }
             
             sql += ' ORDER BY pa.dataultimaatualizacao DESC';
@@ -140,52 +104,16 @@ class PlanoAtividadeService {
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso e categoria do usuário
+            // Aplicar filtro baseado no nível de acesso
             if (nivelAcesso !== 'Administrador' && idUsuario) {
-                // Buscar a categoria do usuário
-                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-                const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
-                const categoriaUsuario = usuario?.categoria;
-                
-                // Aplicar restrições baseadas na categoria
-                switch (categoriaUsuario) {
-                    case '1': // Coordenador - nenhuma restrição, recupera todos os dados
-                        break;
-                        
-                    case '2': // Professor Orientador - apenas planos onde é orientador
-                        sql += ' WHERE ce.id_pessoa_orientador = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '3': // Aluno/Estagiário - apenas seus próprios planos
-                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '4': // Concedente/Local de Estágio - planos onde é concedente
-                        sql += ' WHERE ce.id_pessoa_concedente = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '5': // Supervisor - planos onde é supervisor
-                        sql += ' WHERE ce.id_pessoa_supervisor = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '6': // Instituição/Curso - planos relacionados via id_pessoa_curso
-                         sql += ' WHERE ce.id_pessoa_curso = ?';
-                         params.push(idUsuario);
-                         break;
-                        
-                    case '99': // Usuário Geral - sem acesso aos dados
-                        sql += ' WHERE 1 = 0'; // Retorna vazio
-                        break;
-                        
-                    default: // Categoria não reconhecida - apenas seus próprios planos
-                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
-                        params.push(idUsuario);
-                        break;
-                }
+                // Para usuários não-administradores, mostrar apenas registros onde
+                // o ID da pessoa aparece em qualquer uma das 4 chaves estrangeiras:
+                // orientador, supervisor, estagiário ou concedente
+                sql += ` WHERE (ce.id_pessoa_orientador = ? OR 
+                               ce.id_pessoa_supervisor = ? OR 
+                               ce.id_pessoa_estagiario = ? OR 
+                               ce.id_pessoa_concedente = ?)`;
+                params.push(idUsuario, idUsuario, idUsuario, idUsuario);
             }
             
             const result = await databaseConfig.get(sql, params);
@@ -318,11 +246,6 @@ class PlanoAtividadeService {
                 return false;
             }
 
-            // Buscar a categoria do usuário
-            const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-            const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
-            const categoriaUsuario = usuario?.categoria;
-
             // Buscar dados do campo de estágio relacionado
             const campoEstagio = await databaseConfig.get(
                 'SELECT * FROM campo_estagio WHERE id_campo_estagio = ?',
@@ -333,29 +256,13 @@ class PlanoAtividadeService {
                 return false;
             }
 
-            // Verificar permissão baseada na categoria
-            switch (categoriaUsuario) {
-                case '1': // Coordenador - acesso total
-                    return true;
-                    
-                case '2': // Professor Orientador - apenas planos onde é orientador
-                    return campoEstagio.id_pessoa_orientador === idUsuario;
-                    
-                case '3': // Aluno/Estagiário - apenas seus próprios planos
-                    return campoEstagio.id_pessoa_estagiario === idUsuario;
-                    
-                case '4': // Concedente/Local de Estágio - planos onde é concedente
-                    return campoEstagio.id_pessoa_concedente === idUsuario;
-                    
-                case '5': // Supervisor - planos onde é supervisor
-                    return campoEstagio.id_pessoa_supervisor === idUsuario;
-                    
-                case '6': // Instituição/Curso - planos relacionados via id_pessoa_curso
-                    return campoEstagio.id_pessoa_curso === idUsuario;
-                    
-                default:
-                    return false;
-            }
+            // Para usuários não-administradores, verificar se o ID da pessoa
+            // aparece em qualquer uma das 4 chaves estrangeiras:
+            // orientador, supervisor, estagiário ou concedente
+            return (campoEstagio.id_pessoa_orientador === idUsuario ||
+                    campoEstagio.id_pessoa_supervisor === idUsuario ||
+                    campoEstagio.id_pessoa_estagiario === idUsuario ||
+                    campoEstagio.id_pessoa_concedente === idUsuario);
         } catch (error) {
             console.error('Erro ao validar permissão de acesso ao plano:', error);
             return false;

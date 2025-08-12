@@ -151,7 +151,7 @@ class EstagioService {
                 const dadosCompletos = {
                     ...dadosEstagio,
                     situacao: dadosEstagio.situacao || 'Ativo',
-                    data_cadastro: new Date().toISOString(),
+                    data_cadastro: new Date().toISOString().slice(0, 19).replace('T', ' '),
                     ativo: 1
                 };
 

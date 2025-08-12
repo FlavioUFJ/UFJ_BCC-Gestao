@@ -227,7 +227,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-graduation-cap me-2"></i>Rotinas Administrativas
+                <i class="fas fa-graduation-cap me-2"></i>CoordenAI - Gestão Inteligente
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="<%= origem %>" onclick="console.log('Redirecionando para:', '<%= origem %>')">
@@ -260,14 +260,13 @@
         <!-- Tabs de Navegação -->
         <ul class="nav nav-tabs" id="adminTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pessoas-tab" data-bs-toggle="tab" data-bs-target="#pessoas" type="button" role="tab">
-                    <i class="fas fa-users me-2"></i>Pessoas
+                <button class="nav-link active" id="parametros-tab" data-bs-toggle="tab" data-bs-target="#parametros" type="button" role="tab">
+                    <i class="fas fa-sliders-h me-2"></i>Parâmetros
                 </button>
             </li>
-
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="gerenciar-tab" data-bs-toggle="tab" data-bs-target="#gerenciar" type="button" role="tab">
-                    <i class="fas fa-users-cog me-2"></i>Usuários
+                <button class="nav-link" id="modulos-tab" data-bs-toggle="tab" data-bs-target="#modulos" type="button" role="tab">
+                    <i class="fas fa-cubes me-2"></i>Módulos
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -275,408 +274,183 @@
                     <i class="fas fa-upload me-2"></i>Gestão dos Dados
                 </button>
             </li>
-
         </ul>
 
         <!-- Conteúdo das Tabs -->
         <div class="tab-content" id="adminTabContent">
-            <!-- Tab Pessoas -->
-            <div class="tab-pane fade show active" id="pessoas" role="tabpanel">
+            <!-- Tab Parâmetros -->
+            <div class="tab-pane fade show active" id="parametros" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4><i class="fas fa-users me-2"></i>Pessoas</h4>
-                        <p class="text-muted mb-0">Gerencie o cadastro de pessoas do sistema.</p>
+                        <h4><i class="fas fa-sliders-h me-2"></i>Parâmetros</h4>
+                        <p class="text-muted mb-0">Gerencie os parâmetros e configurações do sistema.</p>
                     </div>
+                    <button type="button" class="btn btn-success" id="btnNovoParametro">
+                        <i class="fas fa-plus me-2"></i>Novo Parâmetro
+                    </button>
                 </div>
                 
-                <!-- Linha de busca -->
+                <!-- Filtros -->
                 <div class="row mb-4">
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="buscaPessoa" placeholder="Buscar por nome ou email...">
-                            <select class="form-select" id="categoriaPessoa" style="max-width: 200px;">
-                                <option value="todos">Todas as categorias</option>
-                                <option value="estagiario">Estagiário</option>
-                                <option value="orientador">Orientador</option>
-                                <option value="supervisor">Supervisor</option>
-                                <option value="concedente">Concedente</option>
-                            </select>
-                            <button class="btn btn-primary" type="button" id="btnBuscarPessoa">
+                            <input type="text" class="form-control" id="buscaParametro" placeholder="Buscar parâmetro...">
+                            <button class="btn btn-primary" type="button" id="btnBuscarParametro">
                                 <i class="fas fa-search"></i> Buscar
                             </button>
                         </div>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <a href="#" class="text-decoration-none me-3" id="linkImportarCsv">
-                            <i class="fas fa-file-csv me-1"></i>Importar CSV
-                        </a>
-                        <button type="button" class="btn btn-success" id="btnNovaPessoa">
-                            <i class="fas fa-plus me-2"></i>Nova Pessoa
-                        </button>
+                    <div class="col-md-6">
+                        <select class="form-select" id="filtroTipoParametro">
+                            <option value="">Todos os tipos</option>
+                            <option value="texto">Texto</option>
+                            <option value="numero">Número</option>
+                            <option value="booleano">Booleano</option>
+                            <option value="lista">Lista</option>
+                        </select>
                     </div>
                 </div>
                 
-                <!-- Tabela de pessoas -->
+                <!-- Tabela de parâmetros -->
                 <div class="table-container">
                     <div class="table-responsive">
-                        <table class="table table-hover" id="tabelaPessoas">
+                        <table class="table table-hover" id="tabelaParametros">
                             <thead>
                                 <tr>
                                     <th>Nome</th>
-                                    <th>Email</th>
-                                    <th>Telefone</th>
-                                    <th>Categoria</th>
-                                    <th>CPF/CNPJ</th>
+                                    <th>Descrição</th>
+                                    <th>Tipo</th>
+                                    <th>Valor Atual</th>
+                                    <th>Status</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="corpoTabelaPessoas">
+                            <tbody id="corpoTabelaParametros">
                                 <tr>
                                     <td colspan="6" class="text-center text-muted py-4">
-                                        <i class="fas fa-search fa-2x mb-2"></i><br>
-                                        Digite um termo para buscar pessoas
+                                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                        Carregando parâmetros...
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Paginação -->
-                    <nav aria-label="Paginação de pessoas" id="paginacaoPessoas" style="display: none;">
-                        <ul class="pagination justify-content-center">
-                            <!-- Paginação será inserida via JavaScript -->
-                        </ul>
-                    </nav>
                 </div>
             </div>
             
 
 
-            <!-- Tab Usuários -->
-            <div class="tab-pane fade" id="gerenciar" role="tabpanel">
-                <div class="mb-4">
-                    <h4><i class="fas fa-users-cog me-2"></i>Usuários e Módulos</h4>
-                    <p class="text-muted">Gerencie usuários, módulos e suas permissões de acesso.</p>
+            <!-- Tab Módulos -->
+            <div class="tab-pane fade" id="modulos" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4><i class="fas fa-cubes me-2"></i>Módulos</h4>
+                        <p class="text-muted mb-0">Gerencie módulos do sistema e vínculos com usuários.</p>
+                    </div>
+                    <button type="button" class="btn btn-success" id="btnNovoModulo">
+                        <i class="fas fa-plus me-2"></i>Novo Módulo
+                    </button>
                 </div>
                 
-                <!-- Sub-tabs para Usuários -->
-                <ul class="nav nav-pills mb-4" id="usuarioSubTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="logins-subtab" data-bs-toggle="pill" data-bs-target="#logins" type="button" role="tab">
-                            <i class="fas fa-key me-2"></i>Gerenciar Logins
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="modulos-subtab" data-bs-toggle="pill" data-bs-target="#modulos" type="button" role="tab">
-                            <i class="fas fa-th-large me-2"></i>Gerenciar Módulos
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="vinculos-subtab" data-bs-toggle="pill" data-bs-target="#vinculos" type="button" role="tab">
-                            <i class="fas fa-link me-2"></i>Vincular Módulos
-                        </button>
-                    </li>
-                </ul>
+                <!-- Filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="buscaModulo" placeholder="Buscar módulo...">
+                            <button class="btn btn-primary" type="button" id="btnBuscarModulo">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-select" id="filtroStatusModulo">
+                            <option value="">Todos os status</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="inativo">Inativo</option>
+                        </select>
+                    </div>
+                </div>
                 
-                <!-- Conteúdo das Sub-tabs -->
-                <div class="tab-content" id="usuarioSubTabContent">
-                    <!-- Sub-tab Gerenciar Logins -->
-                    <div class="tab-pane fade show active" id="logins" role="tabpanel">
-                        <div class="row">
+                <!-- Tabela de módulos -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tabelaModulos">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>URL</th>
+                                    <th>Status</th>
+                                    <th>Usuários Vinculados</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaModulos">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                        Carregando módulos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Seção de Vínculos de Usuários -->
+                <div class="card mt-4" id="vinculosUsuarios" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Usuários Vinculados ao Módulo: <span id="nomeModuloSelecionado"></span></h5>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnFecharVinculos">
+                            <i class="fas fa-times me-1"></i>Fechar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0"><i class="fas fa-key me-2"></i>Alterar Senha</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="alterarSenhaForm">
-                                            <div class="mb-3">
-                                                <label for="emailAlterarSenha" class="form-label">E-mail:</label>
-                                                <input type="email" class="form-control" id="emailAlterarSenha" name="email" required placeholder="Digite o e-mail do usuário">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="novaSenha" class="form-label">Nova Senha:</label>
-                                                <input type="password" class="form-control" id="novaSenha" name="novaSenha" required>
-                                            </div>
-                                            <button type="submit" class="btn btn-warning w-100">
-                                                <i class="fas fa-key me-2"></i>Alterar Senha
-                                            </button>
-                                        </form>
-                                    </div>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="buscaUsuarioVinculo" placeholder="Buscar usuário para vincular...">
+                                    <button class="btn btn-success" type="button" id="btnVincularUsuario">
+                                        <i class="fas fa-plus"></i> Vincular
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Criar Login</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="criarLoginForm">
-                                            <div class="mb-3">
-                                                <label for="buscaPessoaLogin" class="form-label">Buscar Pessoa:</label>
-                                                <div class="position-relative">
-                                                    <input type="text" class="form-control" id="buscaPessoaLogin" placeholder="Digite o nome da pessoa..." autocomplete="off" value="">
-                                                    <input type="hidden" id="pessoaLoginId" name="id_pessoa" required>
-                                                    <div id="resultadosBuscaPessoa" class="position-absolute w-100 bg-white border rounded shadow-sm" style="top: 100%; z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
-                                                </div>
-                                                <small class="text-muted">Digite pelo menos 2 caracteres para buscar</small>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="senhaLogin" class="form-label">Senha:</label>
-                                                <input type="password" class="form-control" id="senhaLogin" name="senha" required autocomplete="new-password" value="">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="nivelAcessoLogin" class="form-label">Nível de Acesso:</label>
-                        <select class="form-select" id="nivelAcessoLogin" name="nivelacesso" required>
-                                                    <option value="">Selecione o nível de acesso...</option>
-                                                    <option value="Visitante">Visitante (acesso restrito, apenas consultas)</option>
-                                                    <option value="Operacional">Operacional (acesso médio, não pode acessar rotinas administrativas)</option>
-                                                    <option value="Administrador">Administrador (acesso total)</option>
-                                                </select>
-                                            </div>
-                                            <button type="submit" class="btn btn-success w-100">
-                                                <i class="fas fa-user-plus me-2"></i>Criar Login
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+                            <div class="col-md-6 text-end">
+                                <button type="button" class="btn btn-warning" id="btnDesvincularSelecionados">
+                                    <i class="fas fa-unlink me-2"></i>Desvincular Selecionados
+                                </button>
                             </div>
                         </div>
                         
-                        <!-- Lista de Usuários com Login -->
-                        <div class="card mt-4">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Usuários Cadastrados</h5>
-                                <button type="button" class="btn btn-outline-light btn-sm" onclick="GerenciadorModulos.carregarUsuarios()">
-                                    <i class="fas fa-sync-alt me-1"></i>Atualizar Lista
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <!-- Filtro de busca -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                            <input type="text" class="form-control" id="filtroUsuarios" placeholder="Buscar por nome..." onkeyup="GerenciadorModulos.filtrarUsuarios()">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover" id="tabelaUsuarios">
-                                        <thead>
-                                            <tr>
-                                                <th>Nome</th>
-                                                <th>Email</th>
-                                                <th>Status</th>
-                                                <th>Tipo de Acesso</th>
-                                                <th>Última Atualização</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="corpoTabelaUsuarios">
-                                            <tr>
-                                                <td colspan="5" class="text-center text-muted py-4">
-                                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
-                                                    Carregando usuários...
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th width="50">
+                                            <input type="checkbox" id="selecionarTodosUsuarios" class="form-check-input">
+                                        </th>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Nível de Acesso</th>
+                                        <th>Data Vínculo</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="corpoUsuariosVinculados">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">
+                                            <i class="fas fa-users fa-2x mb-2"></i><br>
+                                            Nenhum usuário vinculado
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </div>
+            </div>
                     
-                    <!-- Sub-tab Gerenciar Módulos -->
-                    <div class="tab-pane fade" id="modulos" role="tabpanel">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Novo Módulo</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="novoModuloForm">
-                                            <div class="mb-3">
-                                                <label for="nomeModulo" class="form-label">Nome do Módulo:</label>
-                                                <input type="text" class="form-control" id="nomeModulo" name="nome" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="descricaoModulo" class="form-label">Descrição:</label>
-                                                <textarea class="form-control" id="descricaoModulo" name="descricao" rows="3"></textarea>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <label for="iconeModulo" class="form-label">Ícone (FontAwesome):</label>
-                                                    <input type="text" class="form-control" id="iconeModulo" name="icone" placeholder="fas fa-briefcase">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="corModulo" class="form-label">Cor:</label>
-                                                    <input type="color" class="form-control" id="corModulo" name="cor" value="#007bff">
-                                                </div>
-                                            </div>
-                                            <div class="mb-3 mt-3">
-                                                <label for="urlModulo" class="form-label">URL:</label>
-                                                <input type="text" class="form-control" id="urlModulo" name="url" placeholder="/modulo">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="ordemModulo" class="form-label">Ordem:</label>
-                                                <input type="number" class="form-control" id="ordemModulo" name="ordem" value="1">
-                                            </div>
-                                            <button type="submit" class="btn btn-primary w-100">
-                                                <i class="fas fa-plus me-2"></i>Criar Módulo
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0"><i class="fas fa-th-large me-2"></i>Módulos Existentes</h5>
-                                    </div>
-                                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                                        <div id="listaModulos">
-                                            <div class="text-center text-muted py-4">
-                                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
-                                                Carregando módulos...
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Sub-tab Vincular Módulos -->
-                    <div class="tab-pane fade" id="vinculos" role="tabpanel">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="fas fa-link me-2"></i>Vincular Módulos aos Usuários</h5>
-                            </div>
-                            <div class="card-body">
-                                <!-- Seção de Busca e Seleção de Usuários -->
-                                <div class="row mb-4">
-                                    <div class="col-md-8">
-                                        <label for="buscaUsuarioVinculo" class="form-label">Buscar Usuários:</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="buscaUsuarioVinculo" placeholder="Digite o nome do usuário..." autocomplete="off">
-                                            <button class="btn btn-outline-secondary" type="button" id="btnLimparBuscaUsuario">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                        <div id="resultadosBuscaUsuario" class="position-relative" style="display: none;">
-                                            <div class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                                <!-- Resultados da busca serão inseridos aqui -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label">Ações:</label><br>
-                                        <button type="button" class="btn btn-success me-2" id="btnSalvarVinculosLote">
-                                            <i class="fas fa-save me-2"></i>Salvar Vínculos
-                                        </button>
-                                        <button type="button" class="btn btn-secondary" id="btnLimparTudo">
-                                            <i class="fas fa-eraser me-2"></i>Limpar Tudo
-                                        </button>
-                                    </div>
-                                </div>
 
-                                <!-- Lista de Usuários Selecionados -->
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
-                                                <h6 class="mb-0"><i class="fas fa-users me-2"></i>Usuários Selecionados</h6>
-                                                <span class="badge bg-primary" id="contadorUsuarios">0</span>
-                                            </div>
-                                            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                                                <div id="listaUsuariosSelecionados">
-                                                    <div class="text-center text-muted py-3">
-                                                        <i class="fas fa-user-plus fa-2x mb-2"></i><br>
-                                                        Nenhum usuário selecionado
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Lista de Módulos Selecionados -->
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header d-flex justify-content-between align-items-center">
-                                                <h6 class="mb-0"><i class="fas fa-th-large me-2"></i>Módulos Selecionados</h6>
-                                                <span class="badge bg-primary" id="contadorModulos">0</span>
-                                            </div>
-                                            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                                                <div class="mb-3">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnSelecionarTodosModulos">
-                                                        <i class="fas fa-check-double me-1"></i>Selecionar Todos
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="btnLimparModulos">
-                                                        <i class="fas fa-times me-1"></i>Limpar Seleção
-                                                    </button>
-                                                </div>
-                                                <div id="listaModulosDisponiveis">
-                                                    <div class="text-center text-muted py-3">
-                                                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
-                                                        Carregando módulos...
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Seção de Desvincular Módulos -->
-                                <div class="card mt-4">
-                                    <div class="card-header">
-                                        <h6 class="mb-0"><i class="fas fa-unlink me-2"></i>Desvincular Módulos</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <label for="usuarioDesvinculo" class="form-label">Selecionar Usuário:</label>
-                                                <select class="form-select" id="usuarioDesvinculo">
-                                                    <option value="">Selecione um usuário...</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Ações de Desvinculação:</label><br>
-                                                <button type="button" class="btn btn-warning me-2" id="btnDesvincularSelecionados">
-                                                    <i class="fas fa-unlink me-2"></i>Desvincular Selecionados
-                                                </button>
-                                                <button type="button" class="btn btn-danger" id="btnDesvincularTodos">
-                                                    <i class="fas fa-trash me-2"></i>Desvincular Todos
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                        <div id="vinculosAtuaisDesvinculo" style="display: none;" class="mt-3">
-                                            <h6 class="mb-3">Vínculos Atuais:</h6>
-                                            <div class="table-responsive">
-                                                <table class="table table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th width="50">
-                                                                <input type="checkbox" id="selecionarTodosVinculos" class="form-check-input">
-                                                            </th>
-                                                            <th>Módulo</th>
-                                                            <th>Status</th>
-                                                            <th>Data Cadastro</th>
-                                                            <th>Ações</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="corpoVinculosAtuaisDesvinculo">
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -1143,7 +917,20 @@
                     6: 'Curso/Instituição de Ensino',
                     99: 'Usuário Geral'
                 };
-                return categorias[categoria] || 'Categoria não definida';
+                
+                if (!categoria) {
+                    return 'Categoria não definida';
+                }
+                
+                // Processar múltiplas categorias (formato: 1,2,5)
+                const categoriasArray = categoria.toString().split(',').map(cat => cat.trim());
+                
+                // Mapear IDs para nomes
+                const nomesCategorias = categoriasArray.map(id => {
+                    return categorias[id] || `Categoria ${id}`;
+                }).filter(nome => nome); // Remover valores vazios
+                
+                return nomesCategorias.length > 0 ? nomesCategorias.join(', ') : 'Categoria não definida';
             },
             
 

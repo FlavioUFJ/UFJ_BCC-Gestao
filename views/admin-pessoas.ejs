@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - CoordenAI - Gestão Inteligente</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        .nav-tabs .nav-link {
+            color: #495057;
+            border: 1px solid transparent;
+        }
+        .nav-tabs .nav-link.active {
+            color: #007bff;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            border-top: none;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .search-container {
+            position: relative;
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .bg-purple {
+            background-color: #6f42c1 !important;
+            color: white !important;
+            z-index: 1000;
+            display: none;
+        }
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-graduation-cap me-2"></i>CoordenAI - Gestão Inteligente
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="<%= origem %>">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-2"></i>Sair
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-users me-2"></i><%= title %></h2>
+                </div>
+
+                <!-- Navegação por Abas -->
+                <ul class="nav nav-tabs" id="pessoasTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="pessoas-tab" data-bs-toggle="tab" data-bs-target="#pessoas" type="button" role="tab">
+                            <i class="fas fa-user me-2"></i>Pessoas
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">
+                            <i class="fas fa-key me-2"></i>Dados de Login
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="modulos-tab" data-bs-toggle="tab" data-bs-target="#modulos" type="button" role="tab">
+                            <i class="fas fa-th-large me-2"></i>Módulos
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Conteúdo das Abas -->
+                <div class="tab-content" id="pessoasTabContent">
+                    <!-- Aba Pessoas -->
+                    <div class="tab-pane fade show active" id="pessoas" role="tabpanel">
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Gerenciar Pessoas</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Filtros e Busca -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="buscaPessoa" class="form-label">Buscar:</label>
+                                        <input type="text" class="form-control" id="buscaPessoa" placeholder="Nome, email ou CPF/CNPJ...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="categoriaPessoa" class="form-label">Categoria:</label>
+                                        <select class="form-select" id="categoriaPessoa">
+                                            <option value="">Todas as categorias</option>
+                                            <option value="Coordenador">Coordenador</option>
+                                            <option value="Professor/Orientador">Professor/Orientador</option>
+                                            <option value="Aluno/Estagiário">Aluno/Estagiário</option>
+                                            <option value="Concedente">Concedente</option>
+                                            <option value="Supervisor">Supervisor</option>
+                                            <option value="Usuário Geral">Usuário Geral</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <div>
+                                            <button type="button" class="btn btn-primary" id="btnBuscarPessoa">
+                                                <i class="fas fa-search me-2"></i>Buscar
+                                            </button>
+                                            <button type="button" class="btn btn-success ms-2" id="btnNovaPessoa">
+                                                <i class="fas fa-plus me-2"></i>Nova
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tabela de Pessoas -->
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Email</th>
+                                                <th>Telefone</th>
+                                                <th>Categoria</th>
+                                                <th>CPF/CNPJ</th>
+                                                <th width="120">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="corpoTabelaPessoas">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-4">
+                                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                                    Carregando pessoas...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Paginação -->
+                                <nav aria-label="Paginação de pessoas">
+                                    <ul class="pagination justify-content-center" id="paginacaoPessoas">
+                                        <!-- Paginação será inserida aqui -->
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba Dados de Login -->
+                    <div class="tab-pane fade" id="login" role="tabpanel">
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-key me-2"></i>Gerenciar Dados de Login</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Filtros e Busca -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="buscaPessoaLogin" class="form-label">Buscar:</label>
+                                        <input type="text" class="form-control" id="buscaPessoaLogin" placeholder="Nome, email ou CPF/CNPJ...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="categoriaPessoaLogin" class="form-label">Categoria:</label>
+                                        <select class="form-select" id="categoriaPessoaLogin">
+                                            <option value="">Todas as categorias</option>
+                                            <option value="Coordenador">Coordenador</option>
+                                            <option value="Professor/Orientador">Professor/Orientador</option>
+                                            <option value="Aluno/Estagiário">Aluno/Estagiário</option>
+                                            <option value="Concedente">Concedente</option>
+                                            <option value="Supervisor">Supervisor</option>
+                                            <option value="Usuário Geral">Usuário Geral</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <div>
+                                            <button type="button" class="btn btn-primary" id="btnBuscarPessoaLogin">
+                                                <i class="fas fa-search me-2"></i>Buscar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Resultados da busca -->
+                                <div id="resultadosBuscaPessoa" style="display: none;" class="mb-3">
+                                    <!-- Resultados da busca serão inseridos aqui -->
+                                </div>
+
+                                <!-- Tabela de Pessoas para Login -->
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Email</th>
+                                                <th>Categoria</th>
+                                                <th>Status Login</th>
+                                                <th width="120">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="corpoTabelaPessoasLogin">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">
+                                                    <i class="fas fa-search fa-2x mb-2"></i><br>
+                                                    Use os filtros acima para buscar pessoas
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Paginação -->
+                                <nav aria-label="Paginação de pessoas login">
+                                    <ul class="pagination justify-content-center" id="paginacaoPessoasLogin">
+                                        <!-- Paginação será inserida aqui -->
+                                    </ul>
+                                </nav>
+
+                                <!-- Formulário de Login -->
+                                <div id="formLogin" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0"><i class="fas fa-user-cog me-2"></i>Dados de Login</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <form id="dadosLoginForm">
+                                                        <input type="hidden" id="pessoaLoginId" value="">
+                                                        <div class="mb-3">
+                                                            <label for="nomeCompleto" class="form-label">Nome Completo:</label>
+                                                            <input type="text" class="form-control" id="nomeCompleto" readonly>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="emailPessoa" class="form-label">Email:</label>
+                                                            <input type="email" class="form-control" id="emailPessoa" readonly>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="nivelAcesso" class="form-label">Nível de Acesso:</label>
+                                                            <select class="form-select" id="nivelAcesso" required>
+                                                                <option value="">Selecione o nível</option>
+                                                                <option value="Administrador">Administrador</option>
+                                                                <option value="Coordenador">Coordenador</option>
+                                                                <option value="Usuario">Usuário</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="statusLogin" class="form-label">Status:</label>
+                                                            <select class="form-select" id="statusLogin" required>
+                                                                <option value="ativo">Ativo</option>
+                                                                <option value="inativo">Inativo</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="senhaLogin" class="form-label">Nova Senha:</label>
+                                                            <input type="password" class="form-control" id="senhaLogin" placeholder="Digite a nova senha">
+                                                            <div class="form-text">Deixe em branco para manter a senha atual</div>
+                                                        </div>
+                                                        <div class="d-grid">
+                                                            <button type="submit" class="btn btn-primary">
+                                                                <i class="fas fa-save me-2"></i>Salvar Dados de Login
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações da Pessoa</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div id="infosPessoa">
+                                                        <!-- Informações da pessoa serão carregadas aqui -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aba Módulos -->
+                    <div class="tab-pane fade" id="modulos" role="tabpanel">
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-th-large me-2"></i>Gerenciar Módulos da Pessoa</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Filtros e Busca -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="buscaPessoaModulo" class="form-label">Buscar:</label>
+                                        <input type="text" class="form-control" id="buscaPessoaModulo" placeholder="Nome, email ou CPF/CNPJ...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="categoriaPessoaModulo" class="form-label">Categoria:</label>
+                                        <select class="form-select" id="categoriaPessoaModulo">
+                                            <option value="">Todas as categorias</option>
+                                            <option value="Coordenador">Coordenador</option>
+                                            <option value="Professor/Orientador">Professor/Orientador</option>
+                                            <option value="Aluno/Estagiário">Aluno/Estagiário</option>
+                                            <option value="Concedente">Concedente</option>
+                                            <option value="Supervisor">Supervisor</option>
+                                            <option value="Usuário Geral">Usuário Geral</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <div>
+                                            <button type="button" class="btn btn-primary" id="btnBuscarPessoaModulo">
+                                                <i class="fas fa-search me-2"></i>Buscar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tabela de Pessoas para Módulos -->
+                                <div class="table-responsive mb-4">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Email</th>
+                                                <th>Categoria</th>
+                                                <th>Módulos Vinculados</th>
+                                                <th width="120">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="corpoTabelaPessoasModulo">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">
+                                                    <i class="fas fa-search fa-2x mb-2"></i><br>
+                                                    Use os filtros acima para buscar pessoas
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Paginação -->
+                                <nav aria-label="Paginação de pessoas módulo">
+                                    <ul class="pagination justify-content-center" id="paginacaoPessoasModulo">
+                                        <!-- Paginação será inserida aqui -->
+                                    </ul>
+                                </nav>
+
+                                <!-- Campos ocultos para controle -->
+                                <input type="hidden" id="pessoaModuloId" value="">
+                                <div id="resultadosBuscaPessoaModulo" style="display: none;" class="mb-3"></div>
+                                
+                                <!-- Gerenciamento de Módulos -->
+                                <div id="gerenciarModulos" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0"><i class="fas fa-plus me-2"></i>Módulos Disponíveis</h6>
+                                                </div>
+                                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                                    <div id="modulosDisponiveis">
+                                                        <div class="text-center text-muted py-3">
+                                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>
+                                                            Carregando módulos...
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0"><i class="fas fa-link me-2"></i>Módulos Vinculados</h6>
+                                                </div>
+                                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                                    <div id="modulosVinculados">
+                                                        <div class="text-center text-muted py-3">
+                                                            <i class="fas fa-unlink fa-2x mb-2"></i><br>
+                                                            Nenhum módulo vinculado
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Formulário de Pessoa -->
+
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Gerenciador principal da página
+        const AdminPessoas = {
+            currentTab: 'pessoas',
+            selectedPerson: null,
+            
+            init() {
+                this.bindEvents();
+                this.loadPessoas();
+            },
+            
+            bindEvents() {
+                // Eventos das abas
+                document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+                    tab.addEventListener('shown.bs.tab', (e) => {
+                        this.currentTab = e.target.getAttribute('data-bs-target').replace('#', '');
+                        this.onTabChange();
+                    });
+                });
+                
+                // Eventos da aba Pessoas
+                document.getElementById('btnBuscarPessoa').addEventListener('click', () => {
+                    this.loadPessoas();
+                });
+                
+                document.getElementById('buscaPessoa').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.loadPessoas();
+                    }
+                });
+                
+                document.getElementById('btnNovaPessoa').addEventListener('click', () => {
+                    this.openPessoaTab();
+                });
+                
+                // Eventos da aba Login
+                document.getElementById('btnBuscarPessoaLogin').addEventListener('click', () => {
+                    this.loadPessoasLogin();
+                });
+                
+                document.getElementById('buscaPessoaLogin').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.loadPessoasLogin();
+                    }
+                });
+                
+                document.getElementById('categoriaPessoaLogin').addEventListener('change', () => {
+                    this.loadPessoasLogin();
+                });
+                
+                document.getElementById('dadosLoginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveLoginData();
+                });
+                
+                // Eventos da aba Módulos
+                document.getElementById('btnBuscarPessoaModulo').addEventListener('click', () => {
+                    this.loadPessoasModulo();
+                });
+                
+                document.getElementById('buscaPessoaModulo').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.loadPessoasModulo();
+                    }
+                });
+                
+                document.getElementById('categoriaPessoaModulo').addEventListener('change', () => {
+                    this.loadPessoasModulo();
+                });
+            },
+            
+            onTabChange() {
+                switch(this.currentTab) {
+                    case 'pessoas':
+                        if (!document.getElementById('corpoTabelaPessoas').innerHTML.includes('Carregando')) {
+                            this.loadPessoas();
+                        }
+                        break;
+                    case 'login':
+                        this.resetLoginForm();
+                        break;
+                    case 'modulos':
+                        this.resetModulosForm();
+                        break;
+                }
+            },
+            
+            // Métodos da aba Pessoas
+            async loadPessoas() {
+                const busca = document.getElementById('buscaPessoa').value;
+                const categoria = document.getElementById('categoriaPessoa').value;
+                
+                try {
+                    const params = new URLSearchParams({
+                        termo: busca,
+                        categoria: categoria,
+                        limite: 20
+                    });
+                    
+                    const response = await fetch(`/api/pessoas/buscar?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.renderPessoasTable(data.pessoas);
+                    } else {
+                        this.showError('Erro ao carregar pessoas: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showError('Erro ao carregar pessoas');
+                }
+            },
+            
+            renderPessoasTable(pessoas) {
+                const tbody = document.getElementById('corpoTabelaPessoas');
+                
+                if (!pessoas || pessoas.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-2"></i><br>
+                                Nenhuma pessoa encontrada
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                pessoas.forEach(pessoa => {
+                    html += `
+                        <tr>
+                            <td>${pessoa.nome || ''}</td>
+                            <td>${pessoa.email || ''}</td>
+                            <td>${pessoa.telefone || ''}</td>
+                            <td>${this.formatCategoria(pessoa.categoria)}</td>
+                            <td>${pessoa.cnpj_cpf || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-1" onclick="AdminPessoas.editPessoaTab(${pessoa.id_pessoa})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="AdminPessoas.deletePessoa(${pessoa.id_pessoa}, '${pessoa.nome}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            },
+            
+            formatCategoria(categoria) {
+                if (!categoria) return '<span class="badge bg-light text-dark">Sem categoria</span>';
+                
+                // Se contém vírgula, são múltiplas categorias
+                if (categoria.includes(',')) {
+                    return '<span class="badge bg-dark">Várias</span>';
+                }
+                
+                // Mapeamento dos códigos numéricos para textos
+                const categorias = {
+                    '1': '<span class="badge bg-primary">Coordenador</span>',
+                    '2': '<span class="badge bg-success">Professor Orientador</span>',
+                    '3': '<span class="badge bg-info">Aluno/Estagiário</span>',
+                    '4': '<span class="badge bg-warning">Concedente/Local de Estágio</span>',
+                    '5': '<span class="badge bg-secondary">Supervisor</span>',
+                    '6': '<span class="badge bg-purple">Instituição/Curso</span>',
+                    '99': '<span class="badge bg-light text-dark">Usuário Geral</span>',
+                    // Manter compatibilidade com textos existentes
+                    'Coordenador': '<span class="badge bg-primary">Coordenador</span>',
+                    'Professor/Orientador': '<span class="badge bg-success">Professor Orientador</span>',
+                    'Aluno/Estagiário': '<span class="badge bg-info">Aluno/Estagiário</span>',
+                    'Concedente': '<span class="badge bg-warning">Concedente/Local de Estágio</span>',
+                    'Supervisor': '<span class="badge bg-secondary">Supervisor</span>',
+                    'Usuário Geral': '<span class="badge bg-light text-dark">Usuário Geral</span>'
+                };
+                
+                return categorias[categoria] || `<span class="badge bg-light text-dark">${categoria}</span>`;
+            },
+            
+
+            
+            async editPessoa(id) {
+                this.editPessoaTab(id);
+            },
+            
+            // Nova função para abrir cadastro em nova aba
+            openPessoaTab(pessoa = null) {
+                const baseUrl = window.location.origin;
+                const origem = encodeURIComponent('/admin/pessoas');
+                const url = pessoa ? `${baseUrl}/admin/pessoa/editar/${pessoa.id_pessoa}?origem=${origem}` : `${baseUrl}/admin/pessoa/novo?origem=${origem}`;
+                window.open(url, '_blank');
+            },
+            
+            // Nova função para editar pessoa em nova aba
+            editPessoaTab(id) {
+                const baseUrl = window.location.origin;
+                const origem = encodeURIComponent('/admin/pessoas');
+                const url = `${baseUrl}/admin/pessoa/editar/${id}?origem=${origem}`;
+                window.open(url, '_blank');
+            },
+            
+            deletePessoa(id, nome) {
+                if (confirm(`Tem certeza que deseja excluir a pessoa "${nome}"?`)) {
+                    // Implementar exclusão
+                    console.log('Excluir pessoa:', id);
+                }
+            },
+            
+            // Métodos da aba Login
+            async loadPessoasLogin() {
+                const busca = document.getElementById('buscaPessoaLogin').value;
+                const categoria = document.getElementById('categoriaPessoaLogin').value;
+                
+                try {
+                    const params = new URLSearchParams({
+                        termo: busca,
+                        categoria: categoria,
+                        limite: 20
+                    });
+                    
+                    const response = await fetch(`/api/pessoas/buscar?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.renderPessoasLoginTable(data.pessoas);
+                    } else {
+                        this.showError('Erro ao carregar pessoas: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showError('Erro ao carregar pessoas');
+                }
+            },
+            
+            renderPessoasLoginTable(pessoas) {
+                const tbody = document.getElementById('corpoTabelaPessoasLogin');
+                
+                if (!pessoas || pessoas.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-2"></i><br>
+                                Nenhuma pessoa encontrada
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                pessoas.forEach(pessoa => {
+                    const statusLogin = pessoa.login ? 
+                        `<span class="badge bg-success">Ativo</span>` : 
+                        `<span class="badge bg-secondary">Sem Login</span>`;
+                    
+                    html += `
+                        <tr>
+                            <td>${pessoa.nome || ''}</td>
+                            <td>${pessoa.email || ''}</td>
+                            <td>${this.formatCategoria(pessoa.categoria)}</td>
+                            <td>${statusLogin}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-1" onclick="AdminPessoas.gerenciarLogin(${pessoa.id_pessoa})">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            },
+            
+            gerenciarLogin(id) {
+                 // Implementar gerenciamento de login
+                 console.log('Gerenciar login para pessoa:', id);
+                 this.showNotification('Funcionalidade em desenvolvimento', 'info');
+             },
+            
+            async searchPessoaLogin(termo) {
+                if (termo.length < 2) {
+                    document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/pessoas/buscar?termo=${encodeURIComponent(termo)}&limite=10`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.pessoas.length > 0) {
+                        this.renderSearchResults(data.pessoas, 'resultadosBuscaPessoa', 'selectPessoaLogin');
+                    } else {
+                        document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Erro na busca:', error);
+                }
+            },
+            
+            selectPessoaLogin(id, nome) {
+                document.getElementById('buscaPessoaLogin').value = nome;
+                document.getElementById('pessoaLoginId').value = id;
+                document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                
+                this.loadPessoaLoginData(id);
+            },
+            
+            async loadPessoaLoginData(id) {
+                try {
+                    const response = await fetch(`/api/pessoas/${id}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const pessoa = data.pessoa;
+                        
+                        // Preencher dados da pessoa
+                        document.getElementById('nomeCompleto').value = pessoa.nome;
+                        document.getElementById('emailPessoa').value = pessoa.email;
+                        
+                        // Carregar dados de login se existirem
+                        if (pessoa.login) {
+                            document.getElementById('nivelAcesso').value = pessoa.login.nivelacesso;
+                            document.getElementById('statusLogin').value = pessoa.login.status;
+                        }
+                        
+                        // Mostrar informações da pessoa
+                        document.getElementById('infosPessoa').innerHTML = `
+                            <p><strong>Categoria:</strong> ${pessoa.categoria}</p>
+                            <p><strong>CPF/CNPJ:</strong> ${pessoa.cnpj_cpf}</p>
+                            <p><strong>Telefone:</strong> ${pessoa.telefone}</p>
+                            <p><strong>Data Cadastro:</strong> ${new Date(pessoa.dataCadastro).toLocaleDateString('pt-BR')}</p>
+                        `;
+                        
+                        document.getElementById('formLogin').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    this.showError('Erro ao carregar dados da pessoa');
+                }
+            },
+            
+            async saveLoginData() {
+                const pessoaId = document.getElementById('pessoaLoginId').value;
+                const nivelAcesso = document.getElementById('nivelAcesso').value;
+                const status = document.getElementById('statusLogin').value;
+                const senha = document.getElementById('senhaLogin').value;
+                
+                if (!pessoaId || !nivelAcesso || !status) {
+                    this.showError('Preencha todos os campos obrigatórios');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/criar-login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_pessoa: pessoaId,
+                            nivelacesso: nivelAcesso,
+                            status: status,
+                            senha: senha
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showSuccess('Dados de login salvos com sucesso!');
+                        document.getElementById('senhaLogin').value = '';
+                    } else {
+                        this.showError('Erro ao salvar dados: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showError('Erro ao salvar dados de login');
+                }
+            },
+            
+            resetLoginForm() {
+                document.getElementById('buscaPessoaLogin').value = '';
+                document.getElementById('pessoaLoginId').value = '';
+                document.getElementById('formLogin').style.display = 'none';
+                document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+            },
+            
+            // Métodos da aba Módulos
+            async loadPessoasModulo() {
+                const busca = document.getElementById('buscaPessoaModulo').value;
+                const categoria = document.getElementById('categoriaPessoaModulo').value;
+                
+                try {
+                    const params = new URLSearchParams({
+                        termo: busca,
+                        categoria: categoria,
+                        limite: 20
+                    });
+                    
+                    const response = await fetch(`/api/pessoas/buscar?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.renderPessoasModuloTable(data.pessoas);
+                    } else {
+                        this.showError('Erro ao carregar pessoas: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showError('Erro ao carregar pessoas');
+                }
+            },
+            
+            renderPessoasModuloTable(pessoas) {
+                const tbody = document.getElementById('corpoTabelaPessoasModulo');
+                
+                if (!pessoas || pessoas.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-2x mb-2"></i><br>
+                                Nenhuma pessoa encontrada
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                pessoas.forEach(pessoa => {
+                    const modulosCount = pessoa.modulos ? pessoa.modulos.length : 0;
+                    const modulosText = modulosCount > 0 ? 
+                        `<span class="badge bg-primary">${modulosCount} módulo(s)</span>` : 
+                        `<span class="badge bg-secondary">Nenhum</span>`;
+                    
+                    html += `
+                        <tr>
+                            <td>${pessoa.nome || ''}</td>
+                            <td>${pessoa.email || ''}</td>
+                            <td>${this.formatCategoria(pessoa.categoria)}</td>
+                            <td>${modulosText}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary me-1" onclick="AdminPessoas.gerenciarModulos(${pessoa.id_pessoa})">
+                                    <i class="fas fa-th-large"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML = html;
+            },
+            
+            gerenciarModulos(id) {
+                 // Implementar gerenciamento de módulos
+                 console.log('Gerenciar módulos para pessoa:', id);
+                 this.showNotification('Funcionalidade em desenvolvimento', 'info');
+             },
+            
+            async searchPessoaModulo(termo) {
+                if (termo.length < 2) {
+                    document.getElementById('resultadosBuscaPessoaModulo').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/pessoas/buscar?termo=${encodeURIComponent(termo)}&limite=10`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.pessoas.length > 0) {
+                        this.renderSearchResults(data.pessoas, 'resultadosBuscaPessoaModulo', 'selectPessoaModulo');
+                    } else {
+                        document.getElementById('resultadosBuscaPessoaModulo').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Erro na busca:', error);
+                }
+            },
+            
+            selectPessoaModulo(id, nome) {
+                document.getElementById('buscaPessoaModulo').value = nome;
+                document.getElementById('pessoaModuloId').value = id;
+                document.getElementById('resultadosBuscaPessoaModulo').style.display = 'none';
+                
+                this.loadModulosPessoa(id);
+            },
+            
+            async loadModulosPessoa(pessoaId) {
+                try {
+                    // Carregar módulos disponíveis
+                    const modulosResponse = await fetch('/admin/modulos');
+                    const modulosData = await modulosResponse.json();
+                    
+                    // Carregar módulos vinculados à pessoa
+                    // TODO: Implementar endpoint para buscar vínculos da pessoa
+                    
+                    if (modulosData.success) {
+                        this.renderModulosDisponiveis(modulosData.modulos);
+                        document.getElementById('gerenciarModulos').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar módulos:', error);
+                    this.showError('Erro ao carregar módulos');
+                }
+            },
+            
+            renderModulosDisponiveis(modulos) {
+                const container = document.getElementById('modulosDisponiveis');
+                
+                if (!modulos || modulos.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-th-large fa-2x mb-2"></i><br>
+                            Nenhum módulo disponível
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                modulos.forEach(modulo => {
+                    html += `
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div>
+                                <strong>${modulo.nome}</strong><br>
+                                <small class="text-muted">${modulo.descricao}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="AdminPessoas.vincularModulo(${modulo.id})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            vincularModulo(moduloId) {
+                const pessoaId = document.getElementById('pessoaModuloId').value;
+                console.log('Vincular módulo', moduloId, 'à pessoa', pessoaId);
+                // TODO: Implementar vinculação
+            },
+            
+            resetModulosForm() {
+                document.getElementById('buscaPessoaModulo').value = '';
+                document.getElementById('pessoaModuloId').value = '';
+                document.getElementById('gerenciarModulos').style.display = 'none';
+                document.getElementById('resultadosBuscaPessoaModulo').style.display = 'none';
+            },
+            
+            // Métodos auxiliares
+            renderSearchResults(pessoas, containerId, selectFunction) {
+                const container = document.getElementById(containerId);
+                
+                let html = '';
+                pessoas.forEach(pessoa => {
+                    html += `
+                        <div class="search-result-item" onclick="AdminPessoas.${selectFunction}(${pessoa.id_pessoa}, '${pessoa.nome}')">
+                            <strong>${pessoa.nome}</strong><br>
+                            <small class="text-muted">${pessoa.email} - ${pessoa.categoria}</small>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                container.style.display = 'block';
+            },
+            
+            showSuccess(message) {
+                this.showNotification(message, 'success');
+            },
+            
+            showError(message) {
+                this.showNotification(message, 'error');
+            },
+            
+            showNotification(message, type = 'info') {
+                // Criar elemento de notificação
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                // Adicionar ao body
+                document.body.appendChild(notification);
+                
+                // Remover automaticamente após 5 segundos
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        };
+        
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            AdminPessoas.init();
+        });
+        
+        // Fechar resultados de busca quando clicar fora
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                document.querySelectorAll('.search-results').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

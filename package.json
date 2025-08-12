@@ -1,7 +1,7 @@
 {
   "name": "gestao-estagio",
   "version": "1.0.0",
-  "description": "Sistema de gestão de planos de atividade para estagiários",
+  "description": "CoordenAI - Gestão Inteligente de planos de atividade para estagiários",
   "main": "server.js",
   "engines": {
     "node": ">=16.0.0",
@@ -33,6 +33,7 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "method-override": "^3.0.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.9.7",
     "node-fetch": "^2.7.0",

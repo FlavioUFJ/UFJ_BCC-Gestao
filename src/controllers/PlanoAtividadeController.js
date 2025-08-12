@@ -6,6 +6,7 @@
 const databaseConfig = require('../config/database');
 const { messages, enums } = require('../config');
 const Pessoa = require('../models/Pessoa');
+const puppeteer = require('puppeteer');
 
 class PlanoAtividadeController {
     constructor() {
@@ -19,8 +20,23 @@ class PlanoAtividadeController {
      */
     async index(req, res) {
         try {
-            const userId = req.session.user.id;
-            const userCategory = req.session.user.categoria;
+            // Verificar se o usuário está autenticado
+            if (!req.session.user) {
+                return res.status(401).json({ success: false, message: 'Usuário não autenticado' });
+            }
+            
+            const userId = req.session.user.id_pessoa;
+            const userNivelAcesso = req.session.user.nivelacesso;
+            
+            // Verificar se os dados do usuário estão completos
+            if (!userId || !userNivelAcesso) {
+                console.error('[PLANO-ATIVIDADE] Dados do usuário incompletos:', {
+                    userId,
+                    userNivelAcesso,
+                    sessionUser: req.session.user
+                });
+                return res.status(400).json({ success: false, message: 'Dados do usuário incompletos' });
+            }
             
             let query = `
                 SELECT 
@@ -63,18 +79,22 @@ class PlanoAtividadeController {
                 LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
             `;
             
-            // Filtrar por usuário baseado na categoria
-            if (userCategory === 'Estagiário') {
-                query += ` WHERE ce.id_pessoa_estagiario = ?`;
-            } else if (userCategory === 'Professor') {
-                query += ` WHERE ce.id_pessoa_orientador = ?`;
-            } else if (userCategory === 'Supervisor') {
-                query += ` WHERE ce.id_pessoa_supervisor = ?`;
+            const params = [];
+            
+            // Aplicar filtro baseado no nível de acesso
+            if (userNivelAcesso !== 'Administrador') {
+                // Para usuários não-administradores, mostrar apenas registros onde
+                // o ID da pessoa aparece em qualquer uma das 4 chaves estrangeiras:
+                // orientador, supervisor, estagiário ou concedente
+                query += ` WHERE (ce.id_pessoa_orientador = ? OR 
+                                 ce.id_pessoa_supervisor = ? OR 
+                                 ce.id_pessoa_estagiario = ? OR 
+                                 ce.id_pessoa_concedente = ?)`;
+                params.push(userId, userId, userId, userId);
             }
             
             query += ` ORDER BY pa_dataultimaatualizacao DESC`;
             
-            const params = ['Estagiário', 'Professor', 'Supervisor'].includes(userCategory) ? [userId] : [];
             const planos = await databaseConfig.all(query, params);
             
             if (req.xhr || req.headers.accept?.includes('application/json')) {
@@ -564,7 +584,8 @@ class PlanoAtividadeController {
                 });
             }
 
-            const dataAtual = new Date().toISOString();
+            // Formato correto para MySQL DATETIME
+            const dataAtual = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
             // Atualizar plano de atividade
             const sql = `
@@ -627,29 +648,52 @@ class PlanoAtividadeController {
     async gerarPDF(req, res) {
         try {
             const { id } = req.params;
+            console.log('[PDF-DEBUG] Iniciando geração de PDF para ID:', id);
             
             // Buscar dados completos do plano de atividade
-            const plano = await databaseConfig.get(`
-                SELECT 
-                    pa.*,
-                    ce.empresa,
-                    ce.endereco,
-                    ce.telefone,
-                    ce.data_inicial as campo_data_inicial,
-                    ce.data_final as campo_data_final,
-                    pe.nome as nome_estagiario,
-                    pe.email as email_estagiario,
-                    pe.telefone as telefone_estagiario,
-                    po.nome as nome_orientador,
-                    po.email as email_orientador,
-                    ps.nome as nome_supervisor,
-                    ps.email as email_supervisor
-                FROM campo_estagio_planoatividade pa
-                LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-                WHERE pa.id_planoatividade = ?
+            console.log('[PDF-DEBUG] Executando consulta SQL...');
+            const plano = await databaseConfig.get(`SELECT
+ce.id_campo_estagio as ce_id_campo_estagio,
+ce.tipo_estagio AS ce_tipo_estagio,
+ce.semestre_ano AS ce_semestre_ano,
+pe.nome AS nome_estagiario,
+po.nome AS nome_orientador,
+ps.nome AS nome_supervisor,
+pc.nome AS nome_concedente,
+ce.situacao AS ce_situacao,
+ce.data_inicio AS ce_data_inicio,
+ce.data_fim AS ce_data_fim,
+ce.cargahoraria AS ce_cargahoraria,
+ce.observacoes AS ce_observacoes,
+po.categoria AS po_categoria,
+pc.categoria AS pc_categoria,
+pe.categoria AS pe_categoria,
+ps.categoria AS ps_categoria,
+pa.id_planoatividade AS pa_id_planoatividade,
+pa.id_campo_estagio AS pa_id_campo_estagio,
+pa.situacao AS pa_situacao,
+pa.data_lancamento AS pa_data_lancamento,
+pa.data_fechamento AS pa_data_fechamento,
+pa.data_inicial AS pa_data_inicial,
+pa.data_final AS pa_data_final,
+pa.cargahoraria AS pa_cargahoraria,
+pa.atividades AS pa_atividades,
+pa.cronograma AS pa_cronograma,
+pa.objetivos AS pa_objetivos,
+pa.recursos AS pa_recursos,
+pa.autenticacao_estagiario AS pa_autenticacao_estagiario,
+pa.autenticacao_supervisor AS pa_autenticacao_supervisor,
+pa.autenticacao_orientador AS pa_autenticacao_orientador,
+pa.dataultimaatualizacao AS pa_dataultimaatualizacao
+
+FROM
+campo_estagio_planoatividade AS pa
+RIGHT OUTER JOIN campo_estagio AS ce ON pa.id_campo_estagio = ce.id_campo_estagio
+RIGHT OUTER JOIN pessoa AS pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+RIGHT OUTER JOIN pessoa AS po ON ce.id_pessoa_orientador = po.id_pessoa
+RIGHT OUTER JOIN pessoa AS ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+RIGHT OUTER JOIN pessoa AS pc ON ce.id_pessoa_concedente = pc.id_pessoa
+WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             `, [id]);
             
             if (!plano) {
@@ -662,16 +706,34 @@ class PlanoAtividadeController {
             // Renderizar template HTML para PDF
             const htmlContent = await this.renderPDFTemplate(plano);
             
+            // Gerar PDF usando Puppeteer
+            const browser = await puppeteer.launch({
+                headless: "new",
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            
+            const page = await browser.newPage();
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+            
+            const pdfBuffer = await page.pdf({
+                format: 'A4',
+                printBackground: true,
+                margin: {
+                    top: '20mm',
+                    right: '15mm',
+                    bottom: '20mm',
+                    left: '15mm'
+                }
+            });
+            
+            await browser.close();
+            
             // Configurar cabeçalhos para download do PDF
-            const filename = `plano_atividade_${plano.nome_estagiario?.replace(/\s+/g, '_') || 'documento'}_${new Date().toISOString().split('T')[0]}.pdf`;
+            const filename = `${plano.nome_estagiario?.replace(/\s+/g, '_') || 'documento'}_plano_atividade_${new Date().toISOString().split('T')[0]}.pdf`;
             
             res.setHeader('Content-Type', 'application/pdf');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-            
-            // Por enquanto, retornar o HTML que seria convertido em PDF
-            // TODO: Implementar conversão real para PDF usando puppeteer ou similar
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.send(htmlContent);
+            res.send(pdfBuffer);
             
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
@@ -688,9 +750,39 @@ class PlanoAtividadeController {
      * @returns {string} HTML template
      */
     async renderPDFTemplate(plano) {
-        const dataInicial = plano.pa_data_inicial ? new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR') : 'Não informado';
-        const dataFinal = plano.pa_data_final ? new Date(plano.pa_data_final).toLocaleDateString('pt-BR') : 'Não informado';
-        const dataLancamento = plano.pa_data_lancamento ? new Date(plano.pa_data_lancamento).toLocaleDateString('pt-BR') : 'Não informado';
+        // Função auxiliar para validar e formatar dados
+        const formatarDado = (valor, valorPadrao = 'Não informado') => {
+            if (valor === null || valor === undefined || valor === '' || valor === 'null') {
+                return valorPadrao;
+            }
+            return valor;
+        };
+        
+        // Função auxiliar para formatar datas
+        const formatarData = (data) => {
+            if (!data || data === null || data === undefined || data === '' || data === 'null') {
+                return 'Não informado';
+            }
+            try {
+                return new Date(data).toLocaleDateString('pt-BR');
+            } catch (error) {
+                return 'Não informado';
+            }
+        };
+        
+        const dataInicial = formatarData(plano.pa_data_inicial);
+        const dataFinal = formatarData(plano.pa_data_final);
+        const dataLancamento = formatarData(plano.pa_data_lancamento);
+        
+        // Período do estágio (usando datas do campo de estágio se disponíveis)
+        const periodoInicial = formatarData(plano.campo_data_inicial || plano.pa_data_inicial);
+        const periodoFinal = formatarData(plano.campo_data_final || plano.pa_data_final);
+        const periodoCompleto = (periodoInicial !== 'Não informado' && periodoFinal !== 'Não informado') 
+            ? `${periodoInicial} a ${periodoFinal}` 
+            : 'Não informado';
+        
+        // Carga horária (priorizar a do plano, depois a do campo de estágio)
+        const cargaHoraria = formatarDado(plano.pa_cargahoraria || plano.ce_cargahoraria);
         
         return `
         <!DOCTYPE html>
@@ -700,109 +792,258 @@ class PlanoAtividadeController {
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Plano de Atividade - ${plano.nome_estagiario}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-                .section { margin-bottom: 25px; }
-                .section-title { background: #f0f0f0; padding: 10px; font-weight: bold; border-left: 4px solid #007bff; }
-                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-                .info-item { margin-bottom: 10px; }
-                .info-label { font-weight: bold; }
-                .content-box { border: 1px solid #ddd; padding: 15px; margin: 10px 0; min-height: 100px; }
-                .signatures { margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; }
-                .signature-box { text-align: center; border-top: 1px solid #333; padding-top: 10px; }
-                @media print { body { margin: 0; } }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    line-height: 1.6; 
+                    color: #333;
+                }
+                .info-header {
+                    background: linear-gradient(135deg, #007bff, #0056b3);
+                    color: white;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 30px;
+                    text-align: center;
+                }
+                .info-header h1 {
+                    margin: 0 0 10px 0;
+                    font-size: 24px;
+                    font-weight: bold;
+                }
+                .info-header h2 {
+                    margin: 0 0 5px 0;
+                    font-size: 18px;
+                    font-weight: normal;
+                }
+                .info-header h3 {
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: normal;
+                }
+                .company-info {
+                    text-align: center;
+                    margin: 20px 0;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 5px;
+                }
+                .company-name {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                }
+                .period-info {
+                    font-style: italic;
+                    color: #666;
+                    margin-bottom: 15px;
+                }
+                .people-info {
+                    display: flex;
+                    justify-content: space-between;
+                    text-align: center;
+                }
+                .person-box {
+                    flex: 1;
+                    padding: 0 10px;
+                }
+                .person-name {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .person-role {
+                    font-style: italic;
+                    color: #666;
+                    font-size: 12px;
+                }
+                .form-section {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                .section-title {
+                    color: #495057;
+                    border-bottom: 2px solid #dee2e6;
+                    padding-bottom: 10px;
+                    margin-bottom: 20px;
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                .section-title i {
+                    margin-right: 8px;
+                    color: #007bff;
+                }
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 20px;
+                    margin-bottom: 15px;
+                }
+                .info-item {
+                    margin-bottom: 10px;
+                }
+                .info-label {
+                    font-weight: bold;
+                    color: #495057;
+                }
+                .content-box {
+                    border: 1px solid #dee2e6;
+                    padding: 15px;
+                    margin: 10px 0;
+                    min-height: 80px;
+                    background: white;
+                    border-radius: 4px;
+                    white-space: pre-wrap;
+                }
+                .signatures {
+                    margin-top: 60px;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: 40px;
+                    page-break-inside: avoid;
+                }
+                .signature-box {
+                    text-align: center;
+                    padding-top: 40px;
+                }
+                .signature-line {
+                    border-top: 1px solid #333;
+                    margin-bottom: 8px;
+                    height: 1px;
+                }
+                .signature-name {
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    font-size: 14px;
+                }
+                .signature-role {
+                    font-style: italic;
+                    color: #666;
+                    font-size: 12px;
+                }
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 11px;
+                    color: #666;
+                    border-top: 1px solid #dee2e6;
+                    padding-top: 15px;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .form-section { break-inside: avoid; }
+                    .signatures { break-inside: avoid; }
+                }
             </style>
         </head>
         <body>
-            <div class="header">
-                <h1>PLANO DE ATIVIDADE DE ESTÁGIO</h1>
+            <!-- Cabeçalho com informações do Plano de Atividade -->
+            <div class="info-header">
+                <h1><i class="fas fa-clipboard-list"></i> Plano de Atividade</h1>
                 <h2>Universidade Federal de Jataí - UFJ</h2>
                 <h3>Bacharelado em Ciência da Computação</h3>
             </div>
-            
-            <div class="section">
-                <div class="section-title">INFORMAÇÕES GERAIS</div>
+
+            <!-- Informações da Empresa e Período -->
+            <div class="company-info">
+                <div class="company-name">${plano.nome_concedente || 'Não informado'}</div>
+                <div class="person-role" style="margin-bottom: 10px; font-size: 14px;">Local do Estágio</div>
+                <div class="period-info">Período do estágio: ${dataInicial} - ${dataFinal}</div>
+                <div class="people-info">
+                    <div class="person-box">
+                        <div class="person-name">${plano.nome_estagiario || 'Não informado'}</div>
+                        <div class="person-role">Estagiário</div>
+                    </div>
+                    <div class="person-box">
+                        <div class="person-name">${plano.nome_orientador || 'Não informado'}</div>
+                        <div class="person-role">Orientador</div>
+                    </div>
+                    <div class="person-box">
+                        <div class="person-name">${plano.nome_supervisor || 'Não informado'}</div>
+                        <div class="person-role">Supervisor</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Informações Gerais -->
+            <div class="form-section">
+                <h5 class="section-title"><i class="fas fa-info-circle"></i>Informações Gerais</h5>
                 <div class="info-grid">
                     <div>
                         <div class="info-item">
-                            <span class="info-label">Estagiário:</span> ${plano.nome_estagiario || 'Não informado'}
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Email:</span> ${plano.email_estagiario || 'Não informado'}
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Empresa:</span> ${plano.nome_concedente || 'Não informado'}
-                        </div>
-                        <div class="info-item">
                             <span class="info-label">Situação:</span> ${plano.pa_situacao || 'Em edição'}
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Período do Estágio:</span> ${periodoCompleto}
                         </div>
                     </div>
                     <div>
                         <div class="info-item">
-                            <span class="info-label">Orientador:</span> ${plano.nome_orientador || 'Não informado'}
+                            <span class="info-label">Data de Lançamento:</span> ${dataLancamento}
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Supervisor:</span> ${plano.nome_supervisor || 'Não informado'}
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Período:</span> ${dataInicial} - ${dataFinal}
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Carga Horária:</span> ${plano.pa_cargahoraria || 'Não informado'} horas/semana
+                            <span class="info-label">Carga Horária:</span> ${cargaHoraria} horas/semana
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="section">
-                <div class="section-title">ATIVIDADES A DESENVOLVER</div>
+
+            <!-- Seção: Atividades a Desenvolver -->
+            <div class="form-section">
+                <h5 class="section-title"><i class="fas fa-tasks"></i>Atividades a Desenvolver</h5>
                 <div class="content-box">
-                    ${plano.pa_atividades ? plano.pa_atividades.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${formatarDado(plano.pa_atividades)}
                 </div>
             </div>
-            
-            <div class="section">
-                <div class="section-title">OBJETIVOS</div>
+
+            <!-- Seção: Objetivos -->
+            <div class="form-section">
+                <h5 class="section-title"><i class="fas fa-bullseye"></i>Objetivos</h5>
                 <div class="content-box">
-                    ${plano.pa_objetivos ? plano.pa_objetivos.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${formatarDado(plano.pa_objetivos)}
                 </div>
             </div>
-            
-            <div class="section">
-                <div class="section-title">CRONOGRAMA</div>
+
+            <!-- Seção: Cronograma -->
+            <div class="form-section">
+                <h5 class="section-title"><i class="fas fa-calendar-alt"></i>Cronograma</h5>
                 <div class="content-box">
-                    ${plano.pa_cronograma ? plano.pa_cronograma.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${formatarDado(plano.pa_cronograma)}
                 </div>
             </div>
-            
-            <div class="section">
-                <div class="section-title">RECURSOS NECESSÁRIOS</div>
+
+            <!-- Seção: Recursos Necessários -->
+            <div class="form-section">
+                <h5 class="section-title"><i class="fas fa-tools"></i>Recursos Necessários</h5>
                 <div class="content-box">
-                    ${plano.pa_recursos ? plano.pa_recursos.replace(/\n/g, '<br>') : 'Não informado'}
+                    ${formatarDado(plano.pa_recursos)}
                 </div>
             </div>
-            
+
+            <!-- Assinaturas -->
             <div class="signatures">
                 <div class="signature-box">
-                    <div>_________________________________</div>
-                    <div><strong>Estagiário</strong></div>
-                    <div>${plano.nome_estagiario || 'Não informado'}</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">${plano.nome_estagiario || 'Não informado'}</div>
+                    <div class="signature-role">Estagiário</div>
                 </div>
                 <div class="signature-box">
-                    <div>_________________________________</div>
-                    <div><strong>Orientador</strong></div>
-                    <div>${plano.nome_orientador || 'Não informado'}</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">${plano.nome_orientador || 'Não informado'}</div>
+                    <div class="signature-role">Orientador</div>
                 </div>
                 <div class="signature-box">
-                    <div>_________________________________</div>
-                    <div><strong>Supervisor</strong></div>
-                    <div>${plano.nome_supervisor || 'Não informado'}</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">${plano.nome_supervisor || 'Não informado'}</div>
+                    <div class="signature-role">Supervisor</div>
                 </div>
             </div>
-            
-            <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+
+            <!-- Rodapé -->
+            <div class="footer">
                 <p>Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
-                <p>Sistema de Gestão de Estágios - UFJ BCC</p>
+                <p>CoordenAI - Gestão Inteligente - UFJ BCC</p>
             </div>
         </body>
         </html>
@@ -884,6 +1125,135 @@ class PlanoAtividadeController {
         `;
 
         return await databaseConfig.get(sql, [id]);
+    }
+
+    /**
+     * Anexar documento PDF ao plano de atividade
+     */
+    async anexarDocumento(req, res) {
+        try {
+            const multer = require('multer');
+            const path = require('path');
+            const fs = require('fs');
+            
+            // Configurar multer para upload de arquivos
+            const storage = multer.diskStorage({
+                destination: function (req, file, cb) {
+                    const uploadDir = path.join(__dirname, '../../public/uploads/planos-atividade');
+                    
+                    // Criar diretório se não existir
+                    if (!fs.existsSync(uploadDir)) {
+                        fs.mkdirSync(uploadDir, { recursive: true });
+                    }
+                    
+                    cb(null, uploadDir);
+                },
+                filename: function (req, file, cb) {
+                    // Gerar nome único para o arquivo
+                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                    const extension = path.extname(file.originalname);
+                    cb(null, 'plano-' + uniqueSuffix + extension);
+                }
+            });
+            
+            const upload = multer({
+                storage: storage,
+                limits: {
+                    fileSize: 10 * 1024 * 1024 // 10MB
+                },
+                fileFilter: function (req, file, cb) {
+                    if (file.mimetype === 'application/pdf') {
+                        cb(null, true);
+                    } else {
+                        cb(new Error('Apenas arquivos PDF são permitidos'));
+                    }
+                }
+            }).single('documento_pdf');
+            
+            // Processar upload
+            upload(req, res, async (err) => {
+                if (err) {
+                    console.error('Erro no upload:', err);
+                    return res.status(400).json({
+                        success: false,
+                        message: err.message
+                    });
+                }
+                
+                if (!req.file) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Nenhum arquivo foi enviado'
+                    });
+                }
+                
+                const { plano_id } = req.body;
+                
+                if (!plano_id) {
+                    // Remover arquivo se não há plano_id
+                    fs.unlinkSync(req.file.path);
+                    return res.status(400).json({
+                        success: false,
+                        message: 'ID do plano de atividade é obrigatório'
+                    });
+                }
+                
+                try {
+                    // Verificar se o plano existe
+                    const plano = await databaseConfig.get(
+                        'SELECT id FROM campo_estagio_planoatividade WHERE id = ?',
+                        [plano_id]
+                    );
+                    
+                    if (!plano) {
+                        // Remover arquivo se plano não existe
+                        fs.unlinkSync(req.file.path);
+                        return res.status(404).json({
+                            success: false,
+                            message: 'Plano de atividade não encontrado'
+                        });
+                    }
+                    
+                    // Atualizar o plano com o caminho do documento
+                    const caminhoRelativo = `/uploads/planos-atividade/${req.file.filename}`;
+                    
+                    await databaseConfig.run(
+                        'UPDATE campo_estagio_planoatividade SET url_planoassinado = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                        [caminhoRelativo, plano_id]
+                    );
+                    
+                    console.log('Documento anexado com sucesso:', {
+                        plano_id: plano_id,
+                        arquivo: req.file.filename,
+                        caminho: caminhoRelativo
+                    });
+                    
+                    res.json({
+                        success: true,
+                        message: 'Documento PDF anexado com sucesso!',
+                        arquivo: req.file.filename,
+                        caminho: caminhoRelativo
+                    });
+                    
+                } catch (dbError) {
+                    console.error('Erro no banco de dados:', dbError);
+                    // Remover arquivo em caso de erro
+                    fs.unlinkSync(req.file.path);
+                    
+                    res.status(500).json({
+                        success: false,
+                        message: 'Erro ao salvar informações no banco de dados'
+                    });
+                }
+            });
+            
+        } catch (error) {
+            console.error('Erro ao anexar documento:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor: ' + error.message
+            });
+        }
     }
 }
 

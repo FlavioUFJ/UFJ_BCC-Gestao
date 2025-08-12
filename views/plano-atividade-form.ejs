@@ -74,7 +74,7 @@
         </div>
 
         <!-- Formulário -->
-        <form id="formPlanoAtividade" method="POST" action="<%= plano ? `/planos-atividade/${plano.id_campo_estagio_planoatividade}` : '/planos-atividade' %>">
+        <form id="formPlanoAtividade" method="POST" action="<%= plano ? `/planos-atividade/${plano.pa_id_planoatividade}` : '/planos-atividade' %>">
             <% if (plano) { %>
                 <input type="hidden" name="_method" value="PUT">
             <% } %>
@@ -82,8 +82,16 @@
 
             <!-- Seção: Informações Gerais -->
             <div class="form-section">
-                <div class="mb-3">
-                    <h5 class="section-title mb-0"><i class="fas fa-info-circle me-2"></i>Informações Gerais</h5>
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <h5 class="section-title mb-0"><i class="fas fa-info-circle me-2"></i>Dados do Plano</h5>
+                    <div>
+                        <button type="button" class="btn btn-secondary me-2" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Atualizar
+                        </button>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
@@ -178,7 +186,7 @@
                 </div>
                 <div>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i><%= plano ? 'Atualizar' : 'Salvar' %> Plano
+                        <i class="fas fa-save me-2"></i>Salvar
                     </button>
                 </div>
             </div>
@@ -365,13 +373,15 @@
                 return false;
             }
 
-            // Validar se o campo de estágio foi informado
+            // Validar se o campo de estágio foi informado (apenas para criação)
+            <% if (!plano) { %>
             const campoEstagioId = document.querySelector('input[name="id_campo_estagio"]').value;
             if (!campoEstagioId) {
                 e.preventDefault();
                 alert('É necessário selecionar um Campo de Estágio antes de criar o Plano de Atividade.');
                 return false;
             }
+            <% } %>
 
 
         });

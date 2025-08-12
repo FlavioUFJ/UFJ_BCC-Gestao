@@ -28,7 +28,6 @@
                     <form action="/pessoas/profile" method="POST" id="profileForm">
                         <input type="hidden" name="_method" value="PUT">
                         <input type="hidden" name="returnUrl" value="<%= returnUrl %>">
-                        <input type="hidden" name="tipo" value="<%= pessoa.tipo %>">
                         <input type="hidden" name="categoria" value="<%= pessoa.categoria %>">
                         
                         <div class="row">
@@ -78,9 +77,12 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="tipo" class="form-label">Tipo</label>
-                                    <input type="text" class="form-control" id="tipo" 
-                                           value="<%= pessoa.tipoTexto || '' %>" readonly>
+                                    <label for="tipo" class="form-label">Pessoa do Tipo:</label>
+                                    <select class="form-control" id="tipo" name="tipo" required>
+                                        <option value="F" <%= pessoa.tipo === 'F' ? 'selected' : '' %>>Física</option>
+                                        <option value="J" <%= pessoa.tipo === 'J' ? 'selected' : '' %>>Jurídica</option>
+                                        <option value="N" <%= pessoa.tipo === 'N' ? 'selected' : '' %>>Não informado</option>
+                                    </select>
                                 </div>
                                 
                                 <div class="mb-3">

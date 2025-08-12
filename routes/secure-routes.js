@@ -120,6 +120,103 @@ router.get('/rotinas-seguras', requireAuth, async (req, res) => {
 });
 
 /**
+ * Rota para buscar pessoas
+ * Permite acesso a usuários autenticados para preenchimento de formulários
+ */
+router.get('/pessoas/buscar', requireAuth, async (req, res) => {
+    console.log('=== ROTA /pessoas/buscar CHAMADA ===');
+    const { termo, categoria, pagina = 1, limite = 25 } = req.query;
+    console.log('DEBUG - Parâmetros recebidos:', { termo, categoria, pagina, limite });
+    console.log('DEBUG - URL completa:', req.originalUrl);
+    console.log('DEBUG - Method:', req.method);
+    
+    let whereClause = '';
+    let params = [];
+    
+    if (termo && termo.trim() !== '') {
+        // Se há termo de busca
+        if (categoria && categoria !== 'todos') {
+            // Verificar se há múltiplas categorias separadas por vírgula
+            const categorias = categoria.split(',').map(c => c.trim()).filter(c => c);
+            if (categorias.length > 1) {
+                // Para múltiplas categorias, usar LIKE para cada uma
+                const categoriaConditions = categorias.map(() => "(categoria = ? OR categoria LIKE ? OR categoria LIKE ? OR categoria LIKE ?)").join(' OR ');
+                whereClause = `WHERE (${categoriaConditions}) AND (nome LIKE ? OR email LIKE ?)`;
+                const categoriaParams = [];
+                categorias.forEach(cat => {
+                    categoriaParams.push(cat, `${cat},%`, `%,${cat},%`, `%,${cat}`);
+                });
+                params = [...categoriaParams, `%${termo}%`, `%${termo}%`];
+            } else {
+                // Para uma categoria, usar condições para verificar se contém a categoria
+                whereClause = 'WHERE (categoria = ? OR categoria LIKE ? OR categoria LIKE ? OR categoria LIKE ?) AND (nome LIKE ? OR email LIKE ?)';
+                params = [categoria, `${categoria},%`, `%,${categoria},%`, `%,${categoria}`, `%${termo}%`, `%${termo}%`];
+            }
+        } else {
+            whereClause = 'WHERE nome LIKE ? OR email LIKE ?';
+            params = [`%${termo}%`, `%${termo}%`];
+        }
+    } else {
+        // Se não há termo de busca, retornar todas as pessoas
+        if (categoria && categoria !== 'todos') {
+            // Verificar se há múltiplas categorias separadas por vírgula
+            const categorias = categoria.split(',').map(c => c.trim()).filter(c => c);
+            if (categorias.length > 1) {
+                // Para múltiplas categorias, usar LIKE para cada uma
+                const categoriaConditions = categorias.map(() => "(categoria = ? OR categoria LIKE ? OR categoria LIKE ? OR categoria LIKE ?)").join(' OR ');
+                whereClause = `WHERE (${categoriaConditions})`;
+                const categoriaParams = [];
+                categorias.forEach(cat => {
+                    categoriaParams.push(cat, `${cat},%`, `%,${cat},%`, `%,${cat}`);
+                });
+                params = categoriaParams;
+            } else {
+                // Para uma categoria, usar condições para verificar se contém a categoria
+                whereClause = 'WHERE (categoria = ? OR categoria LIKE ? OR categoria LIKE ? OR categoria LIKE ?)';
+                params = [categoria, `${categoria},%`, `%,${categoria},%`, `%,${categoria}`];
+            }
+        } else {
+            whereClause = '';
+            params = [];
+        }
+    }
+    
+    // Primeiro, contar o total de registros
+    const countSql = `SELECT COUNT(*) as total FROM pessoa ${whereClause}`;
+    console.log('DEBUG - SQL count:', countSql);
+    
+    const databaseConfig = require('../src/config/database');
+    const db = databaseConfig;
+    
+    try {
+        const countResult = await db.get(countSql, params);
+        const total = countResult.total;
+        const offset = (parseInt(pagina) - 1) * parseInt(limite);
+        
+        // Buscar os registros com paginação
+        const sql = `SELECT id_pessoa, nome, email, tipo, telefone, cnpj_cpf, categoria FROM pessoa ${whereClause} ORDER BY nome LIMIT ? OFFSET ?`;
+        const finalParams = [...params, parseInt(limite), offset];
+        
+        console.log('DEBUG - SQL gerado:', sql);
+        console.log('DEBUG - Parâmetros SQL:', finalParams);
+        
+        const pessoas = await db.all(sql, finalParams);
+        
+        console.log('DEBUG - Pessoas encontradas:', pessoas.length, 'de', total);
+        res.json({ 
+            success: true, 
+            pessoas: pessoas,
+            total: total,
+            pagina: parseInt(pagina),
+            limite: parseInt(limite)
+        });
+    } catch (err) {
+        console.error('Erro ao buscar pessoas:', err);
+        return res.json({ success: false, message: 'Erro ao buscar pessoas' });
+    }
+});
+
+/**
  * Rota para buscar dados de uma pessoa específica
  * Demonstra controle de acesso em consultas individuais
  */
@@ -594,7 +691,7 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
         
         res.json({ 
             success: true, 
-            message: 'Campo de estágio cadastrado com sucesso!',
+            message: 'Campo de estágio salvo com sucesso!',
             id: result.id
         });
 
@@ -726,85 +823,22 @@ router.get('/usuario/nivel-acesso', requireAuth, async (req, res) => {
     }
 });
 
+
+
 /**
- * Rota para buscar pessoas
- * Permite acesso a usuários autenticados para preenchimento de formulários
+ * Rota para gerar PDF do Campo de Estágio
  */
-router.get('/pessoas/buscar', requireAuth, async (req, res) => {
-    const { termo, categoria, pagina = 1, limite = 25 } = req.query;
-    console.log('DEBUG - Parâmetros recebidos:', { termo, categoria, pagina, limite });
-    
-    let whereClause = '';
-    let params = [];
-    
-    if (termo && termo.trim() !== '') {
-        // Se há termo de busca
-        if (categoria && categoria !== 'todos') {
-            // Verificar se há múltiplas categorias separadas por vírgula
-            const categorias = categoria.split(',').map(c => c.trim()).filter(c => c);
-            if (categorias.length > 1) {
-                const placeholders = categorias.map(() => '?').join(',');
-                whereClause = `WHERE categoria IN (${placeholders}) AND (nome LIKE ? OR email LIKE ?)`;
-                params = [...categorias, `%${termo}%`, `%${termo}%`];
-            } else {
-                whereClause = 'WHERE categoria = ? AND (nome LIKE ? OR email LIKE ?)';
-                params = [categoria, `%${termo}%`, `%${termo}%`];
-            }
-        } else {
-            whereClause = 'WHERE nome LIKE ? OR email LIKE ?';
-            params = [`%${termo}%`, `%${termo}%`];
-        }
-    } else {
-        // Se não há termo de busca, retornar todas as pessoas
-        if (categoria && categoria !== 'todos') {
-            // Verificar se há múltiplas categorias separadas por vírgula
-            const categorias = categoria.split(',').map(c => c.trim()).filter(c => c);
-            if (categorias.length > 1) {
-                const placeholders = categorias.map(() => '?').join(',');
-                whereClause = `WHERE categoria IN (${placeholders})`;
-                params = categorias;
-            } else {
-                whereClause = 'WHERE categoria = ?';
-                params = [categoria];
-            }
-        } else {
-            whereClause = '';
-            params = [];
-        }
-    }
-    
-    // Primeiro, contar o total de registros
-    const countSql = `SELECT COUNT(*) as total FROM pessoa ${whereClause}`;
-    console.log('DEBUG - SQL count:', countSql);
-    
-    const databaseConfig = require('../src/config/database');
-    const db = databaseConfig;
-    
+router.get('/estagios/campo/:id/pdf', requireAuth, async (req, res) => {
     try {
-        const countResult = await db.get(countSql, params);
-        const total = countResult.total;
-        const offset = (parseInt(pagina) - 1) * parseInt(limite);
-        
-        // Buscar os registros com paginação
-        const sql = `SELECT id_pessoa, nome, email, tipo, telefone, cnpj_cpf, categoria FROM pessoa ${whereClause} ORDER BY nome LIMIT ? OFFSET ?`;
-        const finalParams = [...params, parseInt(limite), offset];
-        
-        console.log('DEBUG - SQL gerado:', sql);
-        console.log('DEBUG - Parâmetros SQL:', finalParams);
-        
-        const pessoas = await db.all(sql, finalParams);
-        
-        console.log('DEBUG - Pessoas encontradas:', pessoas.length, 'de', total);
-        res.json({ 
-            success: true, 
-            pessoas: pessoas,
-            total: total,
-            pagina: parseInt(pagina),
-            limite: parseInt(limite)
+        const CampoEstagioController = require('../src/controllers/CampoEstagioController');
+        const controller = new CampoEstagioController();
+        await controller.gerarPDF(req, res);
+    } catch (error) {
+        console.error('Erro ao gerar PDF do campo de estágio:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor'
         });
-    } catch (err) {
-        console.error('Erro ao buscar pessoas:', err);
-        return res.json({ success: false, message: 'Erro ao buscar pessoas' });
     }
 });
 

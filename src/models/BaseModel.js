@@ -316,6 +316,10 @@ class BaseModel {
                 if (rules.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
                     errors.push(`${field} deve ser um email válido`);
                 }
+                
+                if (rules.enum && !rules.enum.includes(value)) {
+                    errors.push(`${field} deve ser um dos valores: ${rules.enum.join(', ')}`);
+                }
             }
         }
         

@@ -13,7 +13,7 @@ const PESSOA_RELATIONS = {
     'pessoaJuridica': ['id_pessoa'],
     // 'campo_estagio': removido - Campo de Estágio
     'pessoa_login': ['id_pessoa'],
-    'usuario_modulos': ['id_pessoa']
+    'pessoa_modulos': ['id_pessoa']
     // 'campo_estagio_relatorio': removido - Campo de Estágio
     // 'campo_estagio_planoatividade': removido - Campo de Estágio
 };

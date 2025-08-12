@@ -50,6 +50,7 @@ router.use('/auth', authRoutes);
 // Rotas de recursos (protegidas)
 router.use('/estagios', estagiosRoutes);
 router.use('/pessoas', pessoasRoutes);
+// router.use('/secure/pessoas', pessoasRoutes); // Removido - conflitava com rotas em secure-routes.js
 router.use('/parametro', parametroRoutes);
 router.use('/admin/parametro', parametroRoutes);
 router.use('/planos-atividade', planosAtividadeRoutes);
@@ -127,6 +128,96 @@ router.get('/admin/rotinas', requireAuth, (req, res) => {
         origem: req.query.origem || '/dashboard'
     });
 });
+
+// Rota para gerenciamento de pessoas (apenas admin)
+router.get('/admin/pessoas', requireAuth, (req, res) => {
+    // Verificar se é admin
+    if (req.session.user.nivelacesso !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acesso negado'
+        });
+    }
+    
+    res.render('admin-pessoas', {
+        title: 'Gerenciamento de Pessoas',
+        user: req.session.user,
+        currentPage: 'admin-pessoas',
+        origem: req.query.origem || '/dashboard'
+    });
+});
+
+// Rota para nova pessoa (apenas admin)
+router.get('/admin/pessoa/novo', requireAuth, (req, res) => {
+    // Verificar se é admin
+    if (req.session.user.nivelacesso !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acesso negado'
+        });
+    }
+    
+    res.render('admin-pessoa-form', {
+        title: 'Nova Pessoa',
+        user: req.session.user,
+        currentPage: 'admin-pessoas',
+        pessoa: null,
+        isEdit: false,
+        origem: req.query.origem || '/admin/pessoas'
+    });
+});
+
+// Rota para editar pessoa (apenas admin)
+router.get('/admin/pessoa/editar/:id', requireAuth, async (req, res) => {
+    // Verificar se é admin
+    if (req.session.user.nivelacesso !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acesso negado'
+        });
+    }
+    
+    try {
+        const PessoaController = require('../controllers/PessoaController');
+        const pessoaController = new PessoaController();
+        
+        // Buscar dados da pessoa
+        const mockReq = { 
+            params: { id: req.params.id },
+            headers: { accept: 'application/json' },
+            xhr: true
+        };
+        const mockRes = {
+            json: (data) => {
+                if (data.success) {
+                    res.render('admin-pessoa-form', {
+                        title: 'Editar Pessoa',
+                        user: req.session.user,
+                        currentPage: 'admin-pessoas',
+                        pessoa: data.data,
+                        isEdit: true,
+                        origem: req.query.origem || '/admin/pessoas'
+                    });
+                } else {
+                    res.status(404).render('error', {
+                        title: 'Pessoa não encontrada',
+                        message: 'A pessoa solicitada não foi encontrada.',
+                        user: req.session.user
+                    });
+                }
+            }
+        };
+        
+        await pessoaController.show(mockReq, mockRes);
+     } catch (error) {
+         console.error('Erro ao carregar pessoa:', error);
+         res.status(500).render('error', {
+             title: 'Erro interno',
+             message: 'Erro ao carregar dados da pessoa.',
+             user: req.session.user
+         });
+     }
+ });
 
 // ===== ROTAS DE API =====
 
@@ -259,18 +350,10 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
         }
         
         // Filtro por categoria (suporta múltiplas categorias separadas por vírgula)
-        if (categoria && categoria !== 'todos') {
-            if (categoria.includes(',')) {
-                // Múltiplas categorias
-                const categorias = categoria.split(',').map(c => c.trim());
-                const placeholders = categorias.map(() => '?').join(',');
-                whereClause += ` AND p.categoria IN (${placeholders})`;
-                params.push(...categorias);
-            } else {
-                // Categoria única
-                whereClause += ' AND p.categoria = ?';
-                params.push(categoria);
-            }
+        if (categoria && categoria !== 'todos' && categoria.trim() !== '') {
+            // Como pessoas podem ter múltiplas categorias (ex: "1,3,5"), usar LIKE para buscar
+            whereClause += ' AND p.categoria LIKE ?';
+            params.push(`%${categoria.trim()}%`);
         }
         
         // Contar total de registros

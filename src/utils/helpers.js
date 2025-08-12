@@ -507,7 +507,27 @@ class Helpers {
             '99': 'Usuário Geral'
         };
         
-        return categorias[String(categoria)] || 'Não informado';
+        // Se categoria está vazia ou null, retornar "Não informado"
+        if (!categoria || categoria === '' || categoria === null || categoria === undefined) {
+            return 'Não informado';
+        }
+        
+        // Converter para string e verificar se contém vírgulas (categorias múltiplas)
+        const categoriaStr = String(categoria).trim();
+        
+        if (categoriaStr.includes(',')) {
+            // Categorias múltiplas - dividir por vírgula e mapear cada uma
+            const categoriasArray = categoriaStr.split(',').map(cat => cat.trim());
+            const categoriasTexto = categoriasArray
+                .map(cat => categorias[cat])
+                .filter(texto => texto) // Remove valores undefined
+                .join(', ');
+            
+            return categoriasTexto || 'Não informado';
+        } else {
+            // Categoria única
+            return categorias[categoriaStr] || 'Não informado';
+        }
     }
 
     /**

@@ -130,6 +130,20 @@ class PessoaController {
             if (dadosPessoa.cnpj_cpf) {
                 dadosPessoa.cnpj_cpf = dadosPessoa.cnpj_cpf.replace(/\D/g, '');
             }
+
+            // Mapear valores do tipo para os códigos do banco de dados
+            if (dadosPessoa.tipo) {
+                const tipoMap = {
+                    'F': 'F',
+                    'J': 'J', 
+                    'N': 'N'
+                };
+                
+                // Se o valor já é um código válido, manter
+                if (tipoMap[dadosPessoa.tipo]) {
+                    dadosPessoa.tipo = tipoMap[dadosPessoa.tipo];
+                }
+            }
             
             // Validar dados obrigatórios
             const camposObrigatorios = ['nome', 'email', 'nivelacesso'];
@@ -289,6 +303,11 @@ class PessoaController {
             const { id } = req.params;
             const dadosPessoa = req.body;
             const user = req.session.user;
+            
+            console.log('=== DEBUG UPDATE PESSOA ===');
+            console.log('ID da pessoa:', id);
+            console.log('Dados recebidos:', JSON.stringify(dadosPessoa, null, 2));
+            console.log('Usuário logado:', user ? user.id_pessoa : 'não logado');
 
             // Limpar máscaras de formatação antes de salvar
             if (dadosPessoa.telefone) {
@@ -299,6 +318,20 @@ class PessoaController {
                 dadosPessoa.cnpj_cpf = dadosPessoa.cnpj_cpf.replace(/\D/g, '');
             }
 
+            // Mapear valores do tipo para os códigos do banco de dados
+            if (dadosPessoa.tipo) {
+                const tipoMap = {
+                    'F': 'F',
+                    'J': 'J', 
+                    'N': 'N'
+                };
+                
+                // Se o valor já é um código válido, manter
+                if (tipoMap[dadosPessoa.tipo]) {
+                    dadosPessoa.tipo = tipoMap[dadosPessoa.tipo];
+                }
+            }
+
             // Verificar permissão de edição
             if (user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR && 
                 user.id_pessoa !== parseInt(id)) {
@@ -306,7 +339,9 @@ class PessoaController {
             }
 
             // Verificar se pessoa existe
+            console.log('Verificando se pessoa existe...');
             const pessoaExistente = await this.pessoaModel.findById(id);
+            console.log('Pessoa existente:', pessoaExistente ? 'encontrada' : 'não encontrada');
             if (!pessoaExistente) {
                 throw new Error('Pessoa não encontrada');
             }
@@ -320,15 +355,36 @@ class PessoaController {
             }
 
             // Atualizar pessoa
+            console.log('Iniciando atualização da pessoa...');
+            console.log('Dados filtrados para atualização:', dadosPessoa);
             const pessoaAtualizada = await this.pessoaModel.update(id, dadosPessoa);
+            console.log('Pessoa atualizada com sucesso:', pessoaAtualizada ? 'sim' : 'não');
 
-            // Para requisições AJAX
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            // Debug headers para verificar detecção AJAX
+            console.log('=== DEBUG HEADERS ===');
+            console.log('req.xhr:', req.xhr);
+            console.log('accept header:', req.headers.accept);
+            console.log('content-type header:', req.headers['content-type']);
+            console.log('all headers:', req.headers);
+            
+            // Para requisições AJAX (incluindo fetch)
+            const isAjax = req.xhr || 
+                          req.headers.accept?.indexOf('json') > -1 || 
+                          req.headers['content-type']?.indexOf('json') > -1 ||
+                          req.headers['x-requested-with'] === 'XMLHttpRequest';
+            
+            console.log('É requisição AJAX?', isAjax);
+            
+            if (isAjax) {
+                console.log('Retornando JSON response');
                 return res.json({
                     success: true,
-                    data: pessoaAtualizada
+                    data: pessoaAtualizada,
+                    message: 'Pessoa atualizada com sucesso!'
                 });
             }
+            
+            console.log('Fazendo redirecionamento...');
 
             // Verificar se é atualização de perfil (quando vem da rota /pessoas/profile)
             const isProfileUpdate = req.originalUrl.includes('/profile') || req.path.includes('/profile');
@@ -346,8 +402,8 @@ class PessoaController {
             
             const errorMessage = error.message || 'Erro ao atualizar pessoa';
             
-            // Para requisições AJAX
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            // Para requisições AJAX (incluindo fetch)
+            if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['content-type']?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
                 const status = error.message.includes('não encontrada') ? 404 : 
                               error.message.includes('negado') ? 403 : 400;
                 

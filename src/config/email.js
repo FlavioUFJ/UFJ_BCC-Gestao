@@ -195,7 +195,7 @@ class EmailConfig {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2 style="color: #333;">Recuperação de Senha</h2>
                 <p>Olá, <strong>${nome}</strong>!</p>
-                <p>Você solicitou a recuperação de sua senha no Sistema de Gestão de Estágios.</p>
+                <p>Você solicitou a recuperação de sua senha no CoordenAI - Gestão Inteligente.</p>
                 <p>Clique no link abaixo para redefinir sua senha:</p>
                 <p style="text-align: center; margin: 30px 0;">
                     <a href="${linkRecuperacao}" 

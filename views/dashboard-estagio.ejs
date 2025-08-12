@@ -50,28 +50,28 @@
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-primary text-white">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-building fa-2x me-3"></i>
-                            <div>
-                                <h5 class="mb-0">Campo de Estágio</h5>
-                                <small class="opacity-75">Gestão de campos de estágio</small>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <% if (camposEstagio && camposEstagio.length > 0) { %>
-                                <span class="badge bg-light text-dark" id="contadorCampoEstagio">1/<%= camposEstagio.length %></span>
-                            <% } else { %>
-                                <span class="badge bg-light text-dark" id="contadorCampoEstagio">0/0</span>
-                            <% } %>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-building fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">Campo de Estágio</h5>
                         </div>
                     </div>
                 </div>
                 <div class="card-body" id="cardCampoEstagio">
                     <% if (camposEstagio && camposEstagio.length > 0) { %>
                         <div class="mb-3" id="campoEstagioContent">
-                            <!-- Primeira linha: Concedente em negrito -->
-                            <p class="mb-2"><strong id="concedenteAtual"><%= camposEstagio[0].nome_concedente || 'N/A' %></strong></p>
+                            <!-- Primeira linha: Concedente e Situação -->
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong id="concedenteAtual"><%= camposEstagio[0].nome_concedente || 'N/A' %></strong>
+                                <% if (camposEstagio && camposEstagio.length > 0) { %>
+                                    <span class="badge" style="background-color: #ffc107; color: #000; font-weight: bold;" id="situacaoAtual">
+                                        <%= camposEstagio[0].situacao || 'N/A' %>
+                                    </span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary" id="situacaoAtual">N/A</span>
+                                <% } %>
+                            </div>
+                            <p class="mb-2 text-muted"><small>Local do Estágio</small></p>
                             
                             <div class="row mb-2">
                                 <div class="col-4">
@@ -80,15 +80,22 @@
                                 <div class="col-4">
                                     <strong>Fim:</strong> <span id="fimAtual"><%= camposEstagio[0].ce_data_fim ? new Date(camposEstagio[0].ce_data_fim).toLocaleDateString('pt-BR') : 'N/A' %></span>
                                 </div>
-                                <div class="col-4 text-end">
-                                    <span style="color: #ffc107; font-weight: bold;" id="situacaoAtual">
-                                        <%= camposEstagio[0].ce_situacao || 'N/A' %>
-                                    </span>
+                                <div class="col-4">
+                                    <strong>CH:</strong> <%= camposEstagio[0].cargahoraria || 'N/A' %>h
                                 </div>
                             </div>
                             <p class="mb-1"><strong>Estagiário:</strong> <span id="estagiarioAtual"><%= camposEstagio[0].nome_estagiario || 'N/A' %></span></p>
                             <p class="mb-1"><strong>Orientador:</strong> <span id="orientadorAtual"><%= camposEstagio[0].nome_orientador || 'N/A' %></span></p>
-                            <p class="mb-0"><strong>Supervisor:</strong> <span id="supervisorAtual"><%= camposEstagio[0].nome_supervisor || 'N/A' %></span></p>
+                            <p class="mb-1"><strong>Supervisor:</strong> <span id="supervisorAtual"><%= camposEstagio[0].nome_supervisor || 'N/A' %></span></p>
+                            <p class="mb-0 text-end">
+                                <span class="badge bg-light text-dark" id="contadorCampoEstagioCorpo">
+                                    <% if (camposEstagio && camposEstagio.length > 0) { %>
+                                        1/<%= camposEstagio.length %>
+                                    <% } else { %>
+                                        0/0
+                                    <% } %>
+                                </span>
+                            </p>
                         </div>
                         
 
@@ -111,10 +118,7 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-info btn-sm" id="btnCampEstGerarPDF" onclick="campEstGerarPDF()">
-                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
-                            </button>
-                            <button type="button" class="btn btn-outline-warning btn-sm" id="btnCampEstAnexarPlano" onclick="campEstAnexarPlano()">
-                                <i class="fas fa-paperclip me-1"></i>Anexar Plano Assinado
+                                <i class="fas fa-file-pdf me-1"></i>Gerar
                             </button>
                         </div>
                     </div>
@@ -143,16 +147,10 @@
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-success text-white">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-tasks fa-2x me-3"></i>
-                            <div>
-                                <h5 class="mb-0">Plano de Atividade</h5>
-
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-light text-dark" id="contadorPaginacao">0/0</span>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-tasks fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">Plano de Atividade</h5>
                         </div>
                     </div>
                 </div>
@@ -176,10 +174,7 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-info btn-sm" id="btnPlanAtiGerarPDF" onclick="planAtiGerarPDF()" title="Gerar PDF do plano de atividade">
-                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
-                            </button>
-                            <button type="button" class="btn btn-outline-warning btn-sm" id="btnPlanAtiAprovar" onclick="planAtiAprovar()" title="Aprovar plano de atividade">
-                                <i class="fas fa-check me-1"></i>Aprovar
+                                <i class="fas fa-file-pdf me-1"></i>Gerar
                             </button>
                         </div>
                     </div>
@@ -235,7 +230,7 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-info btn-sm" id="btnFreqAtiGerarPDF" disabled title="Funcionalidade em desenvolvimento">
-                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                                <i class="fas fa-file-pdf me-1"></i>Gerar
                             </button>
                             <button type="button" class="btn btn-outline-success btn-sm" id="btnFreqAtiValidar" disabled title="Funcionalidade em desenvolvimento">
                                 <i class="fas fa-check-circle me-1"></i>Validar
@@ -294,7 +289,7 @@
                         </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-info btn-sm" id="btnRelAtiGerarPDF" disabled title="Funcionalidade em desenvolvimento">
-                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                                <i class="fas fa-file-pdf me-1"></i>Gerar
                             </button>
                             <button type="button" class="btn btn-outline-success btn-sm" id="btnRelAtiAvaliar" disabled title="Funcionalidade em desenvolvimento">
                                 <i class="fas fa-star me-1"></i>Avaliar
@@ -346,6 +341,11 @@
 </div>
 
 <script>
+    // Variáveis globais para planos de atividade
+    let planosAtividade = [];
+    let planoAtividadeAtualIndex = 0;
+    let planoAtividadeSelecionadoId = null;
+    
     // Objeto principal para gerenciar o dashboard administrativo
     const AdminDashboard = {
         // Estado do modal
@@ -411,7 +411,7 @@
         },
         
         // Carregar planos de atividade
-        async carregarPlanosAtividade() {
+        async carregarPlanosAtividade(campoEstagioId = null) {
             try {
                 mostrarLoadingPlanoAtividade(true);
                 
@@ -424,7 +424,16 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    planosAtividade = result.data || [];
+                    let planosCarregados = result.data || [];
+                    
+                    // Filtrar planos pelo campo de estágio se especificado
+                    if (campoEstagioId) {
+                        planosCarregados = planosCarregados.filter(plano => 
+                            plano.pa_id_campo_estagio == campoEstagioId
+                        );
+                    }
+                    
+                    planosAtividade = planosCarregados;
                     planoAtividadeAtualIndex = 0;
                     planoAtividadeSelecionadoId = null;
                     
@@ -453,14 +462,14 @@
             }
             
             const plano = planosAtividade[planoAtividadeAtualIndex];
-            planoAtividadeSelecionadoId = plano.id_planoatividade;
+            planoAtividadeSelecionadoId = plano.pa_id_planoatividade;
             
             // Definir cor da situação conforme solicitado
             let situacaoColor = '#6c757d'; // cor padrão
             const situacao = plano.pa_situacao || 'Em Edição';
             if (situacao === 'Em Edição') {
                 situacaoColor = '#ffc107'; // amarelo
-            } else if (situacao === 'Cadastrado') {
+            } else if (situacao === 'Concluído') {
                 situacaoColor = '#28a745'; // verde
             } else if (situacao === 'Finalizado') {
                 situacaoColor = '#007bff'; // azul
@@ -471,27 +480,44 @@
             const dataFinal = plano.pa_data_final ? new Date(plano.pa_data_final).toLocaleDateString('pt-BR') : 'Não informado';
             
             cardBody.innerHTML = `
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <p class="mb-2"><strong style="color: ${situacaoColor}; font-weight: bold;">${situacao}</strong></p>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted"><small><strong>Período:</strong> ${dataInicial} - ${dataFinal}</small></span>
-                            <span class="text-muted"><small><strong>CH semanal:</strong> ${plano.pa_cargahoraria || 'Não informado'}</small></span>
+                <div class="mb-3">
+                    <!-- Primeira linha: Nome do estagiário e Situação -->
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>${plano.nome_estagiario || 'N/A'}</strong>
+                        <span class="badge" style="background-color: ${situacaoColor}; color: ${situacaoColor === '#ffc107' ? '#000' : '#fff'}; font-weight: bold;">
+                            ${situacao}
+                        </span>
+                    </div>
+                    <p class="mb-2 text-muted"><small>Estagiário do Plano</small></p>
+                    
+                    <div class="row mb-2">
+                        <div class="col-4">
+                            <strong>Início:</strong> <span>${dataInicial}</span>
+                        </div>
+                        <div class="col-4">
+                            <strong>Fim:</strong> <span>${dataFinal}</span>
+                        </div>
+                        <div class="col-4">
+                            <strong>CH:</strong> <span>${plano.pa_cargahoraria || 'N/A'}</span>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted"><small><strong>Estagiário:</strong> ${plano.nome_estagiario || 'Não informado'}</small></p>
-                        <p class="mb-1 text-muted"><small><strong>Orientador:</strong> ${plano.nome_orientador || 'Não informado'}</small></p>
-                        <p class="mb-1 text-muted"><small><strong>Supervisor:</strong> ${plano.nome_supervisor || 'Não informado'}</small></p>
+                    <p class="mb-1"><strong>Orientador:</strong> <span>${plano.nome_orientador || 'N/A'}</span></p>
+                    <p class="mb-1"><strong>Supervisor:</strong> <span>${plano.nome_supervisor || 'N/A'}</span></p>
+                    <p class="mb-1"><strong>Local do estágio:</strong> <span>${plano.nome_concedente || 'N/A'}</span></p>
+                    
+                    <div class="mt-2">
+                        <p class="mb-1 text-muted"><small><a href="#" onclick="anexarDocumentoPDF(${plano.pa_id_planoatividade})" class="text-decoration-none"><i class="fas fa-paperclip me-1"></i>Anexar plano Assinado</a></small></p>
+                    </div>
+                    
+                    <div class="text-end">
+                        <span class="badge bg-light text-dark" id="contadorPaginacao">
+                            ${planoAtividadeAtualIndex + 1}/${planosAtividade.length}
+                        </span>
                     </div>
                 </div>
             `;
             
-            // Atualizar contador de paginação no cabeçalho
-            const contadorPaginacao = document.getElementById('contadorPaginacao');
-            if (contadorPaginacao) {
-                contadorPaginacao.textContent = `${planoAtividadeAtualIndex + 1}/${planosAtividade.length}`;
-            }
+            // Situação agora é exibida no corpo do card
             
             // Controlar estado dos botões baseado na situação do plano
             this.controlarBotoesPlanoAtividade(plano);
@@ -499,6 +525,23 @@
         
         // Controlar estado dos botões do card Plano de Atividade
         controlarBotoesPlanoAtividade(plano) {
+            // Botão Novo - desabilitado se já existir um plano de atividade
+            const btnNovoPlano = document.getElementById('btnPlanAtiNovo');
+            if (btnNovoPlano) {
+                const jaExistePlano = planosAtividade && planosAtividade.length > 0;
+                btnNovoPlano.disabled = jaExistePlano;
+                
+                if (jaExistePlano) {
+                    btnNovoPlano.title = 'Já existe um Plano de Atividade para este Campo de Estágio';
+                    btnNovoPlano.classList.remove('btn-success');
+                    btnNovoPlano.classList.add('btn-secondary');
+                } else {
+                    btnNovoPlano.title = 'Criar novo plano de atividade';
+                    btnNovoPlano.classList.remove('btn-secondary');
+                    btnNovoPlano.classList.add('btn-success');
+                }
+            }
+            
             // Botão Editar - desabilitado se plano for "Aprovado" ou não existir plano
             const btnEditarPlano = document.getElementById('btnPlanAtiEditar');
             if (btnEditarPlano) {
@@ -1193,7 +1236,7 @@
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                this.mostrarAlerta('Campo de estágio cadastrado com sucesso!', 'success');
+                this.mostrarAlerta('Campo de estágio salvo com sucesso!', 'success');
                 // Fechar modal
                 const modalElement = document.getElementById('modalCadastroEstagioAdmin');
                 if (modalElement) {
@@ -1375,7 +1418,12 @@
         
         // Verificar se o botão está desabilitado
         if (btnEditarCampo && btnEditarCampo.disabled) {
-            alert('Edição disponível apenas para campos com situação "Em Edição".');
+            const userNivelAcesso = '<%= user.nivelacesso %>';
+            if (userNivelAcesso === 'Administrador') {
+                alert('Erro inesperado: Administradores devem ter permissão para editar todos os campos.');
+            } else {
+                alert('Edição disponível apenas para campos com situação "Em Edição".');
+            }
             return;
         }
         
@@ -1397,6 +1445,13 @@
             registrosFiltrados
         });
         
+        // Verificar se o botão está desabilitado
+        const btnNovoPlano = document.getElementById('btnPlanAtiNovo');
+        if (btnNovoPlano && btnNovoPlano.disabled) {
+            alert('Já existe um Plano de Atividade para este Campo de Estágio.');
+            return;
+        }
+        
         if (!campoSelecionadoId) {
             alert('Por favor, selecione um campo de estágio para criar o plano de atividade.');
             return;
@@ -1409,8 +1464,8 @@
             return;
         }
 
-        if (campoAtual.situacao !== 'Cadastrado') {
-            alert('O plano de atividade só pode ser criado quando houver Campos de Estágio Cadastrados.');
+        if (campoAtual.situacao !== 'Concluído' && campoAtual.situacao !== 'Finalizado') {
+            alert('O plano de atividade só pode ser criado quando houver Campos de Estágio com o status CONCLUÍDO ou FINALIZADO.');
             return;
         }
         
@@ -1425,7 +1480,7 @@
         }
         
         // Verificar se o plano pode ser editado
-        const planoAtual = planosAtividade.find(p => p.id_planoatividade == planoAtividadeSelecionadoId);
+        const planoAtual = planosAtividade.find(p => p.pa_id_planoatividade == planoAtividadeSelecionadoId);
         if (!planoAtual) {
             alert('Plano de atividade não encontrado.');
             return;
@@ -1461,7 +1516,7 @@
             return;
         }
         
-        const planoAtual = planosAtividade.find(p => p.id_planoatividade == planoAtividadeSelecionadoId);
+        const planoAtual = planosAtividade.find(p => p.pa_id_planoatividade == planoAtividadeSelecionadoId);
         if (!planoAtual) {
             alert('Plano de atividade não encontrado.');
             return;
@@ -1489,7 +1544,7 @@
                 },
                 body: JSON.stringify({
                     situacao: 'Aprovado',
-                    data_fechamento: new Date().toISOString()
+                    data_fechamento: new Date().toISOString().slice(0, 19).replace('T', ' ')
                 })
             });
             
@@ -1516,85 +1571,112 @@
             return;
         }
         
-        // Implementar chamada para geração de PDF
-        alert('Funcionalidade de geração de PDF será implementada em breve.');
-        // TODO: Implementar rota para geração de PDF
-        // window.open(`/secure/estagios/campo/${campoSelecionadoId}/pdf`, '_blank');
-    }
-    
-    // Função para anexar plano assinado
-    async function campEstAnexarPlano() {
-        if (!campoSelecionadoId) {
-            alert('Por favor, selecione um campo de estágio para anexar o plano.');
+        // Confirmar geração do PDF
+        if (!confirm('Deseja gerar o PDF do campo de estágio selecionado?')) {
             return;
         }
         
-        try {
-            // Verificar se os parâmetros necessários estão configurados
-            const response = await fetch('/parametro/buscar?identificador=Pastas dos Anexos');
-            const parametroPastas = await response.json();
+        // Abrir PDF em nova janela
+        window.open(`/secure/estagios/campo/${campoSelecionadoId}/pdf`, '_blank');
+    }
+    
+    // Função para controlar botões do card Frequência de Atividade
+    function controlarBotoesFrequenciaAtividade() {
+        const temRegistros = registrosFiltrados && registrosFiltrados.length > 0;
+        
+        // Botão Gerar PDF
+        const btnFreqGerarPDF = document.getElementById('btnFreqAtiGerarPDF');
+        if (btnFreqGerarPDF) {
+            btnFreqGerarPDF.disabled = !temRegistros;
             
-            const response2 = await fetch('/parametro/buscar?identificador=Planos Assinados');
-            const parametroPlanos = await response2.json();
+            if (!temRegistros) {
+                btnFreqGerarPDF.title = 'Nenhum registro carregado';
+                btnFreqGerarPDF.classList.remove('btn-outline-info');
+                btnFreqGerarPDF.classList.add('btn-outline-secondary');
+            } else {
+                btnFreqGerarPDF.title = 'Funcionalidade em desenvolvimento';
+                btnFreqGerarPDF.classList.remove('btn-outline-secondary');
+                btnFreqGerarPDF.classList.add('btn-outline-info');
+            }
+        }
+    }
+    
+    // Função para controlar botões do card Relatório de Atividade
+    function controlarBotoesRelatorioAtividade() {
+        const temRegistros = registrosFiltrados && registrosFiltrados.length > 0;
+        
+        // Botão Gerar PDF
+        const btnRelGerarPDF = document.getElementById('btnRelAtiGerarPDF');
+        if (btnRelGerarPDF) {
+            btnRelGerarPDF.disabled = !temRegistros;
             
-            if (!parametroPastas.success || !parametroPastas.parametros || parametroPastas.parametros.length === 0 || 
-                !parametroPlanos.success || !parametroPlanos.parametros || parametroPlanos.parametros.length === 0) {
-                alert('Para utilizar esta funcionalidade, é necessário configurar os parâmetros:\n\n' +
-                      '• "Pastas dos Anexos"\n' +
-                      '• "Planos Assinados"\n\n' +
-                      'Entre em contato com o administrador do sistema.');
+            if (!temRegistros) {
+                btnRelGerarPDF.title = 'Nenhum registro carregado';
+                btnRelGerarPDF.classList.remove('btn-outline-info');
+                btnRelGerarPDF.classList.add('btn-outline-secondary');
+            } else {
+                btnRelGerarPDF.title = 'Funcionalidade em desenvolvimento';
+                btnRelGerarPDF.classList.remove('btn-outline-secondary');
+                btnRelGerarPDF.classList.add('btn-outline-info');
+            }
+        }
+    }
+    
+    // Função para anexar documento PDF ao plano de atividade
+    function anexarDocumentoPDF(planoId) {
+        if (!planoId) {
+            alert('ID do plano de atividade não encontrado.');
+            return;
+        }
+        
+        // Criar input file para seleção do PDF
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf';
+        input.style.display = 'none';
+        
+        input.onchange = async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.type !== 'application/pdf') {
+                alert('Por favor, selecione apenas arquivos PDF.');
                 return;
             }
             
-            // Criar input file para seleção do PDF
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.pdf';
-            input.style.display = 'none';
+            // Criar FormData para upload
+            const formData = new FormData();
+            formData.append('documento_pdf', file);
+            formData.append('plano_id', planoId);
             
-            input.onchange = async function(event) {
-                const file = event.target.files[0];
-                if (!file) return;
+            try {
+                const uploadResponse = await fetch('/planos-atividade/anexar-documento', {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                if (file.type !== 'application/pdf') {
-                    alert('Por favor, selecione apenas arquivos PDF.');
-                    return;
+                const result = await uploadResponse.json();
+                
+                if (result.success) {
+                    alert('Documento PDF anexado com sucesso!');
+                    // Recarregar os dados do plano
+                    AdminDashboard.carregarPlanosAtividade();
+                } else {
+                    alert('Erro ao anexar documento: ' + (result.message || 'Erro desconhecido'));
                 }
-                
-                // Criar FormData para upload
-                const formData = new FormData();
-                formData.append('plano_assinado', file);
-                formData.append('campo_estagio_id', campoSelecionadoId);
-                
-                try {
-                    const uploadResponse = await fetch('/secure/estagios/campo/anexar-plano', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await uploadResponse.json();
-                    
-                    if (result.success) {
-                        alert('Plano assinado anexado com sucesso!');
-                        location.reload(); // Recarregar para atualizar a exibição
-                    } else {
-                        alert('Erro ao anexar plano: ' + result.message);
-                    }
-                } catch (error) {
-                    console.error('Erro no upload:', error);
-                    alert('Erro ao anexar plano. Tente novamente.');
-                }
-            };
-            
-            document.body.appendChild(input);
-            input.click();
-            document.body.removeChild(input);
-            
-        } catch (error) {
-            console.error('Erro ao verificar parâmetros:', error);
-            alert('Erro ao verificar configurações. Tente novamente.');
-        }
+            } catch (error) {
+                console.error('Erro ao anexar documento:', error);
+                alert('Erro ao anexar documento. Tente novamente.');
+            }
+        };
+        
+        // Adicionar input ao DOM e simular clique
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
     }
+    
+
     
     // Variáveis para navegação entre registros
     let registrosOriginais = <%- JSON.stringify(camposEstagio || []) %>;
@@ -1629,27 +1711,37 @@
         // Armazenar o ID do campo atual para uso no botão Editar
         campoSelecionadoId = registro.id_campo_estagio;
         
-        // Atualizar situação
+        // Atualizar badge de situação com cores dinâmicas
         const situacaoElement = document.getElementById('situacaoAtual');
         if (situacaoElement) {
             const situacao = registro.situacao || 'N/A';
             situacaoElement.textContent = situacao;
             
-            // Controlar cor da fonte baseada na situação
-            if (situacao !== 'Em Edição' && situacao !== 'N/A') {
-                situacaoElement.style.color = '#28a745'; // Verde
-            } else {
-                situacaoElement.style.color = '#ffc107'; // Amarelo (padrão)
+            // Definir cor da situação conforme solicitado
+            let situacaoColor = '#6c757d'; // cor padrão (cinza)
+            if (situacao === 'Em Edição') {
+                situacaoColor = '#ffc107'; // amarelo
+            } else if (situacao === 'Concluído') {
+                situacaoColor = '#28a745'; // verde
+            } else if (situacao === 'Finalizado') {
+                situacaoColor = '#007bff'; // azul
             }
+            
+            // Aplicar cor e ajustar cor do texto
+            situacaoElement.style.backgroundColor = situacaoColor;
+            situacaoElement.style.color = situacaoColor === '#ffc107' ? '#000' : '#fff';
+            situacaoElement.style.fontWeight = 'bold';
         }
         
         // Controlar estado dos botões baseado na situação
         const situacao = registro.situacao || '';
         
-        // Botão Editar - desabilitado se situação for "Cadastrado"
+        // Botão Editar - desabilitado se situação for "Cadastrado", exceto para administradores
         const btnEditarCampo = document.getElementById('btnCampEstEditar');
         if (btnEditarCampo) {
-            const podeEditar = situacao === 'Em Edição';
+            const userNivelAcesso = '<%= user.nivelacesso %>';
+            const isAdmin = userNivelAcesso === 'Administrador';
+            const podeEditar = situacao === 'Em Edição' || isAdmin;
             btnEditarCampo.disabled = !podeEditar;
             
             if (!podeEditar) {
@@ -1657,47 +1749,36 @@
                 btnEditarCampo.classList.remove('btn-outline-primary');
                 btnEditarCampo.classList.add('btn-outline-secondary');
             } else {
-                btnEditarCampo.title = 'Editar campo de estágio';
+                if (isAdmin && situacao !== 'Em Edição') {
+                    btnEditarCampo.title = 'Editar campo de estágio (Permissão de Administrador)';
+                } else {
+                    btnEditarCampo.title = 'Editar campo de estágio';
+                }
                 btnEditarCampo.classList.remove('btn-outline-secondary');
                 btnEditarCampo.classList.add('btn-outline-primary');
             }
         }
         
-        // Botão Gerar PDF - desabilitado se situação for "Em Edição"
+        // Botão Gerar PDF - habilitado quando houver registros
         const btnGerarPDF = document.getElementById('btnCampEstGerarPDF');
         if (btnGerarPDF) {
-            const podeGerarPDF = situacao === 'Cadastrado';
-            btnGerarPDF.disabled = !podeGerarPDF;
+            const temRegistros = registrosFiltrados && registrosFiltrados.length > 0;
+            btnGerarPDF.disabled = !temRegistros;
             
-            if (!podeGerarPDF) {
-                btnGerarPDF.title = 'Geração de PDF disponível apenas para campos com situação "Cadastrado"';
+            if (!temRegistros) {
+                btnGerarPDF.title = 'Nenhum registro carregado';
                 btnGerarPDF.classList.remove('btn-outline-info');
                 btnGerarPDF.classList.add('btn-outline-secondary');
             } else {
-                btnGerarPDF.title = 'Gerar PDF do campo de estágio';
+                btnGerarPDF.title = 'Funcionalidade disponível apenas para Planos de Atividade';
                 btnGerarPDF.classList.remove('btn-outline-secondary');
                 btnGerarPDF.classList.add('btn-outline-info');
             }
         }
         
-        // Botão Anexar Plano Assinado - desabilitado se situação for "Em Edição"
-        const btnAnexarPlano = document.getElementById('btnCampEstAnexarPlano');
-        if (btnAnexarPlano) {
-            const podeAnexarPlano = situacao === 'Cadastrado';
-            btnAnexarPlano.disabled = !podeAnexarPlano;
-            
-            if (!podeAnexarPlano) {
-                btnAnexarPlano.title = 'Anexar plano disponível apenas para campos com situação "Cadastrado"';
-                btnAnexarPlano.classList.remove('btn-outline-warning');
-                btnAnexarPlano.classList.add('btn-outline-secondary');
-            } else {
-                btnAnexarPlano.title = 'Anexar plano assinado';
-                btnAnexarPlano.classList.remove('btn-outline-secondary');
-                btnAnexarPlano.classList.add('btn-outline-warning');
-            }
-        }
+
         
-        // Atualizar datas
+        // Atualizar datas e carga horária
         const inicioElement = document.getElementById('inicioAtual');
         if (inicioElement) {
             inicioElement.textContent = registro.data_inicio ? new Date(registro.data_inicio).toLocaleDateString('pt-BR') : 'N/A';
@@ -1706,6 +1787,12 @@
         const fimElement = document.getElementById('fimAtual');
         if (fimElement) {
             fimElement.textContent = registro.data_fim ? new Date(registro.data_fim).toLocaleDateString('pt-BR') : 'N/A';
+        }
+        
+        // Atualizar carga horária (se houver elemento específico para isso)
+        const cargaHorariaElement = document.getElementById('cargaHorariaAtual');
+        if (cargaHorariaElement) {
+            cargaHorariaElement.textContent = registro.cargahoraria ? registro.cargahoraria + 'h' : 'N/A';
         }
         
         // Atualizar pessoas
@@ -1729,10 +1816,10 @@
             concedenteElement.textContent = registro.nome_concedente || 'N/A';
         }
         
-        // Atualizar contador no header
-        const contadorCampoEstagio = document.getElementById('contadorCampoEstagio');
-        if (contadorCampoEstagio) {
-            contadorCampoEstagio.textContent = `${indiceAtual + 1}/${registrosFiltrados.length}`;
+        // Atualizar contador no corpo do card
+        const contadorCorpoElement = document.getElementById('contadorCampoEstagioCorpo');
+        if (contadorCorpoElement) {
+            contadorCorpoElement.textContent = `${indiceAtual + 1}/${registrosFiltrados.length}`;
         }
         
         // Atualizar estado dos botões
@@ -1743,6 +1830,13 @@
             btnAnterior.disabled = registrosFiltrados.length <= 1;
             btnProximo.disabled = registrosFiltrados.length <= 1;
         }
+        
+        // Controlar botões dos outros cards baseado na existência de registros
+        controlarBotoesFrequenciaAtividade();
+        controlarBotoesRelatorioAtividade();
+        
+        // Carregar planos de atividade relacionados ao campo selecionado
+        AdminDashboard.carregarPlanosAtividade(campoSelecionadoId);
     }
     
     // Função para filtrar registros

@@ -494,10 +494,10 @@ class PlanoAtividadeController {
             
             // Criar objeto campoEstagio para compatibilidade com o formulário
             const campoEstagio = {
-                id_campo_estagio: plano.pa_id_campo_estagio,
-                empresa: plano.nome_concedente,
-                data_inicial: plano.ce_data_inicio,
-                data_final: plano.ce_data_fim,
+                ce_id_campo_estagio: plano.pa_id_campo_estagio,
+                nome_concedente: plano.nome_concedente,
+                ce_data_inicio: plano.ce_data_inicio,
+                ce_data_fim: plano.ce_data_fim,
                 nome_estagiario: plano.nome_estagiario,
                 nome_orientador: plano.nome_orientador,
                 nome_supervisor: plano.nome_supervisor

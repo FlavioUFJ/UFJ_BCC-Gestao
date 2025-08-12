@@ -469,10 +469,10 @@
             const situacao = plano.pa_situacao || 'Em Edição';
             if (situacao === 'Em Edição') {
                 situacaoColor = '#ffc107'; // amarelo
-            } else if (situacao === 'Concluído') {
+            } else if (situacao === 'Em Aprovação') {
+                situacaoColor = '#17a2b8'; // azul claro
+            } else if (situacao === 'Aprovado sem Anexo' || situacao === 'Aprovado com Anexo') {
                 situacaoColor = '#28a745'; // verde
-            } else if (situacao === 'Finalizado') {
-                situacaoColor = '#007bff'; // azul
             }
             
             // Usar os campos corretos da query
@@ -545,7 +545,7 @@
             // Botão Editar - desabilitado se plano for "Aprovado" ou não existir plano
             const btnEditarPlano = document.getElementById('btnPlanAtiEditar');
             if (btnEditarPlano) {
-                const podeEditar = plano && plano.pa_situacao !== 'Aprovado';
+                const podeEditar = plano && plano.pa_situacao !== 'Aprovado sem Anexo' && plano.pa_situacao !== 'Aprovado com Anexo';
                 btnEditarPlano.disabled = !podeEditar;
                 
                 if (!podeEditar) {
@@ -1486,7 +1486,7 @@
             return;
         }
         
-        if (planoAtual.pa_situacao === 'Aprovado') {
+        if (planoAtual.pa_situacao === 'Aprovado sem Anexo' || planoAtual.pa_situacao === 'Aprovado com Anexo') {
             alert('Planos de atividade aprovados não podem ser editados.');
             return;
         }

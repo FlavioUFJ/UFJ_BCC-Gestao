@@ -343,7 +343,7 @@ class PlanoAtividadeController {
             
             const params = [
                 id_campo_estagio,
-                situacao || 'Em edição',
+                situacao || 'Em Edição',
                 dataAtual,
                 dataInicialISO,
                 dataFinalISO,
@@ -484,8 +484,8 @@ class PlanoAtividadeController {
                 });
             }
 
-            // Verificar se pode ser editado (apenas se estiver "Em edição")
-            if (plano.pa_situacao === 'Aprovado') {
+            // Verificar se pode ser editado (apenas se estiver "Em Edição")
+            if (plano.pa_situacao === 'Aprovado sem Anexo' || plano.pa_situacao === 'Aprovado com Anexo') {
                 return res.status(403).render('error', {
                     title: 'Erro',
                     message: 'Plano de atividade aprovado não pode ser editado'
@@ -558,7 +558,7 @@ class PlanoAtividadeController {
             }
 
             // Verificar se pode ser editado
-            if (planoExistente.situacao === 'Aprovado') {
+            if (planoExistente.situacao === 'Aprovado sem Anexo' || planoExistente.situacao === 'Aprovado com Anexo') {
                 return res.status(403).json({
                     success: false,
                     message: 'Plano de atividade aprovado não pode ser editado'
@@ -962,7 +962,7 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                 <div class="info-grid">
                     <div>
                         <div class="info-item">
-                            <span class="info-label">Situação:</span> ${plano.pa_situacao || 'Em edição'}
+                            <span class="info-label">Situação:</span> ${plano.pa_situacao || 'Em Edição'}
                         </div>
                         <div class="info-item">
                             <span class="info-label">Período do Estágio:</span> ${periodoCompleto}

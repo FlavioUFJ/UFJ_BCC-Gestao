@@ -1,12 +1,18 @@
 /**
- * Configuração do Puppeteer
- * Configurações otimizadas para ambientes de produção Linux
+ * Configuração do Puppeteer - ARQUIVO DE EXEMPLO
+ * Copie este arquivo para puppeteer.js e ajuste as configurações conforme necessário
+ * 
+ * IMPORTANTE: Para servidores ARM64, você pode precisar:
+ * 1. Instalar o Chrome/Chromium específico para ARM64
+ * 2. Definir PUPPETEER_EXECUTABLE_PATH no ambiente
+ * 3. Ajustar os argumentos conforme a arquitetura
  */
 
 const puppeteer = require('puppeteer');
 
 /**
- * Configuração padrão do Puppeteer para produção
+ * Configuração padrão do Puppeteer
+ * Ajuste conforme a arquitetura do servidor (x64, ARM64, etc.)
  */
 const defaultConfig = {
     headless: "new",
@@ -22,8 +28,50 @@ const defaultConfig = {
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor'
     ],
+    // Para ARM64, defina o caminho do executável:
+    // executablePath: '/usr/bin/chromium-browser' // Exemplo para Linux ARM64
+    // executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
 };
+
+/**
+ * Configurações específicas para diferentes arquiteturas
+ */
+const architectureConfigs = {
+    // Configuração para servidores ARM64 Linux
+    arm64: {
+        ...defaultConfig,
+        args: [
+            ...defaultConfig.args,
+            '--disable-extensions',
+            '--disable-plugins',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding'
+        ],
+        // Exemplo de caminho comum para ARM64
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'
+    },
+    
+    // Configuração para servidores x64
+    x64: {
+        ...defaultConfig
+    }
+};
+
+/**
+ * Detecta a arquitetura e retorna a configuração apropriada
+ */
+function getArchitectureConfig() {
+    const arch = process.arch;
+    console.log('[PUPPETEER] Arquitetura detectada:', arch);
+    
+    if (arch === 'arm64') {
+        return architectureConfigs.arm64;
+    }
+    
+    return architectureConfigs.x64;
+}
 
 /**
  * Lança uma instância do Puppeteer com configuração otimizada
@@ -32,12 +80,14 @@ const defaultConfig = {
  */
 async function launchBrowser(customConfig = {}) {
     try {
-        const config = { ...defaultConfig, ...customConfig };
+        const baseConfig = getArchitectureConfig();
+        const config = { ...baseConfig, ...customConfig };
         
         console.log('[PUPPETEER] Iniciando browser com configuração:', {
             headless: config.headless,
             argsCount: config.args.length,
-            executablePath: config.executablePath ? 'Customizado' : 'Padrão'
+            executablePath: config.executablePath ? 'Customizado' : 'Padrão',
+            architecture: process.arch
         });
         
         const browser = await puppeteer.launch(config);
@@ -53,13 +103,16 @@ async function launchBrowser(customConfig = {}) {
             console.log('[PUPPETEER] Tentando configuração de fallback...');
             
             const fallbackConfig = {
-                ...defaultConfig,
+                ...getArchitectureConfig(),
                 args: [
-                    ...defaultConfig.args,
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--single-process',
+                    '--disable-gpu',
                     '--disable-extensions',
                     '--disable-plugins',
                     '--disable-images',
-                    '--disable-javascript',
                     '--virtual-time-budget=5000'
                 ],
                 fallback: true
@@ -135,5 +188,6 @@ async function generatePDF(htmlContent, pdfOptions = {}) {
 module.exports = {
     launchBrowser,
     generatePDF,
-    defaultConfig
+    defaultConfig,
+    getArchitectureConfig
 };

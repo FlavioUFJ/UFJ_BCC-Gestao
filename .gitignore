@@ -12,6 +12,7 @@ package-lock.json
 .env.development
 dadosConexaoSGDB.js
 src/config/database.js
+src/config/puppeteer.js
 
 # Logs
 logs/

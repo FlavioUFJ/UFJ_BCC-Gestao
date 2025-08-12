@@ -55,19 +55,22 @@
                          </div>
                      </div>
                 </div>
-                <p class="mb-3"><strong><%= campoEstagio ? campoEstagio.nome_concedente : 'Não informado' %></strong></p>
+                <div class="text-center mb-3">
+                    <p class="mb-1" style="font-size: calc(1rem + 2pt);"><strong><%= campoEstagio ? campoEstagio.nome_concedente : 'Não informado' %></strong></p>
+                    <small class="text-muted" style="font-style: italic;">Campo de Estágio (concedente)</small>
+                </div>
                 <div class="d-flex justify-content-between text-center">
                     <div class="flex-fill">
-                        <div class="small"><%= campoEstagio ? campoEstagio.nome_estagiario : 'Não informado' %></div>
-                        <small class="text-muted" style="font-style: italic;">Estagiário</small>
+                        <div class="small" style="font-size: calc(0.875rem + 3pt);"><%= campoEstagio ? campoEstagio.nome_estagiario : 'Não informado' %></div>
+                        <small class="text-muted" style="font-style: italic; font-size: calc(0.75rem + 3pt);">Estagiário</small>
                     </div>
                     <div class="flex-fill">
-                        <div class="small"><%= campoEstagio ? campoEstagio.nome_orientador : 'Não informado' %></div>
-                        <small class="text-muted" style="font-style: italic;">Orientador</small>
+                        <div class="small" style="font-size: calc(0.875rem + 3pt);"><%= campoEstagio ? campoEstagio.nome_orientador : 'Não informado' %></div>
+                        <small class="text-muted" style="font-style: italic; font-size: calc(0.75rem + 3pt);">Orientador</small>
                     </div>
                     <div class="flex-fill">
-                        <div class="small"><%= campoEstagio ? campoEstagio.nome_supervisor : 'Não informado' %></div>
-                        <small class="text-muted" style="font-style: italic;">Supervisor</small>
+                        <div class="small" style="font-size: calc(0.875rem + 3pt);"><%= campoEstagio ? campoEstagio.nome_supervisor : 'Não informado' %></div>
+                        <small class="text-muted" style="font-style: italic; font-size: calc(0.75rem + 3pt);">Supervisor</small>
                     </div>
                 </div>
             </div>
@@ -109,7 +112,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="data_inicial" class="form-label">Data Inicial *</label>
+                            <label for="data_inicial" class="form-label">Data Inicial do plano *</label>
                             <input type="text" class="form-control" id="data_inicial" name="data_inicial" 
                                    placeholder="DD/MM/AAAA" maxlength="10"
                                    value="<% if (plano && plano.pa_data_inicial) { %><% try { %><%= new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } else if (campoEstagio && campoEstagio.ce_data_inicio && campoEstagio.ce_data_inicio !== 'null' && typeof campoEstagio.ce_data_inicio === 'string' && campoEstagio.ce_data_inicio.trim() !== '') { %><% try { %><%= new Date(campoEstagio.ce_data_inicio).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } %>" required>
@@ -117,7 +120,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="data_final" class="form-label">Data Final *</label>
+                            <label for="data_final" class="form-label">Data final do plano *</label>
                             <input type="text" class="form-control" id="data_final" name="data_final" 
                                    placeholder="DD/MM/AAAA" maxlength="10"
                                    value="<% if (plano && plano.pa_data_final) { %><% try { %><%= new Date(plano.pa_data_final).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } else if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && typeof campoEstagio.ce_data_fim === 'string' && campoEstagio.ce_data_fim.trim() !== '') { %><% try { %><%= new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } %>" required>
@@ -125,7 +128,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="cargahoraria" class="form-label">Carga Horária (horas/semana) *</label>
+                            <label for="cargahoraria" class="form-label">CH Semanal *</label>
                             <input type="number" class="form-control" id="cargahoraria" name="cargahoraria" 
                                    value="<%= plano ? plano.pa_cargahoraria : '' %>" min="1" max="40" required>
                         </div>

@@ -4,7 +4,7 @@
  */
 
 const databaseConfig = require('../config/database');
-const puppeteer = require('puppeteer');
+const { generatePDF } = require('../config/puppeteer');
 const CampoEstagioService = require('../services/CampoEstagioService');
 
 class CampoEstagioController {
@@ -55,16 +55,8 @@ class CampoEstagioController {
             // Renderizar template HTML para PDF
             const htmlContent = await this.renderPDFTemplate(campo);
             
-            // Gerar PDF usando Puppeteer
-            const browser = await puppeteer.launch({
-                headless: "new",
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-            
-            const page = await browser.newPage();
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-            
-            const pdfBuffer = await page.pdf({
+            // Gerar PDF usando configuração centralizada
+            const pdfBuffer = await generatePDF(htmlContent, {
                 format: 'A4',
                 printBackground: true,
                 margin: {
@@ -74,8 +66,6 @@ class CampoEstagioController {
                     left: '15mm'
                 }
             });
-            
-            await browser.close();
             
             // Configurar cabeçalhos para download do PDF
             const filename = `${campo.nome_estagiario?.replace(/\s+/g, '_') || 'documento'}_campo_estagio_${new Date().toISOString().split('T')[0]}.pdf`;

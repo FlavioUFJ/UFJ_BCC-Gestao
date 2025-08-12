@@ -6,7 +6,7 @@
 const databaseConfig = require('../config/database');
 const { messages, enums } = require('../config');
 const Pessoa = require('../models/Pessoa');
-const puppeteer = require('puppeteer');
+const { generatePDF } = require('../config/puppeteer');
 
 class PlanoAtividadeController {
     constructor() {
@@ -706,16 +706,8 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             // Renderizar template HTML para PDF
             const htmlContent = await this.renderPDFTemplate(plano);
             
-            // Gerar PDF usando Puppeteer
-            const browser = await puppeteer.launch({
-                headless: "new",
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-            
-            const page = await browser.newPage();
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-            
-            const pdfBuffer = await page.pdf({
+            // Gerar PDF usando configuração centralizada
+            const pdfBuffer = await generatePDF(htmlContent, {
                 format: 'A4',
                 printBackground: true,
                 margin: {
@@ -725,8 +717,6 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                     left: '15mm'
                 }
             });
-            
-            await browser.close();
             
             // Configurar cabeçalhos para download do PDF
             const filename = `${plano.nome_estagiario?.replace(/\s+/g, '_') || 'documento'}_plano_atividade_${new Date().toISOString().split('T')[0]}.pdf`;

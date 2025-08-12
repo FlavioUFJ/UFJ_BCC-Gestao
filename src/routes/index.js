@@ -745,7 +745,7 @@ router.post('/admin/criar-login', requireAuth, async (req, res) => {
             // Inserir login
             const insertQuery = `
                 INSERT INTO pessoa_login (id_pessoa, senha, nivelacesso, status, dataultimaatualizacao)
-                VALUES (?, ?, ?, 'Ativo', datetime('now', 'localtime'))
+                VALUES (?, ?, ?, 'Ativo', NOW())
             `;
             
             await databaseConfig.run(insertQuery, [id_pessoa, senhaHash, nivelacesso]);
@@ -774,9 +774,22 @@ router.get('/admin/modulos', requireAuth, async (req, res) => {
             });
         }
 
-        // Por enquanto, retornar array vazio para evitar erro JavaScript
-        // TODO: Implementar busca real de módulos quando a tabela for criada
-        const modulos = [];
+        // Buscar módulos do banco de dados
+        const databaseConfig = require('../config/database');
+        const query = `
+            SELECT 
+                id_modulo,
+                nome,
+                descricao,
+                icone,
+                cor,
+                url,
+                ordem
+            FROM modulos
+            ORDER BY ordem, nome
+        `;
+        
+        const modulos = await databaseConfig.all(query, []);
         
         res.json(modulos);
         

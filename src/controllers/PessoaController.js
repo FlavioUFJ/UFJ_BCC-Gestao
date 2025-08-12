@@ -120,7 +120,13 @@ class PessoaController {
      */
     async store(req, res) {
         try {
+            // Definir request atual no modelo para verificações de segurança
+            this.pessoaModel.setCurrentRequest(req);
+            
             const dadosPessoa = req.body;
+            
+            // DEBUG: Log dos dados recebidos
+            
             
             // Limpar máscaras de formatação antes de salvar
             if (dadosPessoa.telefone) {
@@ -134,23 +140,52 @@ class PessoaController {
             // Mapear valores do tipo para os códigos do banco de dados
             if (dadosPessoa.tipo) {
                 const tipoMap = {
+                    'pessoa_fisica': 'F',
+                    'pessoa_juridica': 'J',
+                    'nao_informado': 'N',
                     'F': 'F',
                     'J': 'J', 
                     'N': 'N'
                 };
                 
-                // Se o valor já é um código válido, manter
-                if (tipoMap[dadosPessoa.tipo]) {
-                    dadosPessoa.tipo = tipoMap[dadosPessoa.tipo];
-                }
+                // Mapear o valor ou manter se já é um código válido
+                dadosPessoa.tipo = tipoMap[dadosPessoa.tipo] || dadosPessoa.tipo;
+            }
+            
+            // Validar dados de login se fornecidos
+            if (dadosPessoa.nivelAcesso && !dadosPessoa.statusLogin) {
+                throw new Error('Status do login é obrigatório quando nível de acesso é fornecido');
+            }
+            
+            if (dadosPessoa.statusLogin && !dadosPessoa.nivelAcesso) {
+                throw new Error('Nível de acesso é obrigatório quando status do login é fornecido');
+            }
+            
+            // Validar módulos se fornecidos
+            if (dadosPessoa.modulos && (!Array.isArray(dadosPessoa.modulos) || dadosPessoa.modulos.length === 0)) {
+                throw new Error('Pelo menos um módulo deve ser selecionado');
             }
             
             // Validar dados obrigatórios
-            const camposObrigatorios = ['nome', 'email', 'nivelacesso'];
+            const camposObrigatorios = ['nome', 'email'];
             for (const campo of camposObrigatorios) {
                 if (!dadosPessoa[campo]) {
                     throw new Error(`Campo ${campo} é obrigatório`);
                 }
+            }
+            
+            // Validar dados de login obrigatórios
+            if (!dadosPessoa.nivelAcesso) {
+                throw new Error('Nível de acesso é obrigatório');
+            }
+            
+            if (!dadosPessoa.statusLogin) {
+                throw new Error('Status do login é obrigatório');
+            }
+            
+            // Validar módulos obrigatórios
+            if (!dadosPessoa.modulos || !Array.isArray(dadosPessoa.modulos) || dadosPessoa.modulos.length === 0) {
+                throw new Error('Pelo menos um módulo deve ser selecionado');
             }
 
             // Verificar se email já existe
@@ -162,14 +197,14 @@ class PessoaController {
             // Criar pessoa
             const pessoa = await this.pessoaModel.create(dadosPessoa);
 
-            // Criar login se fornecido
-            if (dadosPessoa.usuario && dadosPessoa.senha) {
-                await this.pessoaModel.createLogin(
-                    pessoa.id_pessoa,
-                    dadosPessoa.usuario,
-                    dadosPessoa.senha
-                );
-            }
+            // Criar login obrigatório
+            await this.createPessoaLogin(pessoa.id_pessoa, {
+                nivelacesso: dadosPessoa.nivelAcesso,
+                status: dadosPessoa.statusLogin
+            });
+            
+            // Criar vínculos com módulos
+            await this.createPessoaModulos(pessoa.id_pessoa, dadosPessoa.modulos);
 
             // Para requisições AJAX
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
@@ -206,6 +241,7 @@ class PessoaController {
      * @param {Object} res - Response object
      */
     async show(req, res) {
+        console.log(`[DEBUG] Método show chamado para pessoa ID: ${req.params.id}`);
         try {
             const { id } = req.params;
             const pessoa = await this.pessoaModel.findById(id);
@@ -213,6 +249,37 @@ class PessoaController {
             if (!pessoa) {
                 throw new Error('Pessoa não encontrada');
             }
+            
+            console.log(`[DEBUG] Pessoa encontrada no show:`, { id: pessoa.id_pessoa, nome: pessoa.nome });
+
+            // Buscar dados de login da pessoa
+            const databaseConfig = require('../config/database');
+            const loginData = await databaseConfig.get(
+                'SELECT nivelacesso, status FROM pessoa_login WHERE id_pessoa = ?',
+                [id]
+            );
+            
+            console.log(`[DEBUG] Dados de login para pessoa ${id}:`, loginData);
+
+            // Buscar módulos vinculados à pessoa
+            const modulosVinculados = await databaseConfig.all(
+                'SELECT id_modulo FROM pessoa_modulos WHERE id_pessoa = ? AND ativo = 1',
+                [id]
+            );
+            
+            console.log(`[DEBUG] Módulos vinculados para pessoa ${id}:`, modulosVinculados);
+
+            // Adicionar dados de login e módulos ao objeto pessoa
+            if (loginData) {
+                pessoa.nivelAcesso = loginData.nivelacesso;
+                pessoa.statusLogin = loginData.status;
+                console.log(`[DEBUG] Dados adicionados ao objeto pessoa - nivelAcesso: ${pessoa.nivelAcesso}, statusLogin: ${pessoa.statusLogin}`);
+            } else {
+                console.log(`[DEBUG] Nenhum dado de login encontrado para pessoa ${id}`);
+            }
+            
+            pessoa.modulos = modulosVinculados.map(m => m.id_modulo);
+            console.log(`[DEBUG] Objeto pessoa final no show:`, { id: pessoa.id_pessoa, nome: pessoa.nome, nivelAcesso: pessoa.nivelAcesso, statusLogin: pessoa.statusLogin, modulos: pessoa.modulos });
 
             // Para requisições AJAX
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
@@ -255,9 +322,11 @@ class PessoaController {
      * @param {Object} res - Response object
      */
     async edit(req, res) {
+        console.log(`[DEBUG] Método edit chamado para pessoa ID: ${req.params.id}`);
         try {
             const { id } = req.params;
             const pessoa = await this.pessoaModel.findById(id);
+            console.log(`[DEBUG] Pessoa encontrada:`, pessoa ? { id: pessoa.id_pessoa, nome: pessoa.nome } : 'null');
 
             if (!pessoa) {
                 throw new Error('Pessoa não encontrada');
@@ -270,10 +339,40 @@ class PessoaController {
                 throw new Error('Acesso negado');
             }
 
-            res.render('pessoas/edit', {
+            // Buscar dados de login da pessoa
+            const databaseConfig = require('../config/database');
+            const loginData = await databaseConfig.get(
+                'SELECT nivelacesso, status FROM pessoa_login WHERE id_pessoa = ?',
+                [id]
+            );
+            
+            console.log(`[DEBUG] Dados de login para pessoa ${id}:`, loginData);
+
+            // Buscar módulos vinculados à pessoa
+            const modulosVinculados = await databaseConfig.all(
+                'SELECT id_modulo FROM pessoa_modulos WHERE id_pessoa = ? AND ativo = 1',
+                [id]
+            );
+            
+            console.log(`[DEBUG] Módulos vinculados para pessoa ${id}:`, modulosVinculados);
+
+            // Adicionar dados de login e módulos ao objeto pessoa
+            if (loginData) {
+                pessoa.nivelAcesso = loginData.nivelacesso;
+                pessoa.statusLogin = loginData.status;
+                console.log(`[DEBUG] Dados adicionados ao objeto pessoa - nivelAcesso: ${pessoa.nivelAcesso}, statusLogin: ${pessoa.statusLogin}`);
+            } else {
+                console.log(`[DEBUG] Nenhum dado de login encontrado para pessoa ${id}`);
+            }
+            
+            pessoa.modulos = modulosVinculados.map(m => m.id_modulo);
+            console.log(`[DEBUG] Objeto pessoa final:`, { id: pessoa.id_pessoa, nome: pessoa.nome, nivelAcesso: pessoa.nivelAcesso, statusLogin: pessoa.statusLogin, modulos: pessoa.modulos });
+
+            res.render('admin-pessoa-form', {
                 title: `Editar Pessoa - ${pessoa.nome}`,
                 user,
                 pessoa,
+                isEdit: true,
                 nivelAcessoOptions: Object.values(enums.nivelAcesso),
                 error: req.query.error || null,
                 currentPage: 'pessoas'
@@ -300,6 +399,9 @@ class PessoaController {
      */
     async update(req, res) {
         try {
+            // Definir request atual no modelo para verificações de segurança
+            this.pessoaModel.setCurrentRequest(req);
+            
             const { id } = req.params;
             const dadosPessoa = req.body;
             const user = req.session.user;
@@ -359,6 +461,19 @@ class PessoaController {
             console.log('Dados filtrados para atualização:', dadosPessoa);
             const pessoaAtualizada = await this.pessoaModel.update(id, dadosPessoa);
             console.log('Pessoa atualizada com sucesso:', pessoaAtualizada ? 'sim' : 'não');
+            
+            // Atualizar login se fornecido
+            if (dadosPessoa.nivelAcesso && dadosPessoa.statusLogin) {
+                await this.updatePessoaLogin(id, {
+                    nivelacesso: dadosPessoa.nivelAcesso,
+                    status: dadosPessoa.statusLogin
+                });
+            }
+            
+            // Atualizar módulos se fornecidos
+            if (dadosPessoa.modulos) {
+                await this.updatePessoaModulos(id, dadosPessoa.modulos);
+            }
 
             // Debug headers para verificar detecção AJAX
             console.log('=== DEBUG HEADERS ===');
@@ -543,6 +658,9 @@ class PessoaController {
      */
     async destroy(req, res) {
         try {
+            // Definir request atual no modelo para verificações de segurança
+            this.pessoaModel.setCurrentRequest(req);
+            
             const { id } = req.params;
 
             // Verificar se é administrador
@@ -575,7 +693,7 @@ class PessoaController {
             await this.pessoaModel.delete(id);
 
             // Para requisições AJAX
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
                 return res.json({
                     success: true,
                     message: messages.success.deleted
@@ -590,7 +708,7 @@ class PessoaController {
             const errorMessage = error.message || 'Erro ao excluir pessoa';
             
             // Para requisições AJAX
-            if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+            if (req.xhr || req.headers.accept?.indexOf('json') > -1 || req.headers['x-requested-with'] === 'XMLHttpRequest') {
                 return res.status(500).json({
                     success: false,
                     message: errorMessage
@@ -706,6 +824,133 @@ class PessoaController {
             });
         }
     }
-}
-
-module.exports = PessoaController;
+    
+    /**
+     * Cria login para uma pessoa
+     * @param {number} idPessoa - ID da pessoa
+     * @param {Object} loginData - Dados do login
+     */
+    async createPessoaLogin(idPessoa, loginData) {
+        try {
+            const databaseConfig = require('../config/database');
+            
+            // Verificar se já existe login para esta pessoa
+            const existingLogin = await databaseConfig.get(
+                'SELECT id_pessoa FROM pessoa_login WHERE id_pessoa = ?',
+                [idPessoa]
+            );
+            
+            if (existingLogin) {
+                throw new Error('Já existe um login para esta pessoa');
+            }
+            
+            // Inserir login com senha padrão temporária
+            const bcrypt = require('bcrypt');
+            const senhaTemporaria = await bcrypt.hash('123456', 10); // Senha padrão temporária
+            
+            const query = `
+                INSERT INTO pessoa_login (id_pessoa, senha, nivelacesso, status, dataultimaatualizacao)
+                VALUES (?, ?, ?, ?, NOW())
+            `;
+            
+            await databaseConfig.run(query, [idPessoa, senhaTemporaria, loginData.nivelacesso, loginData.status]);
+            
+        } catch (error) {
+            console.error('Erro ao criar login da pessoa:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Cria vínculos da pessoa com módulos
+     * @param {number} idPessoa - ID da pessoa
+     * @param {Array} modulos - Array com IDs dos módulos
+     */
+    async createPessoaModulos(idPessoa, modulos) {
+        try {
+            const databaseConfig = require('../config/database');
+            
+            // Inserir vínculos com módulos
+            const query = `
+                INSERT INTO pessoa_modulos (id_pessoa, id_modulo, ativo, dataultimaatualizacao)
+                VALUES (?, ?, 1, NOW())
+            `;
+            
+            for (const idModulo of modulos) {
+                await databaseConfig.run(query, [idPessoa, idModulo]);
+            }
+            
+        } catch (error) {
+             console.error('Erro ao criar vínculos com módulos:', error);
+             throw error;
+         }
+     }
+     
+     /**
+      * Atualiza login de uma pessoa
+      * @param {number} idPessoa - ID da pessoa
+      * @param {Object} loginData - Dados do login
+      */
+     async updatePessoaLogin(idPessoa, loginData) {
+         try {
+             const databaseConfig = require('../config/database');
+             
+             // Verificar se existe login para esta pessoa
+             const existingLogin = await databaseConfig.get(
+                 'SELECT id_pessoa FROM pessoa_login WHERE id_pessoa = ?',
+                 [idPessoa]
+             );
+             
+             if (existingLogin) {
+                 // Atualizar login existente
+                 const query = `
+                     UPDATE pessoa_login 
+                     SET nivelacesso = ?, status = ?, dataultimaatualizacao = NOW()
+                     WHERE id_pessoa = ?
+                 `;
+                 
+                 await databaseConfig.run(query, [loginData.nivelacesso, loginData.status, idPessoa]);
+             } else {
+                 // Criar novo login
+                 await this.createPessoaLogin(idPessoa, loginData);
+             }
+             
+         } catch (error) {
+             console.error('Erro ao atualizar login da pessoa:', error);
+             throw error;
+         }
+     }
+     
+     /**
+      * Atualiza vínculos da pessoa com módulos
+      * @param {number} idPessoa - ID da pessoa
+      * @param {Array} modulos - Array com IDs dos módulos
+      */
+     async updatePessoaModulos(idPessoa, modulos) {
+         try {
+             const databaseConfig = require('../config/database');
+             
+             // Remover vínculos existentes
+             await databaseConfig.run(
+                 'DELETE FROM pessoa_modulos WHERE id_pessoa = ?',
+                 [idPessoa]
+             );
+             
+             // Inserir novos vínculos
+             const query = `
+                 INSERT INTO pessoa_modulos (id_pessoa, id_modulo, ativo, dataultimaatualizacao)
+                 VALUES (?, ?, 1, NOW())
+             `;
+             
+             for (const idModulo of modulos) {
+                 await databaseConfig.run(query, [idPessoa, idModulo]);
+             }
+             
+         } catch (error) {
+             console.error('Erro ao atualizar vínculos com módulos:', error);
+             throw error;
+         }
+     }
+ }
+ 
+ module.exports = PessoaController;

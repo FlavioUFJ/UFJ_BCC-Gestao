@@ -140,4 +140,32 @@ router.get('/buscar', async (req, res) => {
 // GET /pessoas/api/:tipo - Buscar pessoas por tipo
 router.get('/api/:tipo', (req, res) => pessoaController.getByType(req, res));
 
+// ===== ROTAS DE API PARA MÓDULOS =====
+
+// GET /api/pessoas/:id/modulos - Buscar módulos de uma pessoa
+router.get('/api/:id/modulos', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const databaseConfig = require('../config/database');
+        
+        const query = `
+            SELECT m.id_modulo, m.nome, m.descricao, m.icone, m.cor, m.url, m.ordem
+            FROM pessoa_modulos pm
+            INNER JOIN modulos m ON pm.id_modulo = m.id_modulo
+            WHERE pm.id_pessoa = ?
+            ORDER BY m.ordem, m.nome
+        `;
+        
+        const modulos = await databaseConfig.all(query, [id]);
+        
+        res.json(modulos);
+    } catch (error) {
+        console.error('Erro ao buscar módulos da pessoa:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar módulos da pessoa: ' + error.message
+        });
+    }
+});
+
 module.exports = router;

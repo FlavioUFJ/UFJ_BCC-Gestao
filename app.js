@@ -25,6 +25,7 @@ const SessionConfig = require('./src/config/session');
 const accessControlMiddleware = require('./middleware/access-control');
 const validationMiddleware = require('./src/middleware/validation');
 const LoggingMiddleware = require('./src/middleware/logging');
+const securityErrorHandler = require('./src/middleware/security-error-handler');
 
 // Importar rotas
 const routes = require('./src/routes');
@@ -333,6 +334,9 @@ class App {
             error.status = 404;
             next(error);
         });
+
+        // Middleware de tratamento de erros de segurança
+        this.app.use(securityErrorHandler);
 
         // Middleware de tratamento de erros do multer
         this.app.use((error, req, res, next) => {

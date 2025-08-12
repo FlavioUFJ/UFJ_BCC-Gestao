@@ -188,6 +188,9 @@ class ParametroController {
      */
     async create(req, res) {
         try {
+            // Definir request atual no modelo para verificações de segurança
+            this.parametroModel.setCurrentRequest(req);
+            
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({
@@ -236,6 +239,9 @@ class ParametroController {
      */
     async update(req, res) {
         try {
+            // Definir request atual no modelo para verificações de segurança
+            this.parametroModel.setCurrentRequest(req);
+            
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({
@@ -299,6 +305,9 @@ class ParametroController {
      */
     async delete(req, res) {
         try {
+            // Definir request atual no modelo para verificações de segurança
+            this.parametroModel.setCurrentRequest(req);
+            
             const { id } = req.params;
             
             const parametro = await this.parametroModel.findById(id);

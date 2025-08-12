@@ -281,8 +281,8 @@
                                                             <select class="form-select" id="nivelAcesso" required>
                                                                 <option value="">Selecione o nível</option>
                                                                 <option value="Administrador">Administrador</option>
-                                                                <option value="Coordenador">Coordenador</option>
-                                                                <option value="Usuario">Usuário</option>
+                                                                <option value="Operador">Operador</option>
+                                                                <option value="Visitante">Visitante</option>
                                                             </select>
                                                         </div>
                                                         <div class="mb-3">
@@ -647,9 +647,68 @@
             
             deletePessoa(id, nome) {
                 if (confirm(`Tem certeza que deseja excluir a pessoa "${nome}"?`)) {
-                    // Implementar exclusão
-                    console.log('Excluir pessoa:', id);
+                    fetch(`/pessoas/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            this.loadPessoas();
+                            this.showAlert('Pessoa excluída com sucesso!', 'success');
+                        } else {
+                            this.showAlert('Erro ao excluir pessoa: ' + data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        this.showAlert('Erro ao excluir pessoa: ' + error.message, 'error');
+                    });
                 }
+            },
+            
+            showAlert(message, type = 'info') {
+                // Remove alertas existentes
+                const existingAlerts = document.querySelectorAll('.alert-temp');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                const alertClass = {
+                    'success': 'alert-success',
+                    'error': 'alert-danger',
+                    'warning': 'alert-warning',
+                    'info': 'alert-info'
+                }[type] || 'alert-info';
+                
+                const container = document.querySelector('.main-container') || document.querySelector('.container-fluid');
+                if (!container) return;
+                
+                const firstChild = container.firstElementChild;
+                if (!firstChild) return;
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert ${alertClass} alert-dismissible fade show alert-temp`;
+                alertDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                container.insertBefore(alertDiv, firstChild);
+                
+                // Auto-remover após 5 segundos
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
             },
             
             // Métodos da aba Login

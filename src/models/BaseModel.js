@@ -5,6 +5,7 @@
 
 const databaseConfig = require('../config/database');
 const { validation, messages } = require('../config');
+const { databaseSecurity, SecurityError } = require('../middleware/database-security');
 
 class BaseModel {
     constructor(tableName, primaryKey = 'id') {
@@ -17,6 +18,15 @@ class BaseModel {
         this.fillable = []; // Campos que podem ser preenchidos em massa
         this.hidden = []; // Campos que devem ser ocultados na serialização
         this.rules = {}; // Regras de validação
+        this.currentRequest = null; // Para armazenar o request atual
+    }
+
+    /**
+     * Define o request atual para verificações de segurança
+     * @param {Object} req - Request object
+     */
+    setCurrentRequest(req) {
+        this.currentRequest = req;
     }
 
     /**
@@ -99,6 +109,11 @@ class BaseModel {
      */
     async create(data) {
         try {
+            // Verificação de segurança
+            if (this.currentRequest) {
+                await databaseSecurity.checkPermission(this.tableName, 'create', this.currentRequest);
+            }
+            
             // Validar dados
             await this.validate(data);
             
@@ -115,8 +130,11 @@ class BaseModel {
             const result = await databaseConfig.run(query, values);
             
             // Buscar e retornar o registro criado
-            return await this.findById(result.id);
+            return await this.findById(result.insertId);
         } catch (error) {
+            if (error instanceof SecurityError) {
+                throw error; // Re-throw security errors
+            }
             console.error(`Erro ao criar registro em ${this.tableName}:`, error);
             if (error.message.includes('validation')) {
                 throw error;
@@ -133,6 +151,11 @@ class BaseModel {
      */
     async update(id, data) {
         try {
+            // Verificação de segurança
+            if (this.currentRequest) {
+                await databaseSecurity.checkPermission(this.tableName, 'update', this.currentRequest);
+            }
+            
             // Verificar se o registro existe
             const existing = await this.findById(id);
             if (!existing) {
@@ -161,6 +184,9 @@ class BaseModel {
             // Buscar e retornar o registro atualizado
             return await this.findById(id);
         } catch (error) {
+            if (error instanceof SecurityError) {
+                throw error; // Re-throw security errors
+            }
             console.error(`Erro ao atualizar registro ${id} em ${this.tableName}:`, error);
             if (error.message.includes('validation') || error.message.includes('não encontrado')) {
                 throw error;
@@ -176,6 +202,11 @@ class BaseModel {
      */
     async delete(id) {
         try {
+            // Verificação de segurança
+            if (this.currentRequest) {
+                await databaseSecurity.checkPermission(this.tableName, 'delete', this.currentRequest);
+            }
+            
             // Verificar se o registro existe
             const existing = await this.findById(id);
             if (!existing) {
@@ -187,6 +218,9 @@ class BaseModel {
             
             return result.changes > 0;
         } catch (error) {
+            if (error instanceof SecurityError) {
+                throw error; // Re-throw security errors
+            }
             console.error(`Erro ao excluir registro ${id} de ${this.tableName}:`, error);
             if (error.message.includes('não encontrado')) {
                 throw error;

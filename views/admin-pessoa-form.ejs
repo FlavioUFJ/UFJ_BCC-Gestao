@@ -189,9 +189,84 @@
 
                 </div>
                 
+                <!-- Seção de Dados de Login -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-key me-2"></i>Dados de Login</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="nivelAcesso" class="form-label">Nível de Acesso <span class="text-danger">*</span></label>
+                                <select class="form-select" id="nivelAcesso" name="nivelAcesso" required>
+                                    <option value="">Selecione o nível de acesso</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Operador">Operador</option>
+                                    <option value="Visitante">Visitante</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="statusLogin" class="form-label">Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="statusLogin" name="statusLogin" required>
+                                    <option value="Ativo" selected>Ativo</option>
+                                    <option value="Inativo">Inativo</option>
+                                    <option value="Bloqueado">Bloqueado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Módulos -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-cubes me-2"></i>Módulos do Sistema</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="moduloSelect" class="form-label">Selecionar Módulo:</label>
+                                <select id="moduloSelect" class="form-select">
+                                    <option value="">Carregando módulos...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" id="btnAdicionarModulo" class="btn btn-success" onclick="PessoaForm.adicionarModulo()">
+                                    <i class="fas fa-plus me-1"></i>Adicionar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <label class="form-label">Módulos Selecionados:</label>
+                                <div class="table-responsive">
+                                    <table id="tabelaModulos" class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th width="60">Ícone</th>
+                                                <th>Nome</th>
+                                                <th>Descrição</th>
+                                                <th width="100">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabelaModulosBody">
+                                            <tr id="semModulos">
+                                                <td colspan="4" class="text-center text-muted py-3">
+                                                    <i class="fas fa-info-circle me-2"></i>Nenhum módulo selecionado
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="btn-group-actions d-flex justify-content-between">
                     <div>
-                        <button type="button" class="btn btn-secondary" onclick="window.location.href='<%= origem %>'">
+                        <button type="button" class="btn btn-secondary" onclick="PessoaForm.voltarPagina()">
                             <i class="fas fa-arrow-left me-1"></i>
                             Voltar
                         </button>
@@ -218,17 +293,28 @@
         <% } %>
         
         const PessoaForm = {
-            init() {
+            async init() {
+                console.log('[DEBUG] PessoaForm.init() chamado');
                 this.setupEventListeners();
                 this.setupFormValidation();
                 this.setupCategoriaHandling();
+                // Carregar módulos primeiro, depois preencher dados de edição
+                await this.loadModulos();
+                <% if (typeof isEdit !== 'undefined' && isEdit) { %>
+                console.log('[DEBUG] Chamando preencherDadosEdicao...');
                 this.preencherDadosEdicao();
+                <% } %>
             },
             
             setupEventListeners() {
                 document.getElementById('pessoaForm').addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.savePessoa();
+                });
+                
+                // Event listener para o botão de adicionar módulo
+                document.getElementById('btnAdicionarModulo').addEventListener('click', () => {
+                    this.adicionarModulo();
                 });
             },
             
@@ -253,7 +339,10 @@
                 this.aplicarRegrasIncompatibilidade();
             },
             
-            preencherDadosEdicao() {
+            async preencherDadosEdicao() {
+                console.log('[DEBUG] Função preencherDadosEdicao chamada');
+                console.log('[DEBUG] isEdit:', <% if (typeof isEdit !== 'undefined') { %><%- JSON.stringify(isEdit) %><% } else { %>undefined<% } %>);
+                console.log('[DEBUG] pessoa:', <% if (typeof pessoa !== 'undefined' && pessoa) { %><%- JSON.stringify(pessoa) %><% } else { %>undefined<% } %>);
                 <% if (typeof isEdit !== 'undefined' && isEdit && typeof pessoa !== 'undefined' && pessoa) { %>
                 // Preencher checkboxes de categoria baseado nos dados da pessoa
                 if (<%- JSON.stringify(pessoa.categoria) %>) {
@@ -265,7 +354,6 @@
                         '1': 'Coordenador',
                         '2': 'Professor',
                         '3': 'Aluno',
-                        '4': 'Concedente',
                         '5': 'Supervisor',
                         '99': 'Usuário Geral'
                     };
@@ -284,6 +372,41 @@
                     // Atualizar campo oculto
                     this.updateCategoriaField();
                 }
+                
+                // Preencher dados de login
+                console.log('[DEBUG] Iniciando preenchimento de dados de login');
+                <% if (pessoa.nivelAcesso) { %>
+                const nivelAcessoSelect = document.getElementById('nivelAcesso');
+                console.log('[DEBUG] Elemento nivelAcesso encontrado:', nivelAcessoSelect);
+                console.log('[DEBUG] Valor a ser definido para nivelAcesso:', '<%- pessoa.nivelAcesso %>');
+                if (nivelAcessoSelect) {
+                    nivelAcessoSelect.value = '<%- pessoa.nivelAcesso %>';
+                    console.log('[DEBUG] Nível de acesso preenchido:', '<%- pessoa.nivelAcesso %>');
+                    console.log('[DEBUG] Valor atual do select nivelAcesso:', nivelAcessoSelect.value);
+                } else {
+                    console.log('[DEBUG] Elemento nivelAcesso não encontrado!');
+                }
+                <% } else { %>
+                console.log('[DEBUG] pessoa.nivelAcesso não existe');
+                <% } %>
+                
+                <% if (pessoa.statusLogin) { %>
+                const statusLoginSelect = document.getElementById('statusLogin');
+                console.log('[DEBUG] Elemento statusLogin encontrado:', statusLoginSelect);
+                console.log('[DEBUG] Valor a ser definido para statusLogin:', '<%- pessoa.statusLogin %>');
+                if (statusLoginSelect) {
+                    statusLoginSelect.value = '<%- pessoa.statusLogin %>';
+                    console.log('[DEBUG] Status login preenchido:', '<%- pessoa.statusLogin %>');
+                    console.log('[DEBUG] Valor atual do select statusLogin:', statusLoginSelect.value);
+                } else {
+                    console.log('[DEBUG] Elemento statusLogin não encontrado!');
+                }
+                <% } else { %>
+                console.log('[DEBUG] pessoa.statusLogin não existe');
+                <% } %>
+                
+                // Carregar módulos da pessoa
+                await this.carregarModulosPessoa();
                 <% } %>
             },
             
@@ -429,13 +552,195 @@
                 }
             },
             
-            async savePessoa() {
+            // Método para carregar módulos disponíveis
+            modulosDisponiveis: [],
+            modulosSelecionados: [],
+            
+            async loadModulos() {
+                try {
+                    const response = await fetch('/admin/modulos');
+                    const modulos = await response.json();
+                    
+                    this.modulosDisponiveis = modulos;
+                    const select = document.getElementById('moduloSelect');
+                    
+                    if (modulos.length === 0) {
+                        select.innerHTML = '<option value="">Nenhum módulo cadastrado</option>';
+                        document.getElementById('btnAdicionarModulo').disabled = true;
+                        return;
+                    }
+                    
+                    select.innerHTML = '<option value="">Selecione um módulo...</option>' + 
+                        modulos.map(modulo => `
+                            <option value="${modulo.id_modulo}" data-icone="${modulo.icone || 'fas fa-cube'}" 
+                                    data-cor="${modulo.cor || '#6c757d'}" data-descricao="${modulo.descricao || ''}">
+                                ${modulo.nome}
+                            </option>
+                        `).join('');
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar módulos:', error);
+                    const select = document.getElementById('moduloSelect');
+                    select.innerHTML = '<option value="">Erro ao carregar módulos</option>';
+                    document.getElementById('btnAdicionarModulo').disabled = true;
+                }
+            },
+            
+            adicionarModulo() {
+                const select = document.getElementById('moduloSelect');
+                const selectedOption = select.options[select.selectedIndex];
+                
+                if (!selectedOption.value) {
+                    this.showAlert('Selecione um módulo para adicionar.', 'warning');
+                    return;
+                }
+                
+                const moduloId = selectedOption.value;
+                
+                // Verificar se o módulo já foi adicionado
+                if (this.modulosSelecionados.find(m => m.id_modulo == moduloId)) {
+                    this.showAlert('Este módulo já foi adicionado.', 'warning');
+                    return;
+                }
+                
+                // Encontrar dados completos do módulo
+                const modulo = this.modulosDisponiveis.find(m => m.id_modulo == moduloId);
+                if (!modulo) {
+                    this.showAlert('Erro ao encontrar dados do módulo.', 'error');
+                    return;
+                }
+                
+                // Adicionar à lista de selecionados
+                this.modulosSelecionados.push(modulo);
+                
+                // Atualizar tabela
+                this.atualizarTabelaModulos();
+                
+                // Resetar select
+                select.selectedIndex = 0;
+            },
+            
+            removerModulo(moduloId) {
+                this.modulosSelecionados = this.modulosSelecionados.filter(m => m.id_modulo != moduloId);
+                this.atualizarTabelaModulos();
+            },
+            
+            atualizarTabelaModulos() {
+                const tbody = document.getElementById('tabelaModulosBody');
+                const semModulos = document.getElementById('semModulos');
+                
+                if (this.modulosSelecionados.length === 0) {
+                    if (semModulos) {
+                        semModulos.style.display = '';
+                    }
+                    // Remover outras linhas
+                    const linhas = tbody.querySelectorAll('tr:not(#semModulos)');
+                    linhas.forEach(linha => linha.remove());
+                    return;
+                }
+                
+                // Ocultar mensagem "sem módulos"
+                if (semModulos) {
+                    semModulos.style.display = 'none';
+                }
+                
+                // Limpar tabela (exceto a linha "sem módulos")
+                const linhas = tbody.querySelectorAll('tr:not(#semModulos)');
+                linhas.forEach(linha => linha.remove());
+                
+                // Adicionar linhas dos módulos selecionados
+                this.modulosSelecionados.forEach(modulo => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="text-center">
+                            <i class="${modulo.icone || 'fas fa-cube'}" style="color: ${modulo.cor || '#6c757d'}; font-size: 1.2em;"></i>
+                        </td>
+                        <td class="fw-medium">${modulo.nome}</td>
+                        <td class="text-muted">${modulo.descricao || ''}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="PessoaForm.removerModulo(${modulo.id_modulo})" title="Remover módulo">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+             },
+             
+             async carregarModulosPessoa() {
+                 <% if (typeof isEdit !== 'undefined' && isEdit && typeof pessoa !== 'undefined' && pessoa) { %>
+                 try {
+                     // Primeiro tentar usar os dados que já foram passados pelo controlador
+                     <% if (pessoa.modulos && pessoa.modulos.length > 0) { %>
+                     const modulosIds = <%- JSON.stringify(pessoa.modulos) %>;
+                     console.log('Módulos da pessoa (IDs do controlador):', modulosIds);
+                     
+                     // Para cada ID de módulo, encontrar os dados completos na lista de módulos disponíveis
+                     modulosIds.forEach(moduloId => {
+                         const modulo = this.modulosDisponiveis.find(m => m.id_modulo == moduloId);
+                         if (modulo && !this.modulosSelecionados.find(m => m.id_modulo == modulo.id_modulo)) {
+                             this.modulosSelecionados.push(modulo);
+                             console.log('Módulo adicionado:', modulo.nome);
+                         }
+                     });
+                     
+                     // Atualizar a tabela
+                     this.atualizarTabelaModulos();
+                     <% } else { %>
+                     // Se não há dados do controlador, buscar via API
+                     const pessoaId = document.getElementById('pessoaId').value;
+                     if (!pessoaId) return;
+                     
+                     const response = await fetch(`/pessoas/api/${pessoaId}/modulos`);
+                     if (response.ok) {
+                         const modulosPessoa = await response.json();
+                         console.log('Módulos da pessoa (API):', modulosPessoa);
+                         
+                         // Adicionar módulos já vinculados à lista de selecionados
+                         modulosPessoa.forEach(modulo => {
+                             if (!this.modulosSelecionados.find(m => m.id_modulo == modulo.id_modulo)) {
+                                 this.modulosSelecionados.push(modulo);
+                             }
+                         });
+                         
+                         // Atualizar a tabela
+                         this.atualizarTabelaModulos();
+                     }
+                     <% } %>
+                 } catch (error) {
+                     console.error('Erro ao carregar módulos da pessoa:', error);
+                 }
+                 <% } %>
+             },
+ 
+             async savePessoa() {
                 const pessoaId = document.getElementById('pessoaId').value;
                 
                 // Validar se pelo menos uma categoria foi selecionada
                 const categoriaValue = document.getElementById('categoria').value;
                 if (!categoriaValue || categoriaValue.trim() === '') {
                     this.showAlert('Por favor, selecione pelo menos uma categoria.', 'warning');
+                    return;
+                }
+                
+                // Validar dados de login obrigatórios
+                const nivelAcesso = document.getElementById('nivelAcesso').value;
+                const statusLogin = document.getElementById('statusLogin').value;
+                
+                if (!nivelAcesso) {
+                    this.showAlert('Por favor, selecione o nível de acesso.', 'danger');
+                    return;
+                }
+                
+                if (!statusLogin) {
+                    this.showAlert('Por favor, selecione o status do login.', 'danger');
+                    return;
+                }
+                
+                // Validar se pelo menos um módulo foi selecionado
+                if (this.modulosSelecionados.length === 0) {
+                    this.showAlert('Por favor, selecione pelo menos um módulo para a pessoa.', 'danger');
                     return;
                 }
                 
@@ -449,7 +754,12 @@
                     email: document.getElementById('email').value,
                     cnpj_cpf: cpfCnpjLimpo,
                     categoria: categoriaValue,
-                    telefone: document.getElementById('telefone').value
+                    telefone: document.getElementById('telefone').value,
+                    // Dados de login
+                    nivelAcesso: document.getElementById('nivelAcesso').value,
+                    statusLogin: document.getElementById('statusLogin').value,
+                    // Módulos selecionados
+                    modulos: this.modulosSelecionados.map(m => m.id_modulo)
                 };
                 
                 try {
@@ -479,18 +789,67 @@
                     const result = await response.json();
                     
                     if (result.success) {
-                        this.showAlert(pessoaId ? 'Pessoa atualizada com sucesso!' : 'Pessoa criada com sucesso!', 'success');
+                        this.showAlert(pessoaId ? 'Pessoa, dados de login e módulos atualizados com sucesso!' : 'Pessoa, dados de login e módulos cadastrados com sucesso!', 'success');
                         
-                        // Não fechar a aba automaticamente - deixar o usuário decidir
-                        // setTimeout(() => {
-                        //     window.close();
-                        // }, 2000);
+                        // Se for um novo cadastro, limpar o formulário para facilitar novo cadastro
+                        if (!pessoaId) {
+                            setTimeout(() => {
+                                this.limparFormulario();
+                            }, 2000);
+                        }
                     } else {
-                        this.showAlert('Erro ao salvar pessoa: ' + result.message, 'danger');
+                        this.showAlert('Erro ao salvar: ' + (result.message || 'Erro desconhecido'), 'danger');
                     }
                 } catch (error) {
                     console.error('Erro:', error);
                     this.showAlert('Erro ao salvar pessoa: ' + error.message, 'danger');
+                }
+            },
+            
+            voltarPagina() {
+                // Tentar voltar para a página anterior
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    // Se não há histórico, ir para a origem ou página padrão
+                    window.location.href = '<%= origem %>' || '/admin/pessoas';
+                }
+                
+                // Se a página foi aberta em uma nova aba, tentar fechá-la após um pequeno delay
+                setTimeout(() => {
+                    if (window.opener) {
+                        window.close();
+                    }
+                }, 100);
+            },
+            
+            limparFormulario() {
+                // Limpar campos do formulário
+                document.getElementById('pessoaForm').reset();
+                
+                // Limpar checkboxes de categoria
+                const checkboxes = document.querySelectorAll('.categoria-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                
+                // Limpar campo hidden de categoria
+                document.getElementById('categoria').value = '';
+                
+                // Limpar módulos selecionados
+                this.modulosSelecionados = [];
+                this.atualizarTabelaModulos();
+                
+                // Resetar selects para primeira opção
+                const selects = document.querySelectorAll('select');
+                selects.forEach(select => {
+                    select.selectedIndex = 0;
+                });
+                
+                // Focar no primeiro campo
+                const primeiroCampo = document.getElementById('tipo');
+                if (primeiroCampo) {
+                    primeiroCampo.focus();
                 }
             },
             

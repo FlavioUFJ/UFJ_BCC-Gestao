@@ -484,12 +484,26 @@ class PlanoAtividadeController {
                 });
             }
 
-            // Verificar se pode ser editado (apenas se estiver "Em Edição")
-            if (plano.pa_situacao === 'Aprovado sem Anexo' || plano.pa_situacao === 'Aprovado com Anexo') {
-                return res.status(403).render('error', {
-                    title: 'Erro',
-                    message: 'Plano de atividade aprovado não pode ser editado'
-                });
+            // Verificar se pode ser editado baseado no nível do usuário
+            const user = req.session.user;
+            const userNivelAcesso = user.nivelacesso;
+            
+            if (userNivelAcesso === 'Administrador') {
+                // Administradores só não podem editar "Aprovado com Anexo"
+                if (plano.pa_situacao === 'Aprovado com Anexo') {
+                    return res.status(403).render('error', {
+                        title: 'Erro',
+                        message: 'Plano de atividade aprovado com anexo não pode ser editado'
+                    });
+                }
+            } else {
+                // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
+                if (plano.pa_situacao === 'Aprovado sem Anexo' || plano.pa_situacao === 'Aprovado com Anexo') {
+                    return res.status(403).render('error', {
+                        title: 'Erro',
+                        message: 'Plano de atividade aprovado não pode ser editado'
+                    });
+                }
             }
             
             // Criar objeto campoEstagio para compatibilidade com o formulário

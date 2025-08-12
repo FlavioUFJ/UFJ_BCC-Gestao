@@ -84,9 +84,9 @@
                                     <strong>CH:</strong> <%= camposEstagio[0].cargahoraria || 'N/A' %>h
                                 </div>
                             </div>
-                            <p class="mb-1"><strong>Estagiário:</strong> <span id="estagiarioAtual"><%= camposEstagio[0].nome_estagiario || 'N/A' %></span></p>
-                            <p class="mb-1"><strong>Orientador:</strong> <span id="orientadorAtual"><%= camposEstagio[0].nome_orientador || 'N/A' %></span></p>
-                            <p class="mb-1"><strong>Supervisor:</strong> <span id="supervisorAtual"><%= camposEstagio[0].nome_supervisor || 'N/A' %></span></p>
+                            <p class="mb-1"><strong>Estagiário:</strong> <span id="estagiarioAtual"><strong><%= camposEstagio[0].nome_estagiario || 'N/A' %></strong></span></p>
+                            <p class="mb-1"><strong>Orientador:</strong> <span id="orientadorAtual"><strong><%= camposEstagio[0].nome_orientador || 'N/A' %></strong></span></p>
+                            <p class="mb-1"><strong>Supervisor:</strong> <span id="supervisorAtual"><strong><%= camposEstagio[0].nome_supervisor || 'N/A' %></strong></span></p>
                             <p class="mb-0 text-end">
                                 <span class="badge bg-light text-dark" id="contadorCampoEstagioCorpo">
                                     <% if (camposEstagio && camposEstagio.length > 0) { %>
@@ -501,8 +501,8 @@
                             <strong>CH:</strong> <span>${plano.pa_cargahoraria || 'N/A'}</span>
                         </div>
                     </div>
-                    <p class="mb-1"><strong>Orientador:</strong> <span>${plano.nome_orientador || 'N/A'}</span></p>
-                    <p class="mb-1"><strong>Supervisor:</strong> <span>${plano.nome_supervisor || 'N/A'}</span></p>
+                    <p class="mb-1"><strong>Orientador:</strong> <span><strong>${plano.nome_orientador || 'N/A'}</strong></span></p>
+                    <p class="mb-1"><strong>Supervisor:</strong> <span><strong>${plano.nome_supervisor || 'N/A'}</strong></span></p>
                     <p class="mb-1"><strong>Local do estágio:</strong> <span>${plano.nome_concedente || 'N/A'}</span></p>
                     
                     <div class="mt-2">
@@ -1825,17 +1825,17 @@
         // Atualizar pessoas
         const estagiarioElement = document.getElementById('estagiarioAtual');
         if (estagiarioElement) {
-            estagiarioElement.textContent = registro.nome_estagiario || 'N/A';
+            estagiarioElement.innerHTML = `<strong>${registro.nome_estagiario || 'N/A'}</strong>`;
         }
         
         const orientadorElement = document.getElementById('orientadorAtual');
         if (orientadorElement) {
-            orientadorElement.textContent = registro.nome_orientador || 'N/A';
+            orientadorElement.innerHTML = `<strong>${registro.nome_orientador || 'N/A'}</strong>`;
         }
         
         const supervisorElement = document.getElementById('supervisorAtual');
         if (supervisorElement) {
-            supervisorElement.textContent = registro.nome_supervisor || 'N/A';
+            supervisorElement.innerHTML = `<strong>${registro.nome_supervisor || 'N/A'}</strong>`;
         }
         
         const concedenteElement = document.getElementById('concedenteAtual');

@@ -970,15 +970,15 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                 <div class="period-info">Período do estágio: ${dataInicial} - ${dataFinal}</div>
                 <div class="people-info">
                     <div class="person-box">
-                        <div class="person-name">${plano.nome_estagiario || 'Não informado'}</div>
+                        <div class="person-name"><strong>${plano.nome_estagiario || 'Não informado'}</strong></div>
                         <div class="person-role">Estagiário</div>
                     </div>
                     <div class="person-box">
-                        <div class="person-name">${plano.nome_orientador || 'Não informado'}</div>
+                        <div class="person-name"><strong>${plano.nome_orientador || 'Não informado'}</strong></div>
                         <div class="person-role">Orientador</div>
                     </div>
                     <div class="person-box">
-                        <div class="person-name">${plano.nome_supervisor || 'Não informado'}</div>
+                        <div class="person-name"><strong>${plano.nome_supervisor || 'Não informado'}</strong></div>
                         <div class="person-role">Supervisor</div>
                     </div>
                 </div>
@@ -1043,17 +1043,17 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             <div class="signatures">
                 <div class="signature-box">
                     <div class="signature-line"></div>
-                    <div class="signature-name">${plano.nome_estagiario || 'Não informado'}</div>
+                    <div class="signature-name"><strong>${plano.nome_estagiario || 'Não informado'}</strong></div>
                     <div class="signature-role">Estagiário</div>
                 </div>
                 <div class="signature-box">
                     <div class="signature-line"></div>
-                    <div class="signature-name">${plano.nome_orientador || 'Não informado'}</div>
+                    <div class="signature-name"><strong>${plano.nome_orientador || 'Não informado'}</strong></div>
                     <div class="signature-role">Orientador</div>
                 </div>
                 <div class="signature-box">
                     <div class="signature-line"></div>
-                    <div class="signature-name">${plano.nome_supervisor || 'Não informado'}</div>
+                    <div class="signature-name"><strong>${plano.nome_supervisor || 'Não informado'}</strong></div>
                     <div class="signature-role">Supervisor</div>
                 </div>
             </div>

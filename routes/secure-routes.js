@@ -1190,6 +1190,17 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
         `;
         
         const user = getUserFromSession(req);
+        console.log('[DEBUG NOTIFICAÇÃO] Usuário extraído da sessão:', user);
+        console.log('[DEBUG NOTIFICAÇÃO] req.session.user:', req.session.user);
+        
+        if (!user || !user.id_pessoa) {
+            console.error('[ERROR NOTIFICAÇÃO] Usuário não autenticado ou sem id_pessoa:', { user, sessionUser: req.session.user });
+            return res.status(401).json({
+                success: false,
+                message: 'Usuário não autenticado'
+            });
+        }
+        
         const rows = await dbHelper.executeCustom(query, [campoId], user, 'campo_estagio', 'all');
         
         if (rows.length === 0) {

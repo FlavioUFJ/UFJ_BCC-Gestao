@@ -634,15 +634,15 @@
                 const baseUrl = window.location.origin;
                 const origem = encodeURIComponent('/admin/pessoas');
                 const url = pessoa ? `${baseUrl}/admin/pessoa/editar/${pessoa.id_pessoa}?origem=${origem}` : `${baseUrl}/admin/pessoa/novo?origem=${origem}`;
-                window.open(url, '_blank');
+                window.location.href = url;
             },
             
-            // Nova função para editar pessoa em nova aba
+            // Função para editar pessoa na mesma aba
             editPessoaTab(id) {
                 const baseUrl = window.location.origin;
                 const origem = encodeURIComponent('/admin/pessoas');
                 const url = `${baseUrl}/admin/pessoa/editar/${id}?origem=${origem}`;
-                window.open(url, '_blank');
+                window.location.href = url;
             },
             
             deletePessoa(id, nome) {

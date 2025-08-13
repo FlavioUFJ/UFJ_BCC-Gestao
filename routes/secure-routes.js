@@ -1237,19 +1237,42 @@ Desejamos a todos um excelente trabalho e uma parceria produtiva.
 Atenciosamente,
 Coordenação de Estágios`;
         
-        // Enviar e-mails (simulação - você pode implementar o envio real aqui)
+        // Importar configuração de e-mail
+        const emailConfig = require('../src/config/email');
+        
         console.log('[EMAIL] Enviando notificações para:', destinatarios.map(d => d.email).join(', '));
         console.log('[EMAIL] Assunto:', assunto);
-        console.log('[EMAIL] Corpo:', corpoEmail);
         
-        // Aqui você pode implementar o envio real de e-mail usando nodemailer ou outro serviço
-        // Por enquanto, vamos simular o sucesso
+        // Enviar e-mails reais para todos os destinatários
+        const resultadosEnvio = [];
         
-        res.json({
-            success: true,
-            message: `E-mails enviados com sucesso para ${destinatarios.length} destinatário(s)`,
-            destinatarios: destinatarios.map(d => ({ nome: d.nome, email: d.email }))
-        });
+        for (const destinatario of destinatarios) {
+            try {
+                await emailConfig.enviarEmail(destinatario.email, assunto, corpoEmail);
+                resultadosEnvio.push({ nome: destinatario.nome, email: destinatario.email, status: 'enviado' });
+                console.log(`[EMAIL] E-mail enviado com sucesso para ${destinatario.email}`);
+            } catch (error) {
+                console.error(`[EMAIL] Erro ao enviar e-mail para ${destinatario.email}:`, error);
+                resultadosEnvio.push({ nome: destinatario.nome, email: destinatario.email, status: 'erro', erro: error.message });
+            }
+        }
+        
+        const sucessos = resultadosEnvio.filter(r => r.status === 'enviado').length;
+        const erros = resultadosEnvio.filter(r => r.status === 'erro').length;
+        
+        if (sucessos > 0) {
+            res.json({
+                success: true,
+                message: `E-mails enviados: ${sucessos} sucesso(s), ${erros} erro(s)`,
+                destinatarios: resultadosEnvio
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: 'Falha ao enviar todos os e-mails',
+                destinatarios: resultadosEnvio
+            });
+        }
         
     } catch (error) {
         console.error('Erro ao enviar notificações por e-mail:', error);

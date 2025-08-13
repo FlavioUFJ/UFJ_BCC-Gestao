@@ -1246,14 +1246,28 @@ Coordenação de Estágios`;
         // Enviar e-mails reais para todos os destinatários
         const resultadosEnvio = [];
         
-        for (const destinatario of destinatarios) {
+        for (let i = 0; i < destinatarios.length; i++) {
+            const destinatario = destinatarios[i];
+            
             try {
                 await emailConfig.enviarEmail(destinatario.email, assunto, corpoEmail);
                 resultadosEnvio.push({ nome: destinatario.nome, email: destinatario.email, status: 'enviado' });
                 console.log(`[EMAIL] E-mail enviado com sucesso para ${destinatario.email}`);
+                
+                // Adicionar delay entre envios (exceto no último)
+                if (i < destinatarios.length - 1) {
+                    console.log('[EMAIL] Aguardando 5 segundos antes do próximo envio...');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
             } catch (error) {
                 console.error(`[EMAIL] Erro ao enviar e-mail para ${destinatario.email}:`, error);
                 resultadosEnvio.push({ nome: destinatario.nome, email: destinatario.email, status: 'erro', erro: error.message });
+                
+                // Adicionar delay mesmo em caso de erro
+                if (i < destinatarios.length - 1) {
+                    console.log('[EMAIL] Aguardando 5 segundos antes do próximo envio...');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
             }
         }
         

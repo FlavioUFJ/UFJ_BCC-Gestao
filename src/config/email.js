@@ -91,7 +91,7 @@ class EmailConfig {
 
         const port = parseInt(config.email_port) || 587;
         
-        this.transporter = nodemailer.createTransport({
+        this.transporter = nodemailer.createTransporter({
             host: config.email_host,
             port: port,
             secure: port === 465, // true para porta 465, false para outras portas
@@ -102,7 +102,13 @@ class EmailConfig {
             tls: {
                 // Não rejeitar conexões não autorizadas
                 rejectUnauthorized: false
-            }
+            },
+            // Configurações específicas para Gmail e outros provedores
+            pool: true, // Usar pool de conexões
+            maxConnections: 1, // Limitar conexões simultâneas
+            maxMessages: 3, // Limitar mensagens por conexão
+            rateDelta: 20000, // Intervalo entre mensagens (20 segundos)
+            rateLimit: 3 // Máximo 3 mensagens por rateDelta
         });
 
         return this.transporter;

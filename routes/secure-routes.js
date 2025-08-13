@@ -1235,9 +1235,17 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
             
             <p>Desejamos a todos um excelente trabalho e uma parceria produtiva.</p>
             
+            <p><b>Envolvidos no estágio:</b><br>
+            ${campo.nome_estagiario}<br>
+            <i>Estagiário</i><br><br>
+            ${campo.nome_supervisor}<br>
+            <i>Supervisor</i><br><br>
+            ${campo.nome_orientador}<br>
+            <i>Orientador</i></p>
+            
             <br>
             <p><b>Atenciosamente,</b><br>
-            Coordenação de Estágios</p>
+            Coordenação de Estágio</p>
         </div>
         `;
         

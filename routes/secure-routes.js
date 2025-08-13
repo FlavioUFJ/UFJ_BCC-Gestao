@@ -1228,14 +1228,18 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
         // Configurar dados do e-mail
         const assunto = 'Liberação para atuação no campo de estágio';
         const corpoEmail = `
-Informamos que, após a conclusão da documentação e a assinatura dos termos do convênio, as partes estão autorizadas a iniciar as atividades de estágio.
-
-Reforçamos a importância de preencher corretamente os demais documentos obrigatórios: plano de atividades, controle de frequência e relatório final de estágio.
-
-Desejamos a todos um excelente trabalho e uma parceria produtiva.
-
-Atenciosamente,
-Coordenação de Estágios`;
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <p>Informamos que, após a conclusão da documentação e a assinatura dos termos do convênio, as partes estão <b>autorizadas a iniciar as atividades de estágio</b>.</p>
+            
+            <p>Reforçamos a importância de preencher corretamente os demais documentos obrigatórios: <b>Plano de Atividades, Controle de Frequência e Relatório Final de estágio</b>.</p>
+            
+            <p>Desejamos a todos um excelente trabalho e uma parceria produtiva.</p>
+            
+            <br>
+            <p><b>Atenciosamente,</b><br>
+            Coordenação de Estágios</p>
+        </div>
+        `;
         
         // Importar configuração de e-mail
         const emailConfig = require('../src/config/email');

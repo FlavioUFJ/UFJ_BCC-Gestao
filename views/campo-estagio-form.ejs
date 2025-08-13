@@ -270,9 +270,9 @@
 
                             <!-- Botões de Ação -->
                             <div class="d-flex justify-content-between align-items-center">
-                                <a href="/estagios/dashboard" class="btn btn-secondary">
+                                <button type="button" class="btn btn-secondary" onclick="voltarPaginaAnterior()">
                                     <i class="fas fa-arrow-left me-1"></i>Voltar
-                                </a>
+                                </button>
                                 <div class="d-flex gap-2">
                                     <% if (isEdicao && campoEstagio) { %>
                                     <button type="button" class="btn btn-danger" id="btnExcluir" disabled>
@@ -755,7 +755,7 @@
                 if (data.success) {
                     mostrarAlerta('Campo de estágio excluído com sucesso!', 'success');
                     setTimeout(() => {
-                        window.location.href = '/estagios/dashboard';
+                        voltarPaginaAnterior();
                     }, 1500);
                 } else {
                     mostrarAlerta(data.message || 'Erro ao excluir campo de estágio', 'error');
@@ -1042,7 +1042,7 @@
                 if (result.success) {
                     mostrarAlerta('Campo de estágio atualizado com sucesso!', 'success');
                     setTimeout(() => {
-                        window.location.href = '/estagios/dashboard';
+                        voltarPaginaAnterior();
                     }, 1500);
                 } else {
                     mostrarAlerta('Erro ao atualizar campo de estágio: ' + result.message, 'error');
@@ -1126,6 +1126,23 @@
                     alert.remove();
                 }
             }, 5000);
+        }
+
+        function voltarPaginaAnterior() {
+            // Tentar voltar para a página anterior
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                // Se não há histórico, ir para o dashboard
+                window.location.href = '/estagios/dashboard';
+            }
+            
+            // Se a página foi aberta em uma nova aba, tentar fechá-la após um pequeno delay
+            setTimeout(() => {
+                if (window.opener) {
+                    window.close();
+                }
+            }, 100);
         }
     </script>
 </body>

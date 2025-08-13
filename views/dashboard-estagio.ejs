@@ -434,6 +434,8 @@
                     }
                     
                     planosAtividade = planosCarregados;
+                    planosAtividadeOriginais = [...planosCarregados];
+                    planosAtividadeFiltrados = [...planosCarregados];
                     planoAtividadeAtualIndex = 0;
                     planoAtividadeSelecionadoId = null;
                     
@@ -568,6 +570,14 @@
                 
                 btnEditarPlano.disabled = !podeEditar;
                 
+                // Debug: Verificar estado do botão
+                console.log('Estado do botão Editar:', {
+                    disabled: btnEditarPlano.disabled,
+                    podeEditar: podeEditar,
+                    classes: btnEditarPlano.className,
+                    title: btnEditarPlano.title
+                });
+                
                 if (!podeEditar) {
                     btnEditarPlano.title = motivoDesabilitado;
                     btnEditarPlano.classList.remove('btn-outline-primary');
@@ -577,6 +587,12 @@
                     btnEditarPlano.classList.remove('btn-outline-secondary');
                     btnEditarPlano.classList.add('btn-outline-primary');
                 }
+                
+                console.log('Estado final do botão:', {
+                    disabled: btnEditarPlano.disabled,
+                    classes: btnEditarPlano.className,
+                    title: btnEditarPlano.title
+                });
             }
             
             // Botão Gerar PDF - desabilitado se não existir plano
@@ -1428,6 +1444,10 @@
     // Variável global para armazenar o ID do campo selecionado
     let campoSelecionadoId = null;
     
+    // Variáveis globais para gerenciar planos de atividade filtrados
+    let planosAtividadeOriginais = [];
+    let planosAtividadeFiltrados = [];
+    
     // Funções para gerenciar os cards
     function campEstGerenciar() {
         const btnEditarCampo = document.getElementById('btnCampEstEditar');
@@ -1977,28 +1997,22 @@
     }
     
     function planAtiFiltrar() {
-        const filtro = document.getElementById('planAtiBusca').value.toLowerCase().trim();
+        const termo = document.getElementById('planAtiBusca').value.toLowerCase().trim();
         
-        if (!filtro) {
-            // Se não há filtro, mostrar todos os planos
-            AdminDashboard.atualizarExibicaoPlanoAtividade();
-            return;
+        if (termo === '') {
+            planosAtividadeFiltrados = [...planosAtividadeOriginais];
+        } else {
+            planosAtividadeFiltrados = planosAtividadeOriginais.filter(plano => {
+                return (
+                    (plano.nome_estagiario && plano.nome_estagiario.toLowerCase().includes(termo)) ||
+                    (plano.nome_orientador && plano.nome_orientador.toLowerCase().includes(termo)) ||
+                    (plano.nome_supervisor && plano.nome_supervisor.toLowerCase().includes(termo))
+                );
+            });
         }
         
-        const planosFiltrados = planosAtividade.filter(plano => {
-            return (plano.nome_estagiario && plano.nome_estagiario.toLowerCase().includes(filtro)) ||
-                   (plano.nome_orientador && plano.nome_orientador.toLowerCase().includes(filtro)) ||
-                   (plano.nome_supervisor && plano.nome_supervisor.toLowerCase().includes(filtro));
-        });
-        
-        if (planosFiltrados.length === 0) {
-            document.getElementById('cardPlanoAtividade').innerHTML = '<div class="text-center py-3"><i class="fas fa-search fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Nenhum plano encontrado</p></div>';
-            return;
-        }
-        
-        // Temporariamente substituir os dados para exibição filtrada
-        const planosOriginais = [...planosAtividade];
-        planosAtividade = planosFiltrados;
+        // Atualizar o array principal com os dados filtrados
+        planosAtividade = [...planosAtividadeFiltrados];
         planoAtividadeAtualIndex = 0;
         AdminDashboard.atualizarExibicaoPlanoAtividade();
     }

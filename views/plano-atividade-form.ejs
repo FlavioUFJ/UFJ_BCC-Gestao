@@ -188,6 +188,11 @@
                     </button>
                 </div>
                 <div>
+                    <% if (plano && plano.pa_id_planoatividade) { %>
+                        <button type="button" class="btn btn-danger me-2" id="btnExcluir" disabled>
+                            <i class="fas fa-trash me-2"></i>Excluir
+                        </button>
+                    <% } %>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i>Salvar
                     </button>
@@ -386,8 +391,95 @@
             }
             <% } %>
 
-
+            return true;
         });
+
+        // Verificar permissão de exclusão
+        <% if (plano && plano.pa_id_planoatividade) { %>
+        function verificarPermissaoExclusao() {
+            const btnExcluir = document.getElementById('btnExcluir');
+            if (!btnExcluir) {
+                console.log('Botão Excluir não encontrado');
+                return;
+            }
+
+            const plano = {
+                pa_situacao: '<%= plano.pa_situacao %>'
+            };
+            const userNivelAcesso = '<%= user.nivelacesso %>';
+
+            // Verificar se o plano pode ser excluído baseado na situação
+            let podeExcluir = false;
+            let motivoDesabilitado = '';
+
+            if (userNivelAcesso === 'Administrador') {
+                // Administradores podem excluir: 'Em Edição', 'Em Aprovação', 'Aprovado sem Anexo'
+                podeExcluir = plano.pa_situacao === 'Em Edição' || 
+                             plano.pa_situacao === 'Em Aprovação' || 
+                             plano.pa_situacao === 'Aprovado sem Anexo';
+                if (!podeExcluir) {
+                    motivoDesabilitado = 'Planos aprovados com anexo não podem ser excluídos';
+                }
+            } else {
+                // Outros usuários podem excluir apenas: 'Em Edição' e 'Em Aprovação'
+                podeExcluir = plano.pa_situacao === 'Em Edição' || 
+                             plano.pa_situacao === 'Em Aprovação';
+                if (!podeExcluir) {
+                    motivoDesabilitado = 'Você não tem permissão para excluir planos aprovados';
+                }
+            }
+
+            // Aplicar permissão ao botão
+            btnExcluir.disabled = !podeExcluir;
+            if (podeExcluir) {
+                btnExcluir.title = 'Excluir plano de atividade';
+                btnExcluir.onclick = confirmarExclusao;
+            } else {
+                btnExcluir.title = motivoDesabilitado;
+                btnExcluir.onclick = null;
+            }
+        }
+
+        function confirmarExclusao() {
+            if (confirm('Tem certeza que deseja excluir este plano de atividade? Esta ação não pode ser desfeita.')) {
+                excluirPlano();
+            }
+        }
+
+        async function excluirPlano() {
+            try {
+                const response = await fetch('/planos-atividade/<%= plano.pa_id_planoatividade %>', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Plano de atividade excluído com sucesso!');
+                    window.location.href = '/estagios/dashboard';
+                } else {
+                    alert('Erro ao excluir plano de atividade: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Erro ao excluir plano:', error);
+                alert('Erro ao excluir plano de atividade. Tente novamente.');
+            }
+        }
+
+        // Executar verificação de permissão quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarPermissaoExclusao();
+        });
+        <% } %>
+
+        function limparFormulario() {
+            if (confirm('Tem certeza que deseja limpar todos os campos do formulário?')) {
+                document.getElementById('formPlanoAtividade').reset();
+            }
+        }
     </script>
 </body>
 </html>

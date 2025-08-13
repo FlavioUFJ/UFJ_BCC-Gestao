@@ -301,6 +301,10 @@
         });
 
         function initializeCampoEstagioForm() {
+            console.log('initializeCampoEstagioForm executada');
+            console.log('Modo de edição:', <%= typeof isEdicao !== 'undefined' && isEdicao ? 'true' : 'false' %>);
+            console.log('campoEstagio existe:', <%= typeof campoEstagio !== 'undefined' && campoEstagio ? 'true' : 'false' %>);
+            
             // Carregar parâmetros de seguro
             carregarParametrosSeguro();
             
@@ -315,17 +319,7 @@
             <% if (typeof isEdicao !== 'undefined' && !isEdicao) { %>
             preencherSemestreAnoAtual();
             
-            // Preenchimento automático das datas com base no plano de atividade
-            <% if (typeof planoAtividade !== 'undefined' && planoAtividade) { %>
-            if ('<%= planoAtividade.pa_data_inicial %>') {
-                const dataInicial = new Date('<%= planoAtividade.pa_data_inicial %>');
-                document.getElementById('data_inicio').value = dataInicial.toLocaleDateString('pt-BR');
-            }
-            if ('<%= planoAtividade.pa_data_final %>') {
-                const dataFinal = new Date('<%= planoAtividade.pa_data_final %>');
-                document.getElementById('data_fim').value = dataFinal.toLocaleDateString('pt-BR');
-            }
-            <% } %>
+
             <% } %>
             
             // Configurar eventos
@@ -346,6 +340,11 @@
             
             // Verificar estado inicial do campo estagiopropriainstituicao
             verificarEstadoInicialCampos();
+            
+            // Inicializar situação anterior para novos campos (se não estiver em modo de edição)
+            <% if (typeof isEdicao === 'undefined' || !isEdicao) { %>
+            document.getElementById('situacao').setAttribute('data-situacao-anterior', 'Em Edição');
+            <% } %>
         }
 
         function carregarParametrosSeguro() {
@@ -442,7 +441,11 @@
             const campo = <%- JSON.stringify(campoEstagio) %>;
             
             // Preencher campos básicos
-            if (campo.situacao) document.getElementById('situacao').value = campo.situacao;
+            if (campo.situacao) {
+                document.getElementById('situacao').value = campo.situacao;
+                // Inicializar situação anterior para controle de mudanças
+                document.getElementById('situacao').setAttribute('data-situacao-anterior', campo.situacao);
+            }
             if (campo.numero_processosei) document.getElementById('numero_processosei').value = campo.numero_processosei;
             if (campo.apolice_seguro) document.getElementById('apolice_seguro').value = campo.apolice_seguro;
             if (campo.nome_seguradora) document.getElementById('nome_seguradora').value = campo.nome_seguradora;
@@ -451,17 +454,6 @@
             if (campo.estagiopropriainstituicao) document.getElementById('estagiopropriainstituicao').checked = campo.estagiopropriainstituicao === 'Sim';
             
             // Preencher datas (converter de ISO para formato brasileiro)
-            // Primeiro, verificar se há dados do plano de atividade para preenchimento automático
-            <% if (typeof planoAtividade !== 'undefined' && planoAtividade) { %>
-            if (!campo.data_inicio && '<%= planoAtividade.pa_data_inicial %>') {
-                const dataInicial = new Date('<%= planoAtividade.pa_data_inicial %>');
-                document.getElementById('data_inicio').value = dataInicial.toLocaleDateString('pt-BR');
-            }
-            if (!campo.data_fim && '<%= planoAtividade.pa_data_final %>') {
-                const dataFinal = new Date('<%= planoAtividade.pa_data_final %>');
-                document.getElementById('data_fim').value = dataFinal.toLocaleDateString('pt-BR');
-            }
-            <% } %>
             
             // Preencher com dados existentes do campo de estágio
             if (campo.data_inicio) {
@@ -549,6 +541,11 @@
             // Validação de datas
             document.getElementById('data_inicio').addEventListener('blur', validarDatas);
             document.getElementById('data_fim').addEventListener('blur', validarDatas);
+
+            // Evento para mudança de situação
+            document.getElementById('situacao').addEventListener('change', function(e) {
+                validarMudancaSituacao(e.target.value, e.target);
+            });
 
             // Submissão do formulário
             document.getElementById('formCampoEstagio').addEventListener('submit', function(e) {
@@ -667,12 +664,20 @@
         
         function verificarPermissaoExclusao() {
             const btnExcluir = document.getElementById('btnExcluir');
-            if (!btnExcluir) return;
+            if (!btnExcluir) {
+                console.log('Botão excluir não encontrado');
+                return;
+            }
+            
+            console.log('Verificando permissão de exclusão...');
             
             <% if (typeof campoEstagio === 'undefined' || !campoEstagio) { %>
             // Se campoEstagio não está definido, não há nada para verificar
+            console.log('campoEstagio não definido');
             return;
             <% } else { %>
+            
+
             
             // Buscar dados do usuário logado
             fetch('/secure/pessoa/<%= user.id_pessoa %>', {
@@ -685,47 +690,39 @@
                     const usuarioLogado = data.data;
                     const idUsuario = parseInt('<%= user.id_pessoa %>');
                     
-                    // Se é administrador, sempre pode excluir
+                    console.log('Dados do usuário:', { nivelAcesso: '<%= user.nivelacesso %>', idUsuario });
+                    
+                    // Verificar situação do campo de estágio
+                    const situacaoCampo = '<%= campoEstagio.situacao %>';
+                    console.log('Situação do campo:', situacaoCampo);
+                    
+                    let podeExcluir = false;
+                    let motivoDesabilitado = '';
+                    
                     if ('<%= user.nivelacesso %>' === 'Administrador') {
-                        btnExcluir.disabled = false;
-                        btnExcluir.onclick = confirmarExclusao;
-                        return;
+                        // Administrador: Desabilitar apenas para 'Finalizado'
+                        podeExcluir = situacaoCampo !== 'Finalizado';
+                        if (!podeExcluir) {
+                            motivoDesabilitado = 'Campos de estágio finalizados não podem ser excluídos';
+                        }
+                        console.log('Usuário é administrador - pode excluir:', podeExcluir);
+                    } else {
+                        // Outros usuários: Desabilitar para 'Concluído' e 'Finalizado'
+                        podeExcluir = situacaoCampo === 'Em Edição';
+                        if (!podeExcluir) {
+                            motivoDesabilitado = 'Você não tem permissão para excluir campos concluídos ou finalizados';
+                        }
+                        console.log('Usuário não é administrador - pode excluir:', podeExcluir);
                     }
-                    
-                    // Para não-administradores, verificar se o usuário está relacionado ao registro
-                    <% if (typeof campoEstagio !== 'undefined' && campoEstagio) { %>
-                    const campoEstagioData = {
-                        id_pessoa_estagiario: <%= campoEstagio.id_pessoa_estagiario || 'null' %>,
-                        id_pessoa_orientador: <%= campoEstagio.id_pessoa_orientador || 'null' %>,
-                        id_pessoa_concedente: <%= campoEstagio.id_pessoa_concedente || 'null' %>,
-                        id_pessoa_supervisor: <%= campoEstagio.id_pessoa_supervisor || 'null' %>,
-                        id_pessoa_curso: <%= campoEstagio.id_pessoa_curso || 'null' %>
-                    };
-                    <% } else { %>
-                    const campoEstagioData = {
-                        id_pessoa_estagiario: null,
-                        id_pessoa_orientador: null,
-                        id_pessoa_concedente: null,
-                        id_pessoa_supervisor: null,
-                        id_pessoa_curso: null
-                    };
-                    <% } %>
-                    
-                    // Verificar se o usuário corresponde a alguma das chaves estrangeiras
-                    const podeExcluir = (
-                        campoEstagioData.id_pessoa_estagiario === idUsuario ||
-                        campoEstagioData.id_pessoa_orientador === idUsuario ||
-                        campoEstagioData.id_pessoa_concedente === idUsuario ||
-                        campoEstagioData.id_pessoa_supervisor === idUsuario ||
-                        campoEstagioData.id_pessoa_curso === idUsuario
-                    );
                     
                     if (podeExcluir) {
                         btnExcluir.disabled = false;
+                        btnExcluir.title = 'Excluir campo de estágio';
                         btnExcluir.onclick = confirmarExclusao;
                     } else {
                         btnExcluir.disabled = true;
-                        btnExcluir.title = 'Você não tem permissão para excluir este registro';
+                        btnExcluir.title = motivoDesabilitado;
+                        btnExcluir.onclick = null;
                     }
                 }
             })
@@ -771,69 +768,203 @@
         }
         <% } %>
 
+        function validarMudancaSituacao(novaSituacao, selectElement) {
+            const situacaoAnterior = selectElement.getAttribute('data-situacao-anterior') || 'Em Edição';
+            
+            // Verificar se está mudando de "Em Edição" para "Concluído"
+            if (situacaoAnterior === 'Em Edição' && novaSituacao === 'Concluído') {
+                // 1º) Verificar se existe número SEI
+                const numeroSEI = document.getElementById('numero_processosei').value;
+                if (!numeroSEI || numeroSEI.trim() === '') {
+                    mostrarAlerta('Não é possível mudar a situação do campo de estágio para "Concluído" sem que tenha número SEI informado no formulário.', 'error');
+                    selectElement.value = situacaoAnterior;
+                    document.getElementById('numero_processosei').focus();
+                    return;
+                }
+                
+                // 2º) Confirmar com o usuário
+                if (confirm('Tem certeza que deseja concluir o cadastro do campo de estágio? Esta ação irá salvar o formulário e enviar notificações por e-mail para os envolvidos.')) {
+                    // 3º) Executar ações de conclusão
+                    concluirCampoEstagio();
+                } else {
+                    // Reverter para "Em Edição"
+                    selectElement.value = 'Em Edição';
+                }
+            }
+            
+            // Atualizar situação anterior para próximas mudanças
+            selectElement.setAttribute('data-situacao-anterior', novaSituacao);
+        }
+        
+        function concluirCampoEstagio() {
+            // Mostrar tela de carregamento
+            mostrarTelaCarregamento('Salvando formulário e enviando notificações...');
+            
+            // Salvar formulário com status concluído
+            const formData = new FormData(document.getElementById('formCampoEstagio'));
+            const data = Object.fromEntries(formData.entries());
+            
+            // Garantir que a situação seja "Concluído"
+            data.situacao = 'Concluído';
+            
+            // Incluir campos desabilitados
+            const camposDesabilitados = [
+                'apolice_seguro', 'nome_seguradora', 'valor_bolsa', 'valor_valetransporte',
+                'id_pessoa_curso_nome', 'id_pessoa_estagiario_nome', 'id_pessoa_orientador_nome',
+                'id_pessoa_concedente_nome', 'id_pessoa_supervisor_nome', 'confirmaaptoestagio',
+                'estagiopropriainstituicao', 'numero_convenio'
+            ];
+            
+            camposDesabilitados.forEach(campoId => {
+                const elemento = document.getElementById(campoId);
+                if (elemento && (elemento.disabled || elemento.readOnly)) {
+                    data[campoId] = elemento.value || '';
+                }
+            });
+            
+            <% if (typeof isEdicao !== 'undefined' && isEdicao) { %>
+            const url = '/secure/estagios/campo/editar/<%= campoEstagio.id_campo_estagio %>';
+            <% } else { %>
+            const url = '/secure/estagios/campo/criar';
+            <% } %>
+            
+            fetch(url, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Enviar e-mails de notificação
+                    <% if (typeof campoEstagio !== 'undefined' && campoEstagio) { %>
+                    enviarEmailsNotificacao(result.campoEstagioId || <%= campoEstagio.id_campo_estagio %>);
+                    <% } else { %>
+                    enviarEmailsNotificacao(result.campoEstagioId || null);
+                    <% } %>
+                } else {
+                    ocultarTelaCarregamento();
+                    mostrarAlerta(result.message || 'Erro ao salvar campo de estágio', 'error');
+                    // Reverter situação
+                    document.getElementById('situacao').value = 'Em Edição';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao salvar campo de estágio:', error);
+                ocultarTelaCarregamento();
+                mostrarAlerta('Erro ao salvar campo de estágio', 'error');
+                // Reverter situação
+                document.getElementById('situacao').value = 'Em Edição';
+            });
+        }
+        
+        function enviarEmailsNotificacao(campoEstagioId) {
+            fetch(`/secure/estagios/campo/enviar-notificacao/${campoEstagioId}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                ocultarTelaCarregamento();
+                if (result.success) {
+                    mostrarTelaNotificacao('E-mails de notificação enviados com sucesso para todos os envolvidos no campo de estágio!');
+                } else {
+                    mostrarAlerta('Campo de estágio salvo, mas houve erro ao enviar e-mails: ' + (result.message || 'Erro desconhecido'), 'warning');
+                    setTimeout(() => {
+                        window.location.href = '/estagios/dashboard';
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao enviar e-mails:', error);
+                ocultarTelaCarregamento();
+                mostrarAlerta('Campo de estágio salvo, mas houve erro ao enviar e-mails de notificação', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/estagios/dashboard';
+                }, 3000);
+            });
+        }
+        
+        function mostrarTelaCarregamento(mensagem) {
+            const loadingHtml = `
+                <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 400px;">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p style="margin: 0; font-size: 16px; color: #333;">${mensagem}</p>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', loadingHtml);
+        }
+        
+        function ocultarTelaCarregamento() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+        
+        function mostrarTelaNotificacao(mensagem) {
+            const notificationHtml = `
+                <div id="notificationOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 40px; border-radius: 10px; text-align: center; max-width: 500px;">
+                        <div style="color: #28a745; font-size: 48px; margin-bottom: 20px;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h4 style="color: #333; margin-bottom: 20px;">Sucesso!</h4>
+                        <p style="margin-bottom: 30px; font-size: 16px; color: #666;">${mensagem}</p>
+                        <button type="button" class="btn btn-primary" onclick="fecharTelaNotificacao()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', notificationHtml);
+        }
+        
+        function fecharTelaNotificacao() {
+            const overlay = document.getElementById('notificationOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+            // Redirecionar para o dashboard
+            window.location.href = '/estagios/dashboard';
+        }
+
         function validarDatas() {
             const dataInicio = document.getElementById('data_inicio').value;
             const dataFim = document.getElementById('data_fim').value;
             
-            // Datas do plano de atividade para validação
-            <% if (typeof planoAtividade !== 'undefined' && planoAtividade) { %>
-            const paDataInicial = '<%= planoAtividade.pa_data_inicial %>' ? new Date('<%= planoAtividade.pa_data_inicial %>') : null;
-            const paDataFinal = '<%= planoAtividade.pa_data_final %>' ? new Date('<%= planoAtividade.pa_data_final %>') : null;
-            <% } else { %>
-            const paDataInicial = null;
-            const paDataFinal = null;
-            <% } %>
+
             
-            if (dataInicio) {
-                const inicio = parseDataBrasileira(dataInicio);
-                
-                // Validação: ce.data_inicio não pode ser menor que pa_data_inicial
-                if (paDataInicial && inicio && inicio < paDataInicial) {
-                    mostrarAlerta('A data de início não pode ser menor que a data inicial do plano de atividade (' + paDataInicial.toLocaleDateString('pt-BR') + ').', 'error');
-                    document.getElementById('data_inicio').focus();
-                    return false;
-                }
-                
-                // Validação: ce.data_inicio não pode ser maior que pa_data_final
-                if (paDataFinal && inicio && inicio > paDataFinal) {
-                    mostrarAlerta('A data de início não pode ser maior que a data final do plano de atividade (' + paDataFinal.toLocaleDateString('pt-BR') + ').', 'error');
-                    document.getElementById('data_inicio').focus();
-                    return false;
-                }
-            }
-            
-            if (dataFim) {
-                const fim = parseDataBrasileira(dataFim);
-                
-                // Validação: ce.data_fim não pode ser maior que pa_data_final
-                if (paDataFinal && fim && fim > paDataFinal) {
-                    mostrarAlerta('A data de fim não pode ser maior que a data final do plano de atividade (' + paDataFinal.toLocaleDateString('pt-BR') + ').', 'error');
-                    document.getElementById('data_fim').focus();
-                    return false;
-                }
-                
-                // Validação: ce.data_fim não pode ser menor ou igual a ce.data_inicio
-                if (dataInicio) {
-                    const inicio = parseDataBrasileira(dataInicio);
-                    if (inicio && fim && fim <= inicio) {
-                        mostrarAlerta('A data de fim deve ser maior que a data de início.', 'error');
-                        document.getElementById('data_fim').focus();
-                        return false;
-                    }
-                }
-            }
-            
-            // Validação geral: data de início não pode ser maior que data de fim
+            // Validação: ce.data_inicio não pode ser maior que ce.data_fim
+            // e ce.data_fim não pode ser menor que ce.data_inicio
             if (dataInicio && dataFim) {
                 const inicio = parseDataBrasileira(dataInicio);
                 const fim = parseDataBrasileira(dataFim);
                 
                 if (inicio && fim && inicio > fim) {
                     mostrarAlerta('A data de início não pode ser maior que a data de fim.', 'error');
+                    document.getElementById('data_inicio').value = '';
                     document.getElementById('data_inicio').focus();
                     return false;
                 }
+                
+                if (inicio && fim && fim < inicio) {
+                    mostrarAlerta('A data de fim não pode ser menor que a data de início.', 'error');
+                    document.getElementById('data_fim').value = '';
+                    document.getElementById('data_fim').focus();
+                    return false;
+                }
             }
+            
+
             
             return true;
         }

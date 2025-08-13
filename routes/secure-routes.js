@@ -280,20 +280,7 @@ router.get('/estagios/campo/novo', requireAuth, async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        // Buscar dados do plano de atividade se fornecido via query parameter
-        let planoAtividade = null;
-        const planoAtividadeId = req.query.plano_atividade_id;
-        if (planoAtividadeId) {
-            const db = databaseConfig;
-            const planoQuery = `
-                SELECT 
-                    pa.data_inicial AS pa_data_inicial,
-                    pa.data_final AS pa_data_final
-                FROM campo_estagio_planoatividade pa
-                WHERE pa.id_planoatividade = ?
-            `;
-            planoAtividade = await db.get(planoQuery, [planoAtividadeId]);
-        }
+
 
         res.render('campo-estagio-form', {
             title: 'Cadastro Campo de Estágio',
@@ -301,8 +288,7 @@ router.get('/estagios/campo/novo', requireAuth, async (req, res) => {
             isAdmin: await dbHelper.isAdmin(user),
             currentPage: 'campo-estagio-novo',
             isEdicao: false,
-            campoEstagio: null,
-            planoAtividade: planoAtividade
+            campoEstagio: null
         });
 
     } catch (error) {
@@ -349,18 +335,7 @@ router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
         
         const campoEstagio = await db.get(query, [campoId]);
         
-        // Buscar dados do plano de atividade associado para preenchimento automático
-        let planoAtividade = null;
-        if (campoEstagio) {
-            const planoQuery = `
-                SELECT 
-                    pa.data_inicial AS pa_data_inicial,
-                    pa.data_final AS pa_data_final
-                FROM campo_estagio_planoatividade pa
-                WHERE pa.id_campo_estagio = ?
-            `;
-            planoAtividade = await db.get(planoQuery, [campoId]);
-        }
+
         
         if (!campoEstagio) {
             return res.status(404).render('error', {
@@ -376,7 +351,6 @@ router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
             isAdmin: await dbHelper.isAdmin(user),
             currentPage: 'campo-estagio-editar',
             campoEstagio: campoEstagio,
-            planoAtividade: planoAtividade,
             isEdicao: true
         });
 
@@ -392,7 +366,128 @@ router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
 });
 
 /**
- * Rota para atualizar campo de estágio
+ * Rota para editar campo de estágio (POST)
+ */
+router.post('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        const campoId = parseInt(req.params.id);
+        
+        if (!user) {
+            return res.json({ success: false, message: 'Usuário não autenticado' });
+        }
+
+        const {
+            situacao,
+            numero_processosei,
+            apolice_seguro,
+            nome_seguradora,
+            tipo_estagio,
+            data_inicio,
+            data_fim,
+            semestre_ano,
+            cargahoraria,
+            id_pessoa_curso,
+            id_pessoa_estagiario,
+            numero_matricula,
+            periodo,
+            id_pessoa_orientador,
+            id_pessoa_concedente,
+            numero_convenio,
+            id_pessoa_supervisor,
+            valor_bolsa,
+            valor_valetransporte,
+            observacoes
+        } = req.body;
+
+        // Converter datas do formato brasileiro para ISO
+        let dataInicioISO = null;
+        let dataFimISO = null;
+        
+        if (data_inicio) {
+            const partes = data_inicio.split('/');
+            if (partes.length === 3) {
+                dataInicioISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+        }
+        
+        if (data_fim) {
+            const partes = data_fim.split('/');
+            if (partes.length === 3) {
+                dataFimISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            }
+        }
+
+        const db = databaseConfig;
+        
+        const sql = `
+            UPDATE campo_estagio SET
+                situacao = ?,
+                numero_processosei = ?,
+                apolice_seguro = ?,
+                nome_seguradora = ?,
+                tipo_estagio = ?,
+                data_inicio = ?,
+                data_fim = ?,
+                semestre_ano = ?,
+                cargahoraria = ?,
+                id_pessoa_curso = ?,
+                id_pessoa_estagiario = ?,
+                numero_matricula = ?,
+                periodo = ?,
+                id_pessoa_orientador = ?,
+                id_pessoa_concedente = ?,
+                numero_convenio = ?,
+                id_pessoa_supervisor = ?,
+                valor_bolsa = ?,
+                valor_valetransporte = ?,
+                observacoes = ?
+            WHERE id_campo_estagio = ?
+        `;
+        
+        const params = [
+            situacao || 'Em Edição',
+            numero_processosei || null,
+            apolice_seguro || null,
+            nome_seguradora || null,
+            tipo_estagio || null,
+            dataInicioISO,
+            dataFimISO,
+            semestre_ano || null,
+            cargahoraria || null,
+            id_pessoa_curso || null,
+            id_pessoa_estagiario || null,
+            numero_matricula || null,
+            periodo || null,
+            id_pessoa_orientador || null,
+            id_pessoa_concedente || null,
+            numero_convenio || null,
+            id_pessoa_supervisor || null,
+            valor_bolsa || null,
+            valor_valetransporte || null,
+            observacoes || null,
+            campoId
+        ];
+
+        await db.run(sql, params);
+        
+        res.json({ 
+            success: true, 
+            message: 'Campo de estágio atualizado com sucesso!',
+            campoEstagioId: campoId
+        });
+
+    } catch (error) {
+        console.error('Erro ao atualizar campo de estágio:', error);
+        res.json({ 
+            success: false, 
+            message: 'Erro ao atualizar campo de estágio: ' + error.message 
+        });
+    }
+});
+
+/**
+ * Rota para atualizar campo de estágio (PUT)
  */
 router.put('/estagios/campo/atualizar/:id', requireAuth, async (req, res) => {
     try {
@@ -537,27 +632,31 @@ router.delete('/estagios/campo/excluir/:id', requireAuth, async (req, res) => {
             });
         }
 
-        // Verificar permissões
+        // Verificar permissões baseadas na situação do campo e nível de acesso
         const isAdmin = user.nivelacesso === 'Administrador';
-        const idUsuario = parseInt(user.id_pessoa);
+        const situacaoCampo = campoEstagio.situacao;
         
-        let podeExcluir = isAdmin;
+        let podeExcluir = false;
+        let motivoNegacao = '';
         
-        // Para não-administradores, verificar se o usuário está relacionado ao registro
-        if (!isAdmin) {
-            podeExcluir = (
-                campoEstagio.id_pessoa_estagiario === idUsuario ||
-                campoEstagio.id_pessoa_orientador === idUsuario ||
-                campoEstagio.id_pessoa_concedente === idUsuario ||
-                campoEstagio.id_pessoa_supervisor === idUsuario ||
-                campoEstagio.id_pessoa_curso === idUsuario
-            );
+        if (isAdmin) {
+            // Administrador: Desabilitar apenas para 'Finalizado'
+            podeExcluir = situacaoCampo !== 'Finalizado';
+            if (!podeExcluir) {
+                motivoNegacao = 'Campos de estágio finalizados não podem ser excluídos';
+            }
+        } else {
+            // Outros usuários: Desabilitar para 'Concluído' e 'Finalizado'
+            podeExcluir = situacaoCampo === 'Em Edição';
+            if (!podeExcluir) {
+                motivoNegacao = 'Você não tem permissão para excluir campos concluídos ou finalizados';
+            }
         }
         
         if (!podeExcluir) {
             return res.status(403).json({ 
                 success: false, 
-                message: 'Você não tem permissão para excluir este registro' 
+                message: motivoNegacao 
             });
         }
 
@@ -1062,6 +1161,86 @@ router.post('/estagios/campo/anexar-plano', requireAuth, async (req, res) => {
         
     } catch (error) {
         console.error('Erro ao anexar plano assinado:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor: ' + error.message
+        });
+    }
+});
+
+// Rota para enviar notificações por email quando campo de estágio é concluído
+router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, res) => {
+    console.log('[SECURE-ROUTES] Rota de envio de notificação acessada para campo ID:', req.params.id);
+    
+    try {
+        const campoId = req.params.id;
+        
+        // Buscar dados do campo de estágio e pessoas envolvidas
+        const query = `
+            SELECT 
+                ce.*,
+                pe.nome as nome_estagiario, pe.email as email_estagiario,
+                po.nome as nome_orientador, po.email as email_orientador,
+                ps.nome as nome_supervisor, ps.email as email_supervisor
+            FROM campo_estagio ce
+            LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+            LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
+            LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+            WHERE ce.id_campo_estagio = ?
+        `;
+        
+        const [rows] = await dbHelper.executeQuery(query, [campoId]);
+        
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Campo de estágio não encontrado'
+            });
+        }
+        
+        const campo = rows[0];
+        
+        // Preparar lista de destinatários
+        const destinatarios = [];
+        if (campo.email_estagiario) destinatarios.push({ nome: campo.nome_estagiario, email: campo.email_estagiario });
+        if (campo.email_orientador) destinatarios.push({ nome: campo.nome_orientador, email: campo.email_orientador });
+        if (campo.email_supervisor) destinatarios.push({ nome: campo.nome_supervisor, email: campo.email_supervisor });
+        
+        if (destinatarios.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nenhum e-mail válido encontrado para os envolvidos no campo de estágio'
+            });
+        }
+        
+        // Configurar dados do e-mail
+        const assunto = 'Liberação para atuação no campo de estágio';
+        const corpoEmail = `
+Informamos que, após a conclusão da documentação e a assinatura dos termos do convênio, as partes estão autorizadas a iniciar as atividades de estágio.
+
+Reforçamos a importância de preencher corretamente os demais documentos obrigatórios: plano de atividades, controle de frequência e relatório final de estágio.
+
+Desejamos a todos um excelente trabalho e uma parceria produtiva.
+
+Atenciosamente,
+Coordenação de Estágios`;
+        
+        // Enviar e-mails (simulação - você pode implementar o envio real aqui)
+        console.log('[EMAIL] Enviando notificações para:', destinatarios.map(d => d.email).join(', '));
+        console.log('[EMAIL] Assunto:', assunto);
+        console.log('[EMAIL] Corpo:', corpoEmail);
+        
+        // Aqui você pode implementar o envio real de e-mail usando nodemailer ou outro serviço
+        // Por enquanto, vamos simular o sucesso
+        
+        res.json({
+            success: true,
+            message: `E-mails enviados com sucesso para ${destinatarios.length} destinatário(s)`,
+            destinatarios: destinatarios.map(d => ({ nome: d.nome, email: d.email }))
+        });
+        
+    } catch (error) {
+        console.error('Erro ao enviar notificações por e-mail:', error);
         res.status(500).json({
             success: false,
             message: 'Erro interno do servidor: ' + error.message

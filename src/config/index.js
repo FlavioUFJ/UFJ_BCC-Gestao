@@ -66,7 +66,10 @@ const enums = {
     nivelAcesso: {
         ADMINISTRADOR: 'Administrador',
         OPERADOR: 'Operador',
-        VISITANTE: 'Visitante'
+        VISITANTE: 'Visitante',
+        ORIENTADOR: 'Orientador',
+        ESTAGIARIO: 'Estagiário',
+        EMPRESA: 'Empresa'
     },
     
     statusRelatorio: {

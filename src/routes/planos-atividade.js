@@ -37,6 +37,9 @@ router.post('/', (req, res) => planoAtividadeController.store(req, res));
 // PUT /planos-atividade/:id - Atualizar plano de atividade
 router.put('/:id', (req, res) => planoAtividadeController.update(req, res));
 
+// DELETE /planos-atividade/:id - Excluir plano de atividade
+router.delete('/:id', (req, res) => planoAtividadeController.destroy(req, res));
+
 // ===== ROTAS DE FUNCIONALIDADES ESPECÍFICAS =====
 
 // GET /planos-atividade/:id/pdf - Gerar PDF do plano

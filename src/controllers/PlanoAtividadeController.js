@@ -1273,6 +1273,88 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             });
         }
     }
+
+    /**
+     * Exclui um plano de atividade
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async destroy(req, res) {
+        try {
+            const { id } = req.params;
+            const user = req.session.user;
+
+            // Verificar se o usuário está autenticado
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Usuário não autenticado'
+                });
+            }
+
+            // Buscar o plano de atividade
+            const plano = await databaseConfig.get(
+                'SELECT * FROM campo_estagio_planoatividade WHERE id_planoatividade = ?',
+                [id]
+            );
+
+            if (!plano) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Plano de atividade não encontrado'
+                });
+            }
+
+            // Verificar permissões baseadas no nível de acesso e situação do plano
+            const userNivelAcesso = user.nivelacesso;
+            let podeExcluir = false;
+            let motivoNegacao = '';
+
+            if (userNivelAcesso === 'Administrador') {
+                // Administradores podem excluir: 'Em Edição', 'Em Aprovação', 'Aprovado sem Anexo'
+                podeExcluir = plano.situacao === 'Em Edição' || 
+                             plano.situacao === 'Em Aprovação' || 
+                             plano.situacao === 'Aprovado sem Anexo';
+                if (!podeExcluir) {
+                    motivoNegacao = 'Planos aprovados com anexo não podem ser excluídos';
+                }
+            } else {
+                // Outros usuários podem excluir apenas: 'Em Edição' e 'Em Aprovação'
+                podeExcluir = plano.situacao === 'Em Edição' || 
+                             plano.situacao === 'Em Aprovação';
+                if (!podeExcluir) {
+                    motivoNegacao = 'Você não tem permissão para excluir planos aprovados';
+                }
+            }
+
+            if (!podeExcluir) {
+                return res.status(403).json({
+                    success: false,
+                    message: motivoNegacao
+                });
+            }
+
+            // Excluir o plano de atividade
+            await databaseConfig.run(
+                'DELETE FROM campo_estagio_planoatividade WHERE id_planoatividade = ?',
+                [id]
+            );
+
+            console.log(`Plano de atividade ${id} excluído por usuário ${user.id_pessoa} (${userNivelAcesso})`);
+
+            res.json({
+                success: true,
+                message: 'Plano de atividade excluído com sucesso'
+            });
+
+        } catch (error) {
+            console.error('Erro ao excluir plano de atividade:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
 }
 
 module.exports = PlanoAtividadeController;

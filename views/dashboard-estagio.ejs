@@ -109,10 +109,10 @@
                 <div class="card-footer bg-transparent">
                     <div class="d-flex justify-content-between mb-3">
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-success btn-sm" id="btnCampEstNovo" onclick="window.location.href='/secure/estagios/campo/novo?origem=' + encodeURIComponent(window.location.pathname)">
+                            <button type="button" class="btn btn-success btn-sm" id="btnCampEstNovo" onclick="campEstNovo()">
                                 <i class="fas fa-plus me-1"></i>Novo
                             </button>
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnCampEstEditar" onclick="campEstGerenciar()">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnCampEstEditar" onclick="campEstEditar()">
                                 <i class="fas fa-edit me-1"></i>Editar
                             </button>
                         </div>
@@ -1449,7 +1449,12 @@
     let planosAtividadeFiltrados = [];
     
     // Funções para gerenciar os cards
-    function campEstGerenciar() {
+    function campEstNovo() {
+        // Redirecionar para formulário de criação na mesma aba
+        window.location.href = '/secure/estagios/campo/novo?origem=' + encodeURIComponent(window.location.pathname);
+    }
+    
+    function campEstEditar() {
         const btnEditarCampo = document.getElementById('btnCampEstEditar');
         
         // Verificar se o botão está desabilitado
@@ -1464,8 +1469,8 @@
         }
         
         if (campoSelecionadoId) {
-            // Abre o formulário de edição com o ID do campo selecionado
-            window.open(`/secure/estagios/campo/editar/${campoSelecionadoId}`, '_blank');
+            // Redirecionar para formulário de edição na mesma aba
+            window.location.href = `/secure/estagios/campo/editar/${campoSelecionadoId}`;
         } else {
             alert('Por favor, selecione um campo de estágio para editar.');
         }

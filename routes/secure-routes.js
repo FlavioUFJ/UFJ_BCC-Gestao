@@ -1189,7 +1189,7 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
             WHERE ce.id_campo_estagio = ?
         `;
         
-        const [rows] = await dbHelper.executeQuery(query, [campoId]);
+        const rows = await dbHelper.executeCustom(query, [campoId], req.user, 'campo_estagio', 'all');
         
         if (rows.length === 0) {
             return res.status(404).json({

@@ -91,7 +91,7 @@ class EmailConfig {
 
         const port = parseInt(config.email_port) || 587;
         
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
             host: config.email_host,
             port: port,
             secure: port === 465, // true para porta 465, false para outras portas

@@ -230,7 +230,8 @@
                 <i class="fas fa-graduation-cap me-2"></i>CoordenAI - Gestão Inteligente
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="<%= origem %>" onclick="console.log('Redirecionando para:', '<%= origem %>')">
+                <% let origemUrl = origem; %>
+                        <a class="nav-link" href="<%= origemUrl %>" onclick="console.log('Redirecionando para:', '<%= origemUrl %>')">
                     <i class="fas fa-arrow-left me-1"></i>Voltar ao Dashboard
                 </a>
                 <a class="nav-link" href="/logout">

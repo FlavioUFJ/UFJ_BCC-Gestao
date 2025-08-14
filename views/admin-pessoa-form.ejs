@@ -147,6 +147,11 @@
                                             <label class="form-check-label" for="catSupervisor">Supervisor</label>
                                         </div>
                                         <div class="form-check">
+                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Instituição" id="catInstituicao"
+                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Instituição') ? 'checked' : '' %>>
+                                            <label class="form-check-label" for="catInstituicao">Instituição/Curso</label>
+                                        </div>
+                                        <div class="form-check">
                                             <input class="form-check-input categoria-checkbox" type="checkbox" value="Usuário Geral" id="catUsuarioGeral"
                                                    <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Usuário Geral') ? 'checked' : '' %>>
                                             <label class="form-check-label" for="catUsuarioGeral">Usuário Geral</label>
@@ -341,8 +346,12 @@
             
             async preencherDadosEdicao() {
                 console.log('[DEBUG] Função preencherDadosEdicao chamada');
-                console.log('[DEBUG] isEdit:', <% if (typeof isEdit !== 'undefined') { %><%- JSON.stringify(isEdit) %><% } else { %>undefined<% } %>);
-                console.log('[DEBUG] pessoa:', <% if (typeof pessoa !== 'undefined' && pessoa) { %><%- JSON.stringify(pessoa) %><% } else { %>undefined<% } %>);
+                <%
+        let isEditValue = (typeof isEdit !== 'undefined') ? JSON.stringify(isEdit) : 'undefined';
+        let pessoaValue = (typeof pessoa !== 'undefined' && pessoa) ? JSON.stringify(pessoa) : 'undefined';
+        %>
+        console.log('[DEBUG] isEdit:', <%- isEditValue %>);
+        console.log('[DEBUG] pessoa:', <%- pessoaValue %>);
                 <% if (typeof isEdit !== 'undefined' && isEdit && typeof pessoa !== 'undefined' && pessoa) { %>
                 // Preencher checkboxes de categoria baseado nos dados da pessoa
                 if (<%- JSON.stringify(pessoa.categoria) %>) {
@@ -354,7 +363,9 @@
                         '1': 'Coordenador',
                         '2': 'Professor',
                         '3': 'Aluno',
+                        '4': 'Concedente',
                         '5': 'Supervisor',
+                        '6': 'Instituição',
                         '99': 'Usuário Geral'
                     };
                     
@@ -422,6 +433,7 @@
                     'Aluno': '3',
                     'Concedente': '4',
                     'Supervisor': '5',
+                    'Instituição': '6',
                     'Usuário Geral': '99'
                 };
                 
@@ -440,12 +452,13 @@
             configurarIncompatibilidadeCategorias() {
                 // Definir regras de incompatibilidade
                 this.incompatibilidades = {
-                    'Coordenador': ['Aluno', 'Concedente', 'Usuário Geral'],
-                    'Professor': ['Aluno', 'Concedente', 'Usuário Geral'],
-                    'Aluno': ['Coordenador', 'Professor', 'Concedente', 'Supervisor', 'Usuário Geral'],
+                    'Coordenador': ['Aluno', 'Concedente', 'Instituição', 'Usuário Geral'],
+                    'Professor': ['Aluno', 'Concedente', 'Instituição', 'Usuário Geral'],
+                    'Aluno': ['Coordenador', 'Professor', 'Concedente', 'Supervisor', 'Instituição', 'Usuário Geral'],
                     'Concedente': ['Coordenador', 'Aluno', 'Professor'],
-                    'Supervisor': ['Coordenador', 'Aluno', 'Professor'],
-                    'Usuário Geral': ['Coordenador', 'Professor', 'Aluno', 'Concedente', 'Supervisor']
+                    'Supervisor': ['Coordenador', 'Aluno', 'Professor', 'Instituição'],
+                    'Instituição': ['Coordenador', 'Professor', 'Aluno', 'Supervisor', 'Usuário Geral'],
+                    'Usuário Geral': ['Coordenador', 'Professor', 'Aluno', 'Concedente', 'Supervisor', 'Instituição']
                 };
             },
             

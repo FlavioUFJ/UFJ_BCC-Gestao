@@ -44,8 +44,9 @@
                                 Senha Atual *
                             <% } %>
                         </label>
-                        <input type="password" class="form-control" id="senhaAtual" name="senhaAtual" required 
-                               placeholder="<% if (primeiroLogin) { %>Digite sua matrícula<% } else { %>Digite sua senha atual<% } %>">
+                        <% let placeholderText = primeiroLogin ? 'Digite sua matrícula' : 'Digite sua senha atual'; %>
+                    <input type="password" class="form-control" id="senhaAtual" name="senhaAtual" required
+                           placeholder="<%= placeholderText %>">
                     </div>
                     
                     <div class="mb-3">

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançamento Frequência Diária - Sistema de Gestão de Estágios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        .header-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .total-horas {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #007bff;
+            background: #f0f8ff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #b3d9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-calendar-plus"></i> Lançamento Frequência Diária</h2>
+                </div>
+
+                <!-- Informações do Cabeçalho -->
+                <div class="header-info">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-user"></i> Estagiário:</strong>
+                            <span id="nomeEstagiario"><%= estagiario ? estagiario.nome : 'N/A' %></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-calendar"></i> Mês de Referência:</strong>
+                            <span id="mesReferencia"><%= frequencia ? frequencia.mesdereferencia : 'N/A' %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário de Lançamento -->
+                <form id="lancamentoDiarioForm" method="POST" action="/frequencias/lancamento-diario">
+                    <input type="hidden" name="id_campo_estagio_frequencia" value="<%= frequencia ? frequencia.id_campo_estagio_frequencia : '' %>">
+                    
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-clock"></i> Registro do Dia</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="data_frequencia" class="form-label">Data *</label>
+                                <input type="text" class="form-control data-brasileira" id="data_frequencia" name="data_frequencia" placeholder="dd/mm/aaaa" maxlength="10" required readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hora_inicial" class="form-label">Hora Inicial <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="hora_inicial" name="hora_inicial" placeholder="HH:MM" maxlength="5" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="hora_final" class="form-label">Hora Final <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="hora_final" name="hora_final" placeholder="HH:MM" maxlength="5" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="total_hora" class="form-label">Quant. Hora</label>
+                                <div class="total-horas" id="total_hora">00:00</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label for="atividade_do_dia" class="form-label">Atividade do Dia *</label>
+                                <textarea class="form-control" id="atividade_do_dia" name="atividade_do_dia" rows="4" placeholder="Descreva as atividades realizadas no dia..." required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="voltarFormularioAnterior()">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Função para calcular total de horas
+        function calcularTotalHoras() {
+            const horaInicial = document.getElementById('hora_inicial').value;
+            const horaFinal = document.getElementById('hora_final').value;
+            const totalHoraElement = document.getElementById('total_hora');
+            
+            if (horaInicial && horaFinal) {
+                const [horaIni, minIni] = horaInicial.split(':').map(Number);
+                const [horaFim, minFim] = horaFinal.split(':').map(Number);
+                
+                const inicialMinutos = horaIni * 60 + minIni;
+                const finalMinutos = horaFim * 60 + minFim;
+                
+                let diferencaMinutos = finalMinutos - inicialMinutos;
+                
+                // Se a hora final for menor que a inicial, assumir que passou da meia-noite
+                if (diferencaMinutos < 0) {
+                    diferencaMinutos += 24 * 60;
+                }
+                
+                const horas = Math.floor(diferencaMinutos / 60);
+                const minutos = diferencaMinutos % 60;
+                
+                // Validar se não excede 6 horas (360 minutos)
+                if (diferencaMinutos > 360) {
+                    totalHoraElement.textContent = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+                    totalHoraElement.style.color = 'red';
+                    totalHoraElement.title = 'Atenção: Lançamento não pode exceder 6 horas!';
+                } else {
+                    totalHoraElement.textContent = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+                    totalHoraElement.style.color = '';
+                    totalHoraElement.title = '';
+                }
+            } else {
+                totalHoraElement.textContent = '00:00';
+                totalHoraElement.style.color = '';
+                totalHoraElement.title = '';
+            }
+        }
+        
+        // Função para voltar ao formulário anterior
+        function voltarFormularioAnterior() {
+            // Voltar para a página anterior ou dashboard
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/estagios/dashboard';
+            }
+        }
+        
+        // Função para aplicar máscara de data brasileira
+        function aplicarMascaraData(input) {
+            let valor = input.value.replace(/\D/g, '');
+            
+            if (valor.length >= 2) {
+                valor = valor.substring(0, 2) + '/' + valor.substring(2);
+            }
+            if (valor.length >= 5) {
+                valor = valor.substring(0, 5) + '/' + valor.substring(5, 9);
+            }
+            
+            input.value = valor;
+        }
+        
+        // Função para validar data brasileira
+        function validarDataBrasileira(dataStr) {
+            const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            const match = dataStr.match(regex);
+            
+            if (!match) return false;
+            
+            const dia = parseInt(match[1], 10);
+            const mes = parseInt(match[2], 10);
+            const ano = parseInt(match[3], 10);
+            
+            if (mes < 1 || mes > 12) return false;
+            if (dia < 1 || dia > 31) return false;
+            
+            const data = new Date(ano, mes - 1, dia);
+            return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
+        }
+        
+        // Setar data atual automaticamente
+        function setDataAtual() {
+            const hoje = new Date();
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const ano = hoje.getFullYear();
+            const dataAtual = `${dia}/${mes}/${ano}`;
+            document.getElementById('data_frequencia').value = dataAtual;
+        }
+        
+        // Colocar foco no campo Hora Inicial
+        function setFocoInicial() {
+            document.getElementById('hora_inicial').focus();
+        }
+        
+        // Função para aplicar máscara de hora (HH:MM)
+        function aplicarMascaraHora(campo) {
+            let valor = campo.value.replace(/\D/g, '');
+            if (valor.length >= 2) {
+                valor = valor.substring(0, 2) + ':' + valor.substring(2, 4);
+            }
+            campo.value = valor;
+        }
+        
+        // Função para validar hora (HH:MM)
+        function validarHora(hora) {
+            const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+            return regex.test(hora);
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setar data atual e foco
+            setDataAtual();
+            setFocoInicial();
+            
+            // Aplicar máscaras e calcular total de horas
+            const horaInicial = document.getElementById('hora_inicial');
+            const horaFinal = document.getElementById('hora_final');
+            
+            horaInicial.addEventListener('input', function() {
+                aplicarMascaraHora(this);
+                calcularTotalHoras();
+            });
+            
+            horaFinal.addEventListener('input', function() {
+                aplicarMascaraHora(this);
+                calcularTotalHoras();
+            });
+            
+            // Validar horas ao sair do campo
+            horaInicial.addEventListener('blur', function() {
+                if (this.value && !validarHora(this.value)) {
+                    alert('Hora inicial inválida. Use o formato HH:MM');
+                    this.focus();
+                }
+            });
+            
+            horaFinal.addEventListener('blur', function() {
+                if (this.value && !validarHora(this.value)) {
+                    alert('Hora final inválida. Use o formato HH:MM');
+                    this.focus();
+                }
+            });
+            
+            // Aplicar máscara de data
+            const campoData = document.getElementById('data_frequencia');
+            campoData.addEventListener('input', function() {
+                aplicarMascaraData(this);
+            });
+            
+            campoData.addEventListener('blur', function() {
+                if (this.value && !validarDataBrasileira(this.value)) {
+                    alert('Data inválida. Use o formato dd/mm/aaaa');
+                    this.focus();
+                }
+            });
+            
+            // Submissão do formulário
+            document.getElementById('lancamentoDiarioForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validações básicas
+                const dataFrequencia = document.getElementById('data_frequencia').value;
+                const horaInicial = document.getElementById('hora_inicial').value;
+                const horaFinal = document.getElementById('hora_final').value;
+                const atividadeDia = document.getElementById('atividade_do_dia').value;
+                
+                if (!dataFrequencia || !horaInicial || !horaFinal || !atividadeDia.trim()) {
+                    alert('Por favor, preencha todos os campos obrigatórios.');
+                    return;
+                }
+                
+                if (!validarDataBrasileira(dataFrequencia)) {
+                    alert('Data inválida. Use o formato dd/mm/aaaa');
+                    return;
+                }
+                
+                // Validar se o mês da data corresponde ao mês de referência
+                const mesReferencia = document.getElementById('mesReferencia').textContent.trim();
+                const [dia, mes, ano] = dataFrequencia.split('/');
+                const mesData = parseInt(mes, 10);
+                const anoData = parseInt(ano, 10);
+                
+                // Mapear nomes de meses para números
+                const mesesNomes = {
+                    'Janeiro': 1, 'Fevereiro': 2, 'Março': 3, 'Abril': 4,
+                    'Maio': 5, 'Junho': 6, 'Julho': 7, 'Agosto': 8,
+                    'Setembro': 9, 'Outubro': 10, 'Novembro': 11, 'Dezembro': 12
+                };
+                
+                // Verificar se o mês de referência é um nome por extenso
+                let mesRef, anoRef;
+                if (mesesNomes[mesReferencia]) {
+                    // Mês de referência é apenas o nome (ex: "Janeiro")
+                    mesRef = mesesNomes[mesReferencia];
+                    anoRef = anoData; // Assumir o mesmo ano da data informada
+                } else if (mesReferencia.includes('/')) {
+                    // Mês de referência no formato "MM/AAAA" ou similar
+                    const [mesRefStr, anoRefStr] = mesReferencia.split('/');
+                    mesRef = parseInt(mesRefStr, 10);
+                    anoRef = parseInt(anoRefStr, 10);
+                } else {
+                    // Tentar extrair mês do nome se contém ano (ex: "Janeiro 2024")
+                    const partes = mesReferencia.split(' ');
+                    if (partes.length === 2 && mesesNomes[partes[0]]) {
+                        mesRef = mesesNomes[partes[0]];
+                        anoRef = parseInt(partes[1], 10);
+                    } else {
+                        alert('Formato do mês de referência não reconhecido.');
+                        return;
+                    }
+                }
+                
+                if (mesData !== mesRef || anoData !== anoRef) {
+                    alert(`A data informada deve ser do mês de referência: ${mesReferencia}`);
+                    return;
+                }
+                
+                // Validar se não excede 6 horas
+                if (horaInicial && horaFinal) {
+                    const [horaIni, minIni] = horaInicial.split(':').map(Number);
+                    const [horaFim, minFim] = horaFinal.split(':').map(Number);
+                    
+                    let diferencaMinutos = (horaFim * 60 + minFim) - (horaIni * 60 + minIni);
+                    
+                    if (diferencaMinutos < 0) {
+                        diferencaMinutos += 24 * 60;
+                    }
+                    
+                    if (diferencaMinutos > 360) {
+                        alert('O lançamento não pode exceder 6 horas por dia.');
+                        return;
+                    }
+                }
+                
+                // Enviar formulário
+                const formData = new FormData(this);
+                
+                fetch('/frequencias/lancamento-diario', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Voltar sem notificação conforme solicitado
+                        voltarFormularioAnterior();
+                    } else {
+                        alert('Erro ao salvar: ' + (data.message || 'Erro desconhecido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao salvar o lançamento.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

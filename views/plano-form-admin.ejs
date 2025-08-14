@@ -87,7 +87,8 @@
                                             <option value="">Selecione a situação</option>
                                             <% if (enumValues && enumValues.situacao) { %>
                                                 <% enumValues.situacao.forEach(function(situacao) { %>
-                                                    <option value="<%= situacao %>" <%= (estagiario && estagiario.situacao === situacao) ? 'selected' : '' %>><%= situacao %></option>
+                                                    <% let isSelected = (estagiario && estagiario.situacao === situacao) ? 'selected' : ''; %>
+                            <option value="<%= situacao %>" <%= isSelected %>><%= situacao %></option>
                                                 <% }); %>
                                             <% } %>
                                         </select>

@@ -194,8 +194,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="section-title">Período</div>
-                                <div class="info-item"><strong>Início:</strong> <%= (function(isoDate) { const parts = isoDate.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : ''; })(plano.periodo_inicio) %></div>
-                                <div class="info-item"><strong>Fim:</strong> <%= (function(isoDate) { const parts = isoDate.split('-'); return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : ''; })(plano.periodo_fim) %></div>
+                                <%
+                function formatISOToBRDate(isoDate) {
+                    const parts = isoDate.split('-');
+                    return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : '';
+                }
+                %>
+                <div class="info-item"><strong>Início:</strong> <%= formatISOToBRDate(plano.periodo_inicio) %></div>
+                <div class="info-item"><strong>Fim:</strong> <%= formatISOToBRDate(plano.periodo_fim) %></div>
                             </div>
                             <div class="col-md-6">
                                 <div class="section-title">Carga Horária</div>
@@ -295,8 +301,10 @@
         const year = now.getFullYear();
         return `${day}/${month}/${year}`;
     }
+    let currentDate = formatCurrentDateToBR();
+    let currentTime = new Date().toLocaleTimeString('pt-BR');
 %>
-Documento gerado em <%= formatCurrentDateToBR() %> às <%= new Date().toLocaleTimeString('pt-BR') %>
+Documento gerado em <%= currentDate %> às <%= currentTime %>
                         </div>
                     </div>
                     <div class="card-footer text-center">

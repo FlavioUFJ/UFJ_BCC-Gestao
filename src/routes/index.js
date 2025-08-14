@@ -19,6 +19,7 @@ const estagiosRoutes = require('./estagios');
 const pessoasRoutes = require('./pessoas');
 const parametroRoutes = require('./parametros');
 const planosAtividadeRoutes = require('./planos-atividade');
+const frequenciasRoutes = require('./frequencias');
 
 // ===== ROTAS PRINCIPAIS =====
 
@@ -54,6 +55,7 @@ router.use('/pessoas', pessoasRoutes);
 router.use('/parametro', parametroRoutes);
 router.use('/admin/parametro', parametroRoutes);
 router.use('/planos-atividade', planosAtividadeRoutes);
+router.use('/frequencias', frequenciasRoutes);
 
 // ===== ROTAS DE ARQUIVOS ESTÁTICOS =====
 

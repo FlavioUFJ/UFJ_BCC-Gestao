@@ -48,4 +48,7 @@ router.get('/:id/pdf', (req, res) => planoAtividadeController.gerarPDF(req, res)
 // POST /planos-atividade/anexar-documento - Anexar documento PDF ao plano
 router.post('/anexar-documento', (req, res) => planoAtividadeController.anexarDocumento(req, res));
 
+// GET /planos-atividade/:id/categoria-usuario - Buscar categoria do usuário no plano
+router.get('/:id/categoria-usuario', (req, res) => planoAtividadeController.buscarCategoriaUsuario(req, res));
+
 module.exports = router;

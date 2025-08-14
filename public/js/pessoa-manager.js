@@ -1279,11 +1279,12 @@ class PessoaManager {
     configurarIncompatibilidadeCategorias() {
         // Definir regras de incompatibilidade
         const regrasIncompatibilidade = {
-            '1': ['3', '4', '99'], // Coordenador desabilita: Aluno/Estagiário, Concedente, Usuário Geral
-            '2': ['3', '4', '99'], // Professor/Orientador desabilita: Aluno/Estagiário, Concedente, Usuário Geral
+            '1': ['3', '4', '6', '99'], // Coordenador desabilita: Aluno/Estagiário, Concedente, Instituição, Usuário Geral
+            '2': ['3', '4', '6', '99'], // Professor/Orientador desabilita: Aluno/Estagiário, Concedente, Instituição, Usuário Geral
             '3': ['1', '2', '4', '5', '6', '99'], // Aluno/Estagiário desabilita: todas as outras
             '4': ['1', '2', '3'], // Concedente desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador
-            '5': ['1', '2', '3'], // Supervisor desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador
+            '5': ['1', '2', '3', '6'], // Supervisor desabilita: Coordenador, Aluno/Estagiário, Professor/Orientador, Instituição
+            '6': ['1', '2', '3', '5', '99'], // Instituição desabilita: Coordenador, Professor, Aluno, Supervisor, Usuário Geral
             '99': ['1', '2', '3', '4', '5', '6'] // Usuário Geral desabilita: todas as outras
         };
         

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançamento de Frequência - Sistema de Gestão de Estágios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        .registro-diario-row {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-remove-registro {
+            background: #dc3545;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-add-registro {
+            background: #28a745;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .total-horas {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-12">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-calendar-check"></i> Lançamento de Frequência</h2>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="voltarDashboard()">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Formulário -->
+                <form id="frequenciaForm" method="POST">
+                    <!-- Seção 1: Cabeçalho da Frequência -->
+                    <div class="form-section">
+                        <h4 class="section-title"><i class="fas fa-info-circle"></i> Informações Gerais</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="mesdereferencia" class="form-label">Mês de Referência *</label>
+                                <select class="form-select" id="mesdereferencia" name="mesdereferencia" required>
+                                    <option value="">Selecione o mês</option>
+                                    <option value="Janeiro">Janeiro</option>
+                                    <option value="Fevereiro">Fevereiro</option>
+                                    <option value="Março">Março</option>
+                                    <option value="Abril">Abril</option>
+                                    <option value="Maio">Maio</option>
+                                    <option value="Junho">Junho</option>
+                                    <option value="Julho">Julho</option>
+                                    <option value="Agosto">Agosto</option>
+                                    <option value="Setembro">Setembro</option>
+                                    <option value="Outubro">Outubro</option>
+                                    <option value="Novembro">Novembro</option>
+                                    <option value="Dezembro">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="data_abertura" class="form-label">Data de Abertura</label>
+                                <input type="text" class="form-control data-brasileira" id="data_abertura" name="data_abertura" placeholder="dd/mm/aaaa" maxlength="10">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="data_encerramento" class="form-label">Data de Encerramento</label>
+                                <input type="text" class="form-control data-brasileira" id="data_encerramento" name="data_encerramento" placeholder="dd/mm/aaaa" maxlength="10">
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label for="resumo_atividades" class="form-label">Resumo Mensal das Atividades</label>
+                                <textarea class="form-control" id="resumo_atividades" name="resumo_atividades" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção 2: Registros Diários -->
+                    <div class="form-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="section-title mb-0"><i class="fas fa-clock"></i> Registros Diários</h4>
+                            <div class="total-horas">
+                                Total de Horas: <span id="totalHorasGeral">00:00</span>
+                            </div>
+                        </div>
+                        
+                        <div id="registrosDiarios">
+                            <!-- Registros serão adicionados dinamicamente aqui -->
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-add-registro" onclick="adicionarRegistroDiario()">
+                                <i class="fas fa-plus"></i> Adicionar Registro
+                            </button>
+                            <% if (frequencia && frequencia.id_campo_estagio_frequencia) { %>
+                                <button type="button" class="btn btn-warning" id="btnLancarDia" onclick="abrirLancamentoDiario()" disabled>
+                                    <i class="fas fa-calendar-plus"></i> Lançar Dia
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="d-flex justify-content-between gap-2">
+                        <div>
+                            <% if (frequencia && frequencia.id_campo_estagio_frequencia) { %>
+                                <button type="button" class="btn btn-danger" onclick="excluirFrequencia()">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            <% } %>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary" onclick="voltarDashboard()">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let contadorRegistros = 0;
+        const frequenciaId = <%= frequencia ? frequencia.id_campo_estagio_frequencia : 'null' %>;
+        const planoAtividadeId = <%= planoAtividadeId || 'null' %>;
+        
+        // Dados existentes da frequência (para edição)
+        const frequenciaExistente = <%- JSON.stringify(frequencia || null) %>;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Se estiver editando, carregar dados existentes
+            if (frequenciaExistente) {
+                carregarDadosExistentes();
+            } else {
+                // Adicionar um registro inicial
+                adicionarRegistroDiario();
+            }
+            
+            // Configurar formulário
+            document.getElementById('frequenciaForm').addEventListener('submit', salvarFrequencia);
+        });
+        
+        function carregarDadosExistentes() {
+            // Carregar dados do cabeçalho
+            document.getElementById('mesdereferencia').value = frequenciaExistente.mesdereferencia || '';
+            document.getElementById('data_abertura').value = frequenciaExistente.data_abertura ? formatarDataBrasileira(frequenciaExistente.data_abertura) : '';
+            document.getElementById('data_encerramento').value = frequenciaExistente.data_encerramento ? formatarDataBrasileira(frequenciaExistente.data_encerramento) : '';
+            document.getElementById('resumo_atividades').value = frequenciaExistente.resumo_atividades || '';
+            
+            // Carregar registros diários
+            if (frequenciaExistente.registros_diarios && frequenciaExistente.registros_diarios.length > 0) {
+                frequenciaExistente.registros_diarios.forEach(registro => {
+                    adicionarRegistroDiario(registro);
+                });
+            } else {
+                adicionarRegistroDiario();
+            }
+            
+            // Verificar botão Lançar Dia após carregar os registros
+            setTimeout(() => {
+                verificarBotaoLancarDia();
+            }, 100);
+        }
+        
+        function adicionarRegistroDiario(dadosRegistro = null) {
+            contadorRegistros++;
+            const registroId = dadosRegistro ? dadosRegistro.id_frequencia_registrodiario : null;
+            
+            const registroHtml = `
+                <div class="registro-diario-row" data-registro-id="${registroId || ''}" data-contador="${contadorRegistros}">
+                    <div class="row align-items-center mb-2">
+                        <div class="col-md-3">
+                            <label class="form-label">Data</label>
+                            <input type="text" class="form-control registro-data data-brasileira" name="registros[${contadorRegistros}][data_da_frequencia]" value="${dadosRegistro ? formatarDataBrasileira(dadosRegistro.data_da_frequencia) : ''}" placeholder="dd/mm/aaaa" maxlength="10" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Hora Inicial</label>
+                            <input type="time" class="form-control registro-hora-inicial" name="registros[${contadorRegistros}][hora_inicial]" value="${dadosRegistro ? dadosRegistro.hora_inicial : ''}" onchange="calcularTotalHoras(${contadorRegistros})" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Hora Final</label>
+                            <input type="time" class="form-control registro-hora-final" name="registros[${contadorRegistros}][hora_final]" value="${dadosRegistro ? dadosRegistro.hora_final : ''}" onchange="calcularTotalHoras(${contadorRegistros})" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quant. Horas</label>
+                            <input type="text" class="form-control registro-total-horas" name="registros[${contadorRegistros}][total_hora]" value="${dadosRegistro ? dadosRegistro.total_hora : '00:00'}" readonly>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-remove-registro d-block" onclick="removerRegistroDiario(${contadorRegistros})" title="Remover registro">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Atividade do Dia</label>
+                            <textarea class="form-control" name="registros[${contadorRegistros}][atividade_do_dia]" rows="2" placeholder="Descreva as atividades realizadas...">${dadosRegistro ? dadosRegistro.atividade_do_dia || '' : ''}</textarea>
+                        </div>
+                    </div>
+                    ${registroId ? `<input type="hidden" name="registros[${contadorRegistros}][id]" value="${registroId}">` : ''}
+                </div>
+            `;
+            
+            document.getElementById('registrosDiarios').insertAdjacentHTML('beforeend', registroHtml);
+            
+            // Aplicar máscara ao campo de data recém-criado
+            const novosCamposData = document.querySelectorAll(`[data-contador="${contadorRegistros}"] .data-brasileira`);
+            novosCamposData.forEach(function(input) {
+                input.addEventListener('input', function() {
+                    aplicarMascaraData(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (this.value && !validarDataBrasileira(this.value)) {
+                        alert('Data inválida. Use o formato dd/mm/aaaa');
+                        this.focus();
+                    }
+                });
+            });
+            
+            // Se tem dados existentes, calcular total de horas
+            if (dadosRegistro) {
+                calcularTotalHoras(contadorRegistros);
+            }
+            
+            atualizarTotalGeral();
+            verificarBotaoLancarDia();
+        }
+        
+        function removerRegistroDiario(contador) {
+            const registro = document.querySelector(`[data-contador="${contador}"]`);
+            if (registro) {
+                registro.remove();
+                atualizarTotalGeral();
+                verificarBotaoLancarDia();
+            }
+        }
+        
+        function calcularTotalHoras(contador) {
+            const registro = document.querySelector(`[data-contador="${contador}"]`);
+            const horaInicial = registro.querySelector('.registro-hora-inicial').value;
+            const horaFinal = registro.querySelector('.registro-hora-final').value;
+            
+            if (horaInicial && horaFinal) {
+                const [horaIni, minIni] = horaInicial.split(':').map(Number);
+                const [horaFim, minFim] = horaFinal.split(':').map(Number);
+                
+                const minutosIniciais = horaIni * 60 + minIni;
+                const minutosFinais = horaFim * 60 + minFim;
+                
+                let diferencaMinutos = minutosFinais - minutosIniciais;
+                
+                // Se a hora final for menor que a inicial, assumir que passou da meia-noite
+                if (diferencaMinutos < 0) {
+                    diferencaMinutos += 24 * 60;
+                }
+                
+                const horas = Math.floor(diferencaMinutos / 60);
+                const minutos = diferencaMinutos % 60;
+                
+                const totalFormatado = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+                registro.querySelector('.registro-total-horas').value = totalFormatado;
+                
+                atualizarTotalGeral();
+            }
+        }
+        
+        function atualizarTotalGeral() {
+            let totalMinutos = 0;
+            
+            document.querySelectorAll('.registro-total-horas').forEach(input => {
+                if (input.value && input.value !== '00:00') {
+                    const [horas, minutos] = input.value.split(':').map(Number);
+                    totalMinutos += horas * 60 + minutos;
+                }
+            });
+            
+            const horasGerais = Math.floor(totalMinutos / 60);
+            const minutosGerais = totalMinutos % 60;
+            
+            document.getElementById('totalHorasGeral').textContent = 
+                `${horasGerais.toString().padStart(2, '0')}:${minutosGerais.toString().padStart(2, '0')}`;
+        }
+        
+        function salvarFrequencia(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const dados = {
+                id_planoatividade: planoAtividadeId,
+                mesdereferencia: formData.get('mesdereferencia'),
+                data_abertura: formData.get('data_abertura') || null,
+                data_encerramento: formData.get('data_encerramento') || null,
+                resumo_atividades: formData.get('resumo_atividades') || null,
+                registros_diarios: []
+            };
+            
+            // Coletar registros diários
+            const registros = document.querySelectorAll('.registro-diario-row');
+            registros.forEach((registro, index) => {
+                const contador = registro.dataset.contador;
+                const registroId = registro.dataset.registroId;
+                
+                const registroData = {
+                    data_da_frequencia: formData.get(`registros[${contador}][data_da_frequencia]`),
+                    hora_inicial: formData.get(`registros[${contador}][hora_inicial]`),
+                    hora_final: formData.get(`registros[${contador}][hora_final]`),
+                    atividade_do_dia: formData.get(`registros[${contador}][atividade_do_dia]`) || null
+                };
+                
+                if (registroId) {
+                    registroData.id_frequencia_registrodiario = registroId;
+                }
+                
+                dados.registros_diarios.push(registroData);
+            });
+            
+            // Enviar dados
+            const url = frequenciaId ? `/frequencias/${frequenciaId}` : '/frequencias';
+            const method = frequenciaId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Frequência salva com sucesso!');
+                    voltarDashboard();
+                } else {
+                    alert('Erro ao salvar frequência: ' + (data.message || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao salvar frequência.');
+            });
+        }
+        
+        function excluirFrequencia() {
+            if (confirm('Tem certeza que deseja excluir esta frequência? Esta ação não pode ser desfeita.')) {
+                fetch(`/frequencias/${frequenciaId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Frequência excluída com sucesso!');
+                        voltarDashboard();
+                    } else {
+                        alert('Erro ao excluir frequência: ' + (data.message || 'Erro desconhecido'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir frequência.');
+                });
+            }
+        }
+        
+        function voltarDashboard() {
+            window.location.href = '/estagios/dashboard';
+        }
+        
+        // Função para habilitar/desabilitar o botão Lançar Dia
+        function verificarBotaoLancarDia() {
+            const btnLancarDia = document.getElementById('btnLancarDia');
+            if (!btnLancarDia) return;
+            
+            // Verificar se existe pelo menos um registro diário
+            const registrosDiarios = document.querySelectorAll('#registrosDiarios .registro-diario-row');
+            btnLancarDia.disabled = registrosDiarios.length === 0;
+        }
+        
+        // Função para abrir o formulário de lançamento diário
+        function abrirLancamentoDiario() {
+            const frequenciaId = <%= frequencia ? frequencia.id_campo_estagio_frequencia : 'null' %>;
+            if (!frequenciaId) {
+                alert('Frequência não encontrada.');
+                return;
+            }
+            
+            window.location.href = `/frequencias/lancamento-diario/${frequenciaId}`;
+        }
+        
+        // Verificar botão ao carregar a página e sempre que registros mudarem
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarBotaoLancarDia();
+            
+            // Observer para detectar mudanças nos registros diários
+            const registrosDiariosContainer = document.getElementById('registrosDiarios');
+            if (registrosDiariosContainer) {
+                const observer = new MutationObserver(function() {
+                    verificarBotaoLancarDia();
+                });
+                observer.observe(registrosDiariosContainer, { childList: true, subtree: true });
+            }
+        });
+        
+        // Função para formatar data no padrão brasileiro
+        function formatarDataBrasileira(dataISO) {
+            if (!dataISO) return '';
+            const data = new Date(dataISO);
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+        
+        // Função para aplicar máscara de data brasileira
+        function aplicarMascaraData(input) {
+            let valor = input.value.replace(/\D/g, '');
+            
+            if (valor.length >= 2) {
+                valor = valor.substring(0, 2) + '/' + valor.substring(2);
+            }
+            if (valor.length >= 5) {
+                valor = valor.substring(0, 5) + '/' + valor.substring(5, 9);
+            }
+            
+            input.value = valor;
+        }
+        
+        // Função para validar data brasileira
+        function validarDataBrasileira(dataStr) {
+            const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            const match = dataStr.match(regex);
+            
+            if (!match) return false;
+            
+            const dia = parseInt(match[1], 10);
+            const mes = parseInt(match[2], 10);
+            const ano = parseInt(match[3], 10);
+            
+            if (mes < 1 || mes > 12) return false;
+            if (dia < 1 || dia > 31) return false;
+            
+            const data = new Date(ano, mes - 1, dia);
+            return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
+        }
+        
+        // Aplicar máscara aos campos de data quando o documento carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aplicar máscara aos campos existentes
+            document.querySelectorAll('.data-brasileira').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    aplicarMascaraData(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (this.value && !validarDataBrasileira(this.value)) {
+                        alert('Data inválida. Use o formato dd/mm/aaaa');
+                        this.focus();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

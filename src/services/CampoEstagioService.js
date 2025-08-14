@@ -53,32 +53,35 @@ class CampoEstagioService {
                 const categoriaUsuario = usuario?.categoria;
                 
                 // Aplicar restrições baseadas na categoria
+                // Agora considerando que o usuário pode ter múltiplas funções
+                const condicoes = [];
+                
                 switch (categoriaUsuario) {
                     case '1': // Coordenador - nenhuma restrição, recupera todos os dados
                         break;
                         
                     case '2': // Professor/Orientador - estágios onde é orientador
-                        sql += ' WHERE ce.id_pessoa_orientador = ?';
+                        condicoes.push('ce.id_pessoa_orientador = ?');
                         params.push(idUsuario);
                         break;
                         
                     case '3': // Aluno/Estagiário - apenas seus próprios estágios
-                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
+                        condicoes.push('ce.id_pessoa_estagiario = ?');
                         params.push(idUsuario);
                         break;
                         
                     case '4': // Concedente/Local de Estágio - estágios onde é concedente
-                        sql += ' WHERE ce.id_pessoa_concedente = ?';
+                        condicoes.push('ce.id_pessoa_concedente = ?');
                         params.push(idUsuario);
                         break;
                         
                     case '5': // Supervisor - estágios onde é supervisor
-                        sql += ' WHERE ce.id_pessoa_supervisor = ?';
+                        condicoes.push('ce.id_pessoa_supervisor = ?');
                         params.push(idUsuario);
                         break;
                         
                     case '6': // Instituição/Curso - estágios relacionados via id_pessoa_curso
-                        sql += ' WHERE ce.id_pessoa_curso = ?';
+                        condicoes.push('ce.id_pessoa_curso = ?');
                         params.push(idUsuario);
                         break;
                         
@@ -87,9 +90,37 @@ class CampoEstagioService {
                         break;
                         
                     default: // Categoria não reconhecida - apenas seus próprios estágios
-                        sql += ' WHERE ce.id_pessoa_estagiario = ?';
+                        condicoes.push('ce.id_pessoa_estagiario = ?');
                         params.push(idUsuario);
                         break;
+                }
+                
+                // Além da categoria principal, verificar se o usuário está vinculado em outras funções
+                // Isso permite que um usuário veja estágios onde participa em qualquer função
+                if (categoriaUsuario !== '1' && categoriaUsuario !== '99') {
+                    // Adicionar condições para verificar se o usuário está em outras funções
+                    const funcoesAdicionais = [
+                        'ce.id_pessoa_estagiario = ?',
+                        'ce.id_pessoa_orientador = ?',
+                        'ce.id_pessoa_supervisor = ?',
+                        'ce.id_pessoa_concedente = ?',
+                        'ce.id_pessoa_curso = ?'
+                    ];
+                    
+                    // Remover a condição já adicionada pela categoria principal
+                    const condicaoExistente = condicoes[0];
+                    const funcoesParaAdicionar = funcoesAdicionais.filter(funcao => funcao !== condicaoExistente);
+                    
+                    // Adicionar todas as outras funções possíveis
+                    funcoesParaAdicionar.forEach(funcao => {
+                        condicoes.push(funcao);
+                        params.push(idUsuario);
+                    });
+                }
+                
+                // Aplicar as condições com OR se houver múltiplas
+                if (condicoes.length > 0) {
+                    sql += ' WHERE (' + condicoes.join(' OR ') + ')';
                 }
             }
             

@@ -1355,6 +1355,81 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             });
         }
     }
+
+    /**
+     * Busca a categoria do usuário logado no plano de atividade
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async buscarCategoriaUsuario(req, res) {
+        try {
+            const { id } = req.params; // ID do plano de atividade
+            const userId = req.session.user.id_pessoa;
+            
+            if (!id || !userId) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'ID do plano de atividade e usuário são obrigatórios' 
+                });
+            }
+            
+            // Buscar as categorias do usuário no plano de atividade
+            // Agora considerando que uma pessoa pode ter múltiplas funções
+            const query = `
+                SELECT 
+                    ce.id_pessoa_estagiario,
+                    ce.id_pessoa_orientador,
+                    ce.id_pessoa_supervisor
+                FROM campo_estagio ce
+                WHERE ce.id_campo_estagio = ?
+            `;
+            
+            const result = await databaseConfig.get(query, [id]);
+            
+            if (!result) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Plano de atividade não encontrado' 
+                });
+            }
+            
+            const campoEstagio = result;
+            const categorias = [];
+            
+            // Verificar em quais funções o usuário está vinculado
+            if (campoEstagio.id_pessoa_estagiario === userId) {
+                categorias.push('Estagiário');
+            }
+            if (campoEstagio.id_pessoa_orientador === userId) {
+                categorias.push('Orientador');
+            }
+            if (campoEstagio.id_pessoa_supervisor === userId) {
+                categorias.push('Supervisor');
+            }
+            
+            if (categorias.length === 0) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'Usuário não possui permissão neste plano de atividade' 
+                });
+            }
+            
+            // Retornar a primeira categoria encontrada (para compatibilidade)
+            // mas também todas as categorias disponíveis
+            res.json({ 
+                success: true, 
+                categoria: categorias[0], // Categoria principal para compatibilidade
+                categorias: categorias    // Todas as categorias disponíveis
+            });
+            
+        } catch (error) {
+            console.error('Erro ao buscar categoria do usuário:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Erro interno do servidor' 
+            });
+        }
+    }
 }
 
 module.exports = PlanoAtividadeController;

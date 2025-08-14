@@ -116,7 +116,22 @@
                             <label for="data_inicial" class="form-label">Data Inicial do plano *</label>
                             <input type="text" class="form-control" id="data_inicial" name="data_inicial" 
                                    placeholder="DD/MM/AAAA" maxlength="10"
-                                   value="<% if (plano && plano.pa_data_inicial) { %><% try { %><%= new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } else if (campoEstagio && campoEstagio.ce_data_inicio && campoEstagio.ce_data_inicio !== 'null' && typeof campoEstagio.ce_data_inicio === 'string' && campoEstagio.ce_data_inicio.trim() !== '') { %><% try { %><%= new Date(campoEstagio.ce_data_inicio).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } %>" required>
+                                   value="<%
+                                   let dataInicialValue = '';
+                                   if (plano && plano.pa_data_inicial) {
+                                       try {
+                                           dataInicialValue = new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR');
+                                       } catch(e) {
+                                           dataInicialValue = '';
+                                       }
+                                   } else if (campoEstagio && campoEstagio.ce_data_inicio && campoEstagio.ce_data_inicio !== 'null' && typeof campoEstagio.ce_data_inicio === 'string' && campoEstagio.ce_data_inicio.trim() !== '') {
+                                       try {
+                                           dataInicialValue = new Date(campoEstagio.ce_data_inicio).toLocaleDateString('pt-BR');
+                                       } catch(e) {
+                                           dataInicialValue = '';
+                                       }
+                                   }
+                                   %><%= dataInicialValue %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -124,7 +139,22 @@
                             <label for="data_final" class="form-label">Data final do plano *</label>
                             <input type="text" class="form-control" id="data_final" name="data_final" 
                                    placeholder="DD/MM/AAAA" maxlength="10"
-                                   value="<% if (plano && plano.pa_data_final) { %><% try { %><%= new Date(plano.pa_data_final).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } else if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && typeof campoEstagio.ce_data_fim === 'string' && campoEstagio.ce_data_fim.trim() !== '') { %><% try { %><%= new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR') %><% } catch(e) { %><% } %><% } %>" required>
+                                   value="<%
+                                   let dataFinalValue = '';
+                                   if (plano && plano.pa_data_final) {
+                                       try {
+                                           dataFinalValue = new Date(plano.pa_data_final).toLocaleDateString('pt-BR');
+                                       } catch(e) {
+                                           dataFinalValue = '';
+                                       }
+                                   } else if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && typeof campoEstagio.ce_data_fim === 'string' && campoEstagio.ce_data_fim.trim() !== '') {
+                                       try {
+                                           dataFinalValue = new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR');
+                                       } catch(e) {
+                                           dataFinalValue = '';
+                                       }
+                                   }
+                                   %><%= dataFinalValue %>" required>
                         </div>
                     </div>
                     <div class="col-md-4">

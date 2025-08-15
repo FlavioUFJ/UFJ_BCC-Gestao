@@ -487,12 +487,10 @@ class FrequenciaController {
                 ORDER BY data_da_frequencia ASC
             `, [id]);
 
-            res.render('frequencia-view', {
-                title: 'Detalhes da Frequência - CoordenAI - Gestão',
-                frequencia,
-                registrosDiarios,
-                user: req.session.user,
-                currentPage: 'frequencia-view'
+            res.render('error', {
+                title: 'Funcionalidade não implementada',
+                message: 'A visualização de detalhes da frequência ainda não foi implementada.',
+                user: req.session.user
             });
         } catch (error) {
             console.error('Erro ao exibir frequência:', error);
@@ -884,6 +882,7 @@ class FrequenciaController {
                     }
                     .info-row {
                         display: flex;
+                        align-items: center;
                         margin-bottom: 5px;
                     }
                     .info-label {
@@ -901,14 +900,7 @@ class FrequenciaController {
                     }
                     .coluna {
                         border: 1px solid #ddd;
-                        padding: 10px;
-                    }
-                    .coluna h4 {
-                        margin: 0 0 10px 0;
-                        text-align: center;
-                        background-color: #f5f5f5;
                         padding: 5px;
-                        font-size: 11px;
                     }
                     .registro {
                         margin-bottom: 8px;
@@ -971,19 +963,15 @@ class FrequenciaController {
                 
                 <div class="info-section">
                      <div class="info-row">
-                         <span class="info-label">Tipo de Estágio:</span>
-                         <span>${frequencia.tipo_estagio}</span>
-                     </div>
-                     <div class="info-row">
                          <span class="info-label">Estagiário:</span>
                          <span>${frequencia.nome_estagiario}</span>
+                         <span class="info-label" style="margin-left: 50px;">Tipo de Estágio:</span>
+                         <span>${frequencia.tipo_estagio}</span>
                      </div>
                      <div class="info-row">
                          <span class="info-label">Período:</span>
                          <span>${frequencia.mesdereferencia} - ${frequencia.semestre_ano}</span>
-                     </div>
-                     <div class="info-row">
-                         <span class="info-label">Total de Horas:</span>
+                         <span class="info-label" style="margin-left: 50px;">Total de Horas:</span>
                          <span>${frequencia.total_hora_mesreferencia || '0'}h</span>
                      </div>
                  </div>
@@ -993,10 +981,9 @@ class FrequenciaController {
                     <div class="registros-grid">
                         ${registrosPorColuna.map((coluna, index) => `
                             <div class="coluna">
-                                <h4>Coluna ${index + 1}</h4>
                                 ${coluna.map(registro => `
                                     <div class="registro">
-                                        <div class="registro-data">${new Date(registro.data_da_frequencia + 'T00:00:00').toLocaleDateString('pt-BR')}</div>
+                                        <div class="registro-data">${new Date(registro.data_da_frequencia).toLocaleDateString('pt-BR')}</div>
                                         <div class="registro-horario">${registro.hora_inicial} - ${registro.hora_final} (${registro.total_hora})</div>
                                         <div class="registro-atividade">${registro.atividade_do_dia || 'Sem descrição'}</div>
                                     </div>
@@ -1376,7 +1363,7 @@ class FrequenciaController {
             dataFinal.setHours(horaFim, minFim, 0, 0);
             
             // Se hora final for menor que inicial, assumir que passou da meia-noite
-            if (dataFinal <= dataInicial) {
+            if (dataFinal.getTime() <= dataInicial.getTime()) {
                 dataFinal.setDate(dataFinal.getDate() + 1);
             }
             

@@ -48,6 +48,12 @@ router.get('/:id/pdf', (req, res) => planoAtividadeController.gerarPDF(req, res)
 // POST /planos-atividade/anexar-documento - Anexar documento PDF ao plano
 router.post('/anexar-documento', (req, res) => planoAtividadeController.anexarDocumento(req, res));
 
+// GET /planos-atividade/:id/download-assinado - Download do documento assinado
+router.get('/:id/download-assinado', (req, res) => planoAtividadeController.downloadDocumentoAssinado(req, res));
+
+// DELETE /planos-atividade/:id/remover-assinado - Remover documento assinado (apenas administradores)
+router.delete('/:id/remover-assinado', requirePermissions(['Administrador']), (req, res) => planoAtividadeController.removerDocumentoAssinado(req, res));
+
 // GET /planos-atividade/:id/categoria-usuario - Buscar categoria do usuário no plano
 router.get('/:id/categoria-usuario', (req, res) => planoAtividadeController.buscarCategoriaUsuario(req, res));
 

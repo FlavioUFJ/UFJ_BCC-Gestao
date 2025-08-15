@@ -121,11 +121,11 @@
                             <div class="row mb-3">
                                 <div class="col-md-3">
                                     <label for="data_inicio" class="form-label required">Início</label>
-                                    <input type="text" class="form-control" id="data_inicio" name="data_inicio" placeholder="dd/mm/aaaa" maxlength="10" required>
+                                    <input type="date" class="form-control" id="data_inicio" name="data_inicio" required>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="data_fim" class="form-label required">Fim</label>
-                                    <input type="text" class="form-control" id="data_fim" name="data_fim" placeholder="dd/mm/aaaa" maxlength="10" required>
+                                    <input type="date" class="form-control" id="data_fim" name="data_fim" required>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="semestre_ano" class="form-label required">Semestre/Ano</label>
@@ -133,7 +133,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label for="cargahoraria" class="form-label required">CH Semanal</label>
-                                    <input type="number" class="form-control" id="cargahoraria" name="cargahoraria" min="1" max="99">
+                                    <input type="number" class="form-control" id="cargahoraria" name="cargahoraria" min="1" max="30">
                                 </div>
                             </div>
 
@@ -308,9 +308,7 @@
             // Carregar parâmetros de seguro
             carregarParametrosSeguro();
             
-            // Configurar máscaras de data
-            aplicarMascaraData('data_inicio');
-            aplicarMascaraData('data_fim');
+            // Configurar máscaras (campos de data agora usam type="date")
             aplicarMascaraSemestreAno('semestre_ano');
             aplicarMascaraMonetaria('valor_bolsa');
             aplicarMascaraMonetaria('valor_valetransporte');
@@ -453,16 +451,46 @@
             if (campo.confirmaaptoestagio) document.getElementById('confirmaaptoestagio').value = campo.confirmaaptoestagio;
             if (campo.estagiopropriainstituicao) document.getElementById('estagiopropriainstituicao').checked = campo.estagiopropriainstituicao === 'Sim';
             
-            // Preencher datas (converter de ISO para formato brasileiro)
+            // Preencher datas (converter de ISO para formato brasileiro - corrigido para evitar problema de fuso horário)
+            
+            // Função para converter data ISO para formato de campo date (YYYY-MM-DD)
+            function converterISOParaDate(dataISO) {
+                if (!dataISO) return '';
+                
+                // Se for um objeto Date, converter para string ISO
+                let dataString = dataISO;
+                if (typeof dataISO === 'object' && dataISO instanceof Date) {
+                    dataString = dataISO.toISOString();
+                } else if (typeof dataISO === 'object') {
+                    // Se for um objeto mas não Date, tentar converter para string
+                    dataString = dataISO.toString();
+                }
+                
+                // Extrair apenas a parte da data (YYYY-MM-DD) se vier com timestamp
+                if (dataString.includes('T')) {
+                    dataString = dataString.split('T')[0];
+                }
+                
+                // Retornar no formato YYYY-MM-DD para campos date
+                return dataString;
+            }
+            
+            // Função para converter data do campo date (YYYY-MM-DD) para formato brasileiro (DD/MM/YYYY)
+            function converterDateParaBR(dataDate) {
+                if (!dataDate) return '';
+                const partes = dataDate.split('-');
+                if (partes.length === 3) {
+                    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+                return '';
+            }
             
             // Preencher com dados existentes do campo de estágio
             if (campo.data_inicio) {
-                const dataInicio = new Date(campo.data_inicio);
-                document.getElementById('data_inicio').value = dataInicio.toLocaleDateString('pt-BR');
+                document.getElementById('data_inicio').value = converterISOParaDate(campo.data_inicio);
             }
             if (campo.data_fim) {
-                const dataFim = new Date(campo.data_fim);
-                document.getElementById('data_fim').value = dataFim.toLocaleDateString('pt-BR');
+                document.getElementById('data_fim').value = converterISOParaDate(campo.data_fim);
             }
             
             if (campo.semestre_ano) document.getElementById('semestre_ano').value = campo.semestre_ano;
@@ -941,22 +969,19 @@
             const dataInicio = document.getElementById('data_inicio').value;
             const dataFim = document.getElementById('data_fim').value;
             
-
-            
-            // Validação: ce.data_inicio não pode ser maior que ce.data_fim
-            // e ce.data_fim não pode ser menor que ce.data_inicio
+            // Validação: data_inicio não pode ser maior que data_fim
             if (dataInicio && dataFim) {
-                const inicio = parseDataBrasileira(dataInicio);
-                const fim = parseDataBrasileira(dataFim);
+                const inicio = new Date(dataInicio);
+                const fim = new Date(dataFim);
                 
-                if (inicio && fim && inicio > fim) {
+                if (inicio > fim) {
                     mostrarAlerta('A data de início não pode ser maior que a data de fim.', 'error');
                     document.getElementById('data_inicio').value = '';
                     document.getElementById('data_inicio').focus();
                     return false;
                 }
                 
-                if (inicio && fim && fim < inicio) {
+                if (fim < inicio) {
                     mostrarAlerta('A data de fim não pode ser menor que a data de início.', 'error');
                     document.getElementById('data_fim').value = '';
                     document.getElementById('data_fim').focus();
@@ -1098,6 +1123,14 @@
                     elemento.focus();
                     return false;
                 }
+            }
+            
+            // Validar carga horária semanal
+            const cargaHoraria = document.getElementById('cargahoraria').value;
+            if (cargaHoraria && parseInt(cargaHoraria) > 30) {
+                mostrarAlerta('A carga horária semanal não pode ser maior que 30 horas.', 'error');
+                document.getElementById('cargahoraria').focus();
+                return false;
             }
             
             return validarDatas();

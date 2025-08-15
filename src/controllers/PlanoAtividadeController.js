@@ -7,6 +7,43 @@ const databaseConfig = require('../config/database');
 const { messages, enums } = require('../config');
 const Pessoa = require('../models/Pessoa');
 const { generatePDF } = require('../config/puppeteer');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configurar multer para upload de arquivos PDF
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '../../public/uploads/planos-atividade');
+        
+        // Criar diretório se não existir
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        // Gerar nome temporário único - será renomeado depois
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        cb(null, 'temp-plano-' + uniqueSuffix + extension);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB
+    },
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Apenas arquivos PDF são permitidos'));
+        }
+    }
+}).single('documento_pdf');
 
 class PlanoAtividadeController {
     constructor() {
@@ -225,7 +262,6 @@ class PlanoAtividadeController {
      */
     async store(req, res) {
         try {
-            console.log('DEBUG: Iniciando criação de plano de atividade');
             console.log('DEBUG: Dados recebidos:', req.body);
             
             const {
@@ -241,17 +277,8 @@ class PlanoAtividadeController {
             } = req.body;
             
             // Validações básicas
-            console.log('DEBUG: Validando campos obrigatórios');
             if (!id_campo_estagio || !atividades || !objetivos || !cronograma || !data_inicial || !data_final || !cargahoraria) {
-                console.log('DEBUG: Campos obrigatórios faltando:', {
-                    id_campo_estagio: !!id_campo_estagio,
-                    atividades: !!atividades,
-                    objetivos: !!objetivos,
-                    cronograma: !!cronograma,
-                    data_inicial: !!data_inicial,
-                    data_final: !!data_final,
-                    cargahoraria: !!cargahoraria
-                });
+
                 return res.status(400).json({
                     success: false,
                     message: 'Campos obrigatórios não preenchidos'
@@ -273,24 +300,25 @@ class PlanoAtividadeController {
                 });
             }
             
-            // Função para converter data DD/MM/YYYY para YYYY-MM-DD
-            const converterDataParaISO = (dataBR) => {
-                if (!dataBR || dataBR.length !== 10) return null;
-                const partes = dataBR.split('/');
-                if (partes.length !== 3) return null;
-                return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            // Validar formato de data ISO (YYYY-MM-DD)
+            const validarDataISO = (dataISO) => {
+                if (!dataISO) return false;
+                const regex = /^\d{4}-\d{2}-\d{2}$/;
+                if (!regex.test(dataISO)) return false;
+                const date = new Date(dataISO);
+                return date instanceof Date && !isNaN(date);
             };
 
-            // Converter datas do formato brasileiro para ISO
-            const dataInicialISO = converterDataParaISO(data_inicial);
-            const dataFinalISO = converterDataParaISO(data_final);
-
-            if (!dataInicialISO || !dataFinalISO) {
+            // Validar datas no formato ISO
+            if (!validarDataISO(data_inicial) || !validarDataISO(data_final)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Formato de data inválido. Use DD/MM/AAAA'
+                    message: 'Formato de data inválido. Use YYYY-MM-DD'
                 });
             }
+
+            const dataInicialISO = data_inicial;
+            const dataFinalISO = data_final;
 
             // Validações de data
             const campoEstagio = await this.buscarCampoEstagio(id_campo_estagio);
@@ -301,34 +329,38 @@ class PlanoAtividadeController {
                 });
             }
 
-            const dataInicialCampo = new Date(campoEstagio.ce_data_inicio);
-            const dataFinalCampo = new Date(campoEstagio.ce_data_fim);
-            const dataInicialPlano = new Date(dataInicialISO);
-            const dataFinalPlano = new Date(dataFinalISO);
 
-            // Validar se data inicial do plano é >= data inicial do campo
-            if (dataInicialPlano < dataInicialCampo) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'A data inicial do plano não pode ser menor que a data inicial do estágio'
-                });
-            }
 
-            // Validar se data final do plano é <= data final do campo
-            if (dataFinalPlano > dataFinalCampo) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'A data final do plano não pode ser maior que a data final do estágio'
-                });
-            }
+            // Função para comparar datas corrigindo problema de timezone
+            const compararDatas = (data1, data2) => {
+                // Extrair apenas a parte da data (YYYY-MM-DD) para evitar problemas de timezone
+                const extrairDataISO = (data) => {
+                    if (!data) return null;
+                    if (typeof data === 'string') {
+                        // Se já é string, extrair parte da data
+                        return data.split('T')[0];
+                    }
+                    // Se é Date object, converter para ISO e extrair data
+                    return data.toISOString().split('T')[0];
+                };
+                
+                const dataISO1 = extrairDataISO(data1);
+                const dataISO2 = extrairDataISO(data2);
+                
+                if (!dataISO1 || !dataISO2) {
+                    throw new Error('Data inválida para comparação');
+                }
+                
+                return {
+                    menor: dataISO1 < dataISO2,
+                    maior: dataISO1 > dataISO2,
+                    igual: dataISO1 === dataISO2,
+                    menorOuIgual: dataISO1 <= dataISO2,
+                    maiorOuIgual: dataISO1 >= dataISO2
+                };
+            };
 
-            // Validar se data inicial <= data final
-            if (dataInicialPlano > dataFinalPlano) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'A data inicial não pode ser maior que a data final'
-                });
-            }
+            // Validação de datas removida - será feita apenas no frontend
 
             // Formato correto para MySQL DATETIME
             const dataAtual = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -355,12 +387,7 @@ class PlanoAtividadeController {
                 dataAtual
             ];
             
-            console.log('DEBUG: Executando SQL:', sql);
-            console.log('DEBUG: Parâmetros:', params);
-            
             const result = await databaseConfig.run(sql, params);
-            
-            console.log('DEBUG: Plano criado com sucesso, ID:', result.lastID);
             
             if (req.xhr || req.headers.accept?.includes('application/json')) {
                 return res.json({ success: true, message: 'Plano de atividade criado com sucesso', data: { id: result.lastID } });
@@ -368,7 +395,7 @@ class PlanoAtividadeController {
             
             res.redirect('/estagios/dashboard?success=Plano de atividade criado com sucesso');
         } catch (error) {
-            console.error('Erro ao criar plano de atividade:', error);
+            console.error('Erro ao salvar plano de atividade:', error);
             
             if (req.xhr || req.headers.accept?.includes('application/json')) {
                 return res.status(500).json({ success: false, message: 'Erro interno do servidor' });
@@ -406,9 +433,9 @@ class PlanoAtividadeController {
                 });
             }
 
-            res.render('plano-atividade-view', {
-                title: 'Visualizar Plano de Atividade',
-                plano,
+            res.render('error', {
+                title: 'Funcionalidade não implementada',
+                message: 'A visualização de detalhes do plano de atividade ainda não foi implementada.',
                 user: req.session.user
             });
         } catch (error) {
@@ -593,24 +620,25 @@ class PlanoAtividadeController {
                 }
             }
 
-            // Função para converter data DD/MM/YYYY para YYYY-MM-DD
-            const converterDataParaISO = (dataBR) => {
-                if (!dataBR || dataBR.length !== 10) return null;
-                const partes = dataBR.split('/');
-                if (partes.length !== 3) return null;
-                return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+            // Validar formato de data ISO (YYYY-MM-DD)
+            const validarDataISO = (dataISO) => {
+                if (!dataISO) return false;
+                const regex = /^\d{4}-\d{2}-\d{2}$/;
+                if (!regex.test(dataISO)) return false;
+                const date = new Date(dataISO);
+                return date instanceof Date && !isNaN(date);
             };
 
-            // Converter datas do formato brasileiro para ISO
-            const dataInicialISO = converterDataParaISO(data_inicial);
-            const dataFinalISO = converterDataParaISO(data_final);
-
-            if (!dataInicialISO || !dataFinalISO) {
+            // Validar datas no formato ISO
+            if (!validarDataISO(data_inicial) || !validarDataISO(data_final)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Formato de data inválido. Use DD/MM/AAAA'
+                    message: 'Formato de data inválido. Use YYYY-MM-DD'
                 });
             }
+
+            const dataInicialISO = data_inicial;
+            const dataFinalISO = data_final;
 
             // Formato correto para MySQL DATETIME
             const dataAtual = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -1132,7 +1160,8 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                 pa.autenticacao_estagiario AS pa_autenticacao_estagiario, 
                 pa.autenticacao_supervisor AS pa_autenticacao_supervisor, 
                 pa.autenticacao_orientador AS pa_autenticacao_orientador, 
-                pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
+                pa.dataultimaatualizacao AS pa_dataultimaatualizacao,
+                pa.url_planoassinado AS pa_url_planoassinado 
             FROM campo_estagio_planoatividade pa 
             LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
             LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
@@ -1150,45 +1179,7 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
      */
     async anexarDocumento(req, res) {
         try {
-            const multer = require('multer');
-            const path = require('path');
-            const fs = require('fs');
-            
-            // Configurar multer para upload de arquivos
-            const storage = multer.diskStorage({
-                destination: function (req, file, cb) {
-                    const uploadDir = path.join(__dirname, '../../public/uploads/planos-atividade');
-                    
-                    // Criar diretório se não existir
-                    if (!fs.existsSync(uploadDir)) {
-                        fs.mkdirSync(uploadDir, { recursive: true });
-                    }
-                    
-                    cb(null, uploadDir);
-                },
-                filename: function (req, file, cb) {
-                    // Gerar nome único para o arquivo
-                    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                    const extension = path.extname(file.originalname);
-                    cb(null, 'plano-' + uniqueSuffix + extension);
-                }
-            });
-            
-            const upload = multer({
-                storage: storage,
-                limits: {
-                    fileSize: 10 * 1024 * 1024 // 10MB
-                },
-                fileFilter: function (req, file, cb) {
-                    if (file.mimetype === 'application/pdf') {
-                        cb(null, true);
-                    } else {
-                        cb(new Error('Apenas arquivos PDF são permitidos'));
-                    }
-                }
-            }).single('documento_pdf');
-            
-            // Processar upload
+            // Processar upload usando a configuração global
             upload(req, res, async (err) => {
                 if (err) {
                     console.error('Erro no upload:', err);
@@ -1219,7 +1210,7 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                 try {
                     // Verificar se o plano existe
                     const plano = await databaseConfig.get(
-                        'SELECT id FROM campo_estagio_planoatividade WHERE id = ?',
+                        'SELECT id_planoatividade FROM campo_estagio_planoatividade WHERE id_planoatividade = ?',
                         [plano_id]
                     );
                     
@@ -1232,24 +1223,61 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                         });
                     }
                     
+                    // Buscar informações do estagiário para gerar nome personalizado
+                    const sql = `
+                        SELECT pe.nome AS nome_estagiario
+                        FROM campo_estagio_planoatividade pa 
+                        LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                        LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
+                        WHERE pa.id_planoatividade = ?
+                    `;
+                    
+                    const resultado = await databaseConfig.get(sql, [plano_id]);
+                    
+                    let nomeArquivoFinal = req.file.filename;
+                    
+                    if (resultado && resultado.nome_estagiario) {
+                        // Limpar nome do estagiário (remover caracteres especiais)
+                        const nomeEstagiario = resultado.nome_estagiario
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            .replace(/\s+/g, '_')
+                            .toLowerCase();
+                        
+                        // Gerar data e hora atual
+                        const agora = new Date();
+                        const dataHora = agora.toISOString()
+                            .replace(/T/, '_')
+                            .replace(/:/g, '-')
+                            .replace(/\..*/, '');
+                        
+                        const extension = path.extname(req.file.originalname);
+                        nomeArquivoFinal = `${nomeEstagiario}-planoAtividade-${dataHora}${extension}`;
+                        
+                        // Renomear o arquivo
+                        const caminhoAntigo = req.file.path;
+                        const caminhoNovo = path.join(path.dirname(req.file.path), nomeArquivoFinal);
+                        
+                        fs.renameSync(caminhoAntigo, caminhoNovo);
+                    }
+                    
                     // Atualizar o plano com o caminho do documento
-                    const caminhoRelativo = `/uploads/planos-atividade/${req.file.filename}`;
+                    const caminhoRelativo = `/public/uploads/planos-atividade/${nomeArquivoFinal}`;
                     
                     await databaseConfig.run(
-                        'UPDATE campo_estagio_planoatividade SET url_planoassinado = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                        [caminhoRelativo, plano_id]
+                        'UPDATE campo_estagio_planoatividade SET url_planoassinado = ?, situacao = ?, dataultimaatualizacao = CURRENT_TIMESTAMP WHERE id_planoatividade = ?',
+                        [caminhoRelativo, 'Aprovado com Anexo', plano_id]
                     );
                     
                     console.log('Documento anexado com sucesso:', {
                         plano_id: plano_id,
-                        arquivo: req.file.filename,
+                        arquivo: nomeArquivoFinal,
                         caminho: caminhoRelativo
                     });
                     
                     res.json({
                         success: true,
                         message: 'Documento PDF anexado com sucesso!',
-                        arquivo: req.file.filename,
+                        arquivo: nomeArquivoFinal,
                         caminho: caminhoRelativo
                     });
                     
@@ -1427,6 +1455,123 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             res.status(500).json({ 
                 success: false, 
                 message: 'Erro interno do servidor' 
+            });
+        }
+    }
+
+    /**
+     * Download do documento assinado
+     */
+    async downloadDocumentoAssinado(req, res) {
+        try {
+            const { id } = req.params;
+            
+            // Buscar informações do plano
+            const plano = await databaseConfig.get(
+                'SELECT url_planoassinado FROM campo_estagio_planoatividade WHERE id_planoatividade = ?',
+                [id]
+            );
+            
+            if (!plano || !plano.url_planoassinado) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Documento assinado não encontrado'
+                });
+            }
+            
+            // Construir caminho completo do arquivo
+            const caminhoArquivo = path.join(__dirname, '../..', plano.url_planoassinado);
+            
+            // Verificar se o arquivo existe
+            if (!fs.existsSync(caminhoArquivo)) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Arquivo não encontrado no servidor'
+                });
+            }
+            
+            // Fazer download do arquivo
+            const nomeArquivo = path.basename(caminhoArquivo);
+            res.download(caminhoArquivo, nomeArquivo, (err) => {
+                if (err) {
+                    console.error('Erro ao fazer download:', err);
+                    if (!res.headersSent) {
+                        res.status(500).json({
+                            success: false,
+                            message: 'Erro ao fazer download do arquivo'
+                        });
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Erro ao fazer download do documento assinado:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    /**
+     * Remover documento assinado (apenas administradores)
+     */
+    async removerDocumentoAssinado(req, res) {
+        try {
+            const { id } = req.params;
+            const user = req.session.user;
+            
+            // Verificar se o usuário é administrador (já verificado no middleware, mas por segurança)
+            if (user.nivelacesso !== 'Administrador') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Acesso negado. Apenas administradores podem remover documentos assinados.'
+                });
+            }
+            
+            // Buscar informações do plano
+            const plano = await databaseConfig.get(
+                'SELECT url_planoassinado FROM campo_estagio_planoatividade WHERE id_planoatividade = ?',
+                [id]
+            );
+            
+            if (!plano || !plano.url_planoassinado) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Documento assinado não encontrado'
+                });
+            }
+            
+            // Construir caminho completo do arquivo
+            const caminhoArquivo = path.join(__dirname, '../..', plano.url_planoassinado);
+            
+            // Remover arquivo do servidor se existir
+            if (fs.existsSync(caminhoArquivo)) {
+                fs.unlinkSync(caminhoArquivo);
+            }
+            
+            // Atualizar banco de dados para remover referência e alterar situação
+            await databaseConfig.run(
+                'UPDATE campo_estagio_planoatividade SET url_planoassinado = NULL, situacao = ?, dataultimaatualizacao = CURRENT_TIMESTAMP WHERE id_planoatividade = ?',
+                ['Aprovado sem Anexo', id]
+            );
+            
+            console.log('Documento assinado removido:', {
+                plano_id: id,
+                arquivo_removido: plano.url_planoassinado,
+                usuario: user.nome
+            });
+            
+            res.json({
+                success: true,
+                message: 'Documento assinado removido com sucesso!'
+            });
+            
+        } catch (error) {
+            console.error('Erro ao remover documento assinado:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
             });
         }
     }

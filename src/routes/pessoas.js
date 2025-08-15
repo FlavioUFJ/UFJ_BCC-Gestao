@@ -100,8 +100,10 @@ router.get('/buscar', async (req, res) => {
         
         // Filtro por categoria
         if (categoria && categoria.trim() !== '' && categoria !== 'todas') {
-            whereClause += ' AND p.categoria LIKE ?';
-            params.push(`%${categoria}%`);
+            // Para categorias múltiplas separadas por vírgula, usar FIND_IN_SET ou REGEXP
+            // FIND_IN_SET funciona melhor para valores exatos separados por vírgula
+            whereClause += ' AND (FIND_IN_SET(?, p.categoria) > 0 OR p.categoria = ?)';
+            params.push(categoria, categoria);
         }
         
         // Query para contar total

@@ -310,7 +310,13 @@ class FormValidator {
             const date1 = new Date(value);
             const date2 = new Date(afterDate);
             
-            if (date1 <= date2) {
+            // Validar se as datas são válidas
+            if (isNaN(date1.getTime()) || isNaN(date2.getTime())) {
+                this.addError(field, `${label} ou ${afterLabel} contém data inválida`);
+                return false;
+            }
+            
+            if (date1.getTime() <= date2.getTime()) {
                 this.addError(field, `${label} deve ser posterior à ${afterLabel}`);
                 return false;
             }
@@ -332,7 +338,13 @@ class FormValidator {
             const date1 = new Date(value);
             const date2 = new Date(beforeDate);
             
-            if (date1 >= date2) {
+            // Validar se as datas são válidas
+            if (isNaN(date1.getTime()) || isNaN(date2.getTime())) {
+                this.addError(field, `${label} ou ${beforeLabel} contém data inválida`);
+                return false;
+            }
+            
+            if (date1.getTime() >= date2.getTime()) {
                 this.addError(field, `${label} deve ser anterior à ${beforeLabel}`);
                 return false;
             }

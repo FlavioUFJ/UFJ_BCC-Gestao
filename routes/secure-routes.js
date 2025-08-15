@@ -400,21 +400,21 @@ router.post('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
             observacoes
         } = req.body;
 
-        // Converter datas do formato brasileiro para ISO
+        // Campos date já vêm no formato ISO (YYYY-MM-DD), apenas validar
         let dataInicioISO = null;
         let dataFimISO = null;
         
         if (data_inicio) {
-            const partes = data_inicio.split('/');
-            if (partes.length === 3) {
-                dataInicioISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            // Validar se está no formato correto YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(data_inicio)) {
+                dataInicioISO = data_inicio;
             }
         }
         
         if (data_fim) {
-            const partes = data_fim.split('/');
-            if (partes.length === 3) {
-                dataFimISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            // Validar se está no formato correto YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(data_fim)) {
+                dataFimISO = data_fim;
             }
         }
 
@@ -521,21 +521,21 @@ router.put('/estagios/campo/atualizar/:id', requireAuth, async (req, res) => {
             observacoes
         } = req.body;
 
-        // Converter datas do formato brasileiro para ISO
+        // Campos date já vêm no formato ISO (YYYY-MM-DD), apenas validar
         let dataInicioISO = null;
         let dataFimISO = null;
         
         if (data_inicio) {
-            const partes = data_inicio.split('/');
-            if (partes.length === 3) {
-                dataInicioISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            // Validar se está no formato correto YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(data_inicio)) {
+                dataInicioISO = data_inicio;
             }
         }
         
         if (data_fim) {
-            const partes = data_fim.split('/');
-            if (partes.length === 3) {
-                dataFimISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            // Validar se está no formato correto YYYY-MM-DD
+            if (/^\d{4}-\d{2}-\d{2}$/.test(data_fim)) {
+                dataFimISO = data_fim;
             }
         }
 
@@ -734,21 +734,25 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
             return res.json({ success: false, message: 'Campos obrigatórios não preenchidos' });
         }
 
-        // Converter datas do formato brasileiro para ISO
+        // Converter datas do formato brasileiro para ISO (corrigido para evitar problema de fuso horário)
         let dataInicioISO = null;
         let dataFimISO = null;
         
         if (data_inicio) {
             const partes = data_inicio.split('/');
             if (partes.length === 3) {
-                dataInicioISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                // Usar construtor Date para evitar problemas de fuso horário
+                const dataObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                dataInicioISO = dataObj.toISOString().split('T')[0];
             }
         }
         
         if (data_fim) {
             const partes = data_fim.split('/');
             if (partes.length === 3) {
-                dataFimISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                // Usar construtor Date para evitar problemas de fuso horário
+                const dataObj = new Date(partes[2], partes[1] - 1, partes[0]);
+                dataFimISO = dataObj.toISOString().split('T')[0];
             }
         }
 
@@ -1231,8 +1235,9 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <p>Informamos que, após a conclusão da documentação e a assinatura dos termos do convênio, as partes estão <b>autorizadas a iniciar as atividades de estágio</b>.</p>
             
-            <p>Reforçamos a importância de preencher corretamente os demais documentos obrigatórios: <b>Plano de Atividades, Controle de Frequência e Relatório Final de estágio</b>.</p>
-            
+            <p>Reforçamos a importância de preencher corretamente os demais documentos obrigatórios: 
+			<br><b>Plano de Atividades, Controle de Frequência e Relatório Final de estágio</b>.</p>
+            <p>Este documentos devem ser preenchido no APP, no endereço https://coordenai.computacaoufj.online/</p>
             <p>Desejamos a todos um excelente trabalho e uma parceria produtiva.</p>
             
             <p><b>Envolvidos no estágio:</b><br>

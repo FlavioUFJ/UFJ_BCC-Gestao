@@ -195,7 +195,7 @@ class App {
         this.app.use('/public', express.static(path.join(__dirname, 'public'), {
             maxAge: this.environment === 'production' ? '1d' : '0'
         }));
-        this.app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+        this.app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
             maxAge: '1h'
         }));
         
@@ -233,42 +233,8 @@ class App {
         // Logging de requisições
         this.app.use(LoggingMiddleware.requestLogger);
 
-        // Configuração de upload
-        const storage = multer.diskStorage({
-            destination: (req, file, cb) => {
-                const uploadPath = path.join(__dirname, 'uploads', 'temp');
-                cb(null, uploadPath);
-            },
-            filename: (req, file, cb) => {
-                const uniqueName = Helpers.generateUniqueFilename(file.originalname);
-                cb(null, uniqueName);
-            }
-        });
-
-        const upload = multer({
-            storage: storage,
-            limits: {
-                fileSize: 10 * 1024 * 1024, // 10MB
-                files: 5
-            },
-            fileFilter: (req, file, cb) => {
-                const allowedTypes = [
-                    'application/pdf',
-                    'application/msword',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                    'image/jpeg',
-                    'image/png',
-                    'image/gif'
-                ];
-                
-                if (allowedTypes.includes(file.mimetype)) {
-                    cb(null, true);
-                } else {
-                    cb(new Error('Tipo de arquivo não permitido'), false);
-                }
-            }
-        });
-        this.app.use(upload.any());
+        // Configuração de upload removida - cada rota deve configurar seu próprio multer
+        // para evitar conflitos entre diferentes tipos de upload
 
         // Variáveis globais para views
         this.app.use((req, res, next) => {

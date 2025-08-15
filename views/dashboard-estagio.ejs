@@ -202,7 +202,6 @@
                             <i class="fas fa-calendar-check fa-2x me-3"></i>
                             <div>
                                 <h5 class="mb-0">Frequência</h5>
-                                <small class="opacity-75">Controle de frequência dos estágios</small>
                             </div>
                         </div>
                     </div>
@@ -322,7 +321,7 @@
                             <i class="fas fa-file-alt fa-2x me-3"></i>
                             <div>
                                 <h5 class="mb-0">Relatórios</h5>
-                                <small class="opacity-75">Relatórios dos estágios</small>
+                                <small class="opacity-75">Parciais e/ou Final</small>
                             </div>
                         </div>
                     </div>
@@ -482,15 +481,20 @@
                         atualizarExibicaoFrequencia();
                     } else {
                         console.log('Nenhuma frequência encontrada');
-                        mostrarFrequenciaSemDados();
+                        // Verificar se há plano de atividade selecionado para mostrar mensagem específica
+                        if (planoAtividadeSelecionadoId) {
+                            mostrarFrequenciaSemDados('Não existe frequência iniciada para lançamento.');
+                        } else {
+                            mostrarFrequenciaSemDados('Selecione um plano de atividade para visualizar as frequências');
+                        }
                     }
                 } else {
                     console.error('Erro ao carregar frequências:', response.status);
-                    mostrarFrequenciaSemDados();
+                    mostrarFrequenciaSemDados('Erro ao carregar frequências');
                 }
             } catch (error) {
                 console.error('Erro ao carregar frequências:', error);
-                mostrarFrequenciaSemDados();
+                mostrarFrequenciaSemDados('Erro ao carregar frequências');
             }
         },
         
@@ -561,7 +565,7 @@
                 planoAtividadeSelecionadoId = null;
                 controlarBotoesFrequenciaAtividade();
                 // Mostrar mensagem de sem dados no card de frequência
-                mostrarFrequenciaSemDados();
+                mostrarFrequenciaSemDados('Selecione um plano de atividade para visualizar as frequências');
                 return;
             }
             
@@ -634,7 +638,13 @@
                     </div>
                     
                     <div class="mt-2">
-                        <p class="mb-1 text-muted"><small><a href="#" onclick="anexarDocumentoPDF(${plano.pa_id_planoatividade})" class="text-decoration-none"><i class="fas fa-paperclip me-1"></i>Anexar plano Assinado</a></small></p>
+                        ${plano.pa_situacao === 'Aprovado com Anexo' ? 
+                            `<p class="mb-1 text-muted"><small><span class="text-muted"><i class="fas fa-paperclip me-1"></i>Plano já anexado</span></small></p>
+                             ${'<%= user.nivelacesso %>' === 'Administrador' ? 
+                                `<p class="mb-1 text-muted"><small><a href="#" onclick="removerPlanoAssinado(${plano.pa_id_planoatividade})" class="text-decoration-none text-danger"><i class="fas fa-trash me-1"></i>Excluir plano assinado</a></small></p>` : ''
+                             }` :
+                            `<p class="mb-1 text-muted"><small><a href="#" onclick="anexarDocumentoPDF(${plano.pa_id_planoatividade})" class="text-decoration-none"><i class="fas fa-paperclip me-1"></i>Anexar plano Assinado</a></small></p>`
+                        }
                     </div>
                 </div>
             `;
@@ -679,14 +689,15 @@
                 if (!plano) {
                     podeEditar = false;
                     motivoDesabilitado = 'Nenhum plano de atividade selecionado';
+                } else if (plano.pa_situacao === 'Aprovado com Anexo') {
+                    // Se situação é "Aprovado com Anexo", não pode editar
+                    podeEditar = false;
+                    motivoDesabilitado = 'Planos aprovados com anexo não podem ser editados';
                 } else if (userNivelAcesso === 'Administrador') {
-                    // Administradores só não podem editar "Aprovado com Anexo"
-                    podeEditar = plano.pa_situacao !== 'Aprovado com Anexo';
-                    if (!podeEditar) {
-                        motivoDesabilitado = 'Planos aprovados com anexo não podem ser editados';
-                    }
+                    // Administradores podem editar qualquer situação exceto "Aprovado com Anexo"
+                    podeEditar = true;
                 } else {
-                    // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
+                    // Outros usuários não podem editar "Aprovado sem Anexo" nem "Aprovado com Anexo"
                     podeEditar = plano.pa_situacao !== 'Aprovado sem Anexo' && plano.pa_situacao !== 'Aprovado com Anexo';
                     if (!podeEditar) {
                         motivoDesabilitado = 'Planos aprovados não podem ser editados';
@@ -1147,35 +1158,7 @@
         AdminDashboard.fecharModal();
     }
     
-    // Função para remover PDF assinado
-    function removerPDF(estagiarioId) {
-        AdminDashboard.removerPDF(estagiarioId);
-    }
-    
-    // Adicionar métodos ao AdminDashboard
-    AdminDashboard.removerPDF = function(estagiarioId) {
-        if (confirm('Tem certeza que deseja remover o PDF assinado? Esta ação não pode ser desfeita.')) {
-            fetch(`/admin/plano/${estagiarioId}/remover-pdf`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.mostrarAlerta('PDF removido com sucesso!', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    this.mostrarAlerta('Erro ao remover PDF: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                this.mostrarAlerta('Erro ao remover PDF. Tente novamente.', 'error');
-            });
-        }
-    };
+
     
     // Função para atualizar status do estagiário
     function atualizarStatus(estagiarioId, novoStatus) {
@@ -1471,7 +1454,7 @@
         }
         
         // Inicializar card de frequência com mensagem de sem dados
-        mostrarFrequenciaSemDados();
+        mostrarFrequenciaSemDados('Selecione um plano de atividade para visualizar as frequências');
         
         // Event listener para fechar modal com ESC
         document.addEventListener('keydown', function(event) {
@@ -1681,13 +1664,22 @@
             return;
         }
         
-        // Confirmar geração do PDF
-        if (!confirm('Deseja gerar o PDF do plano de atividade selecionado?')) {
-            return;
-        }
+        // Verificar a situação do plano
+        const planoAtual = planosAtividade.find(p => p.pa_id_planoatividade == planoAtividadeSelecionadoId);
         
-        // Abrir PDF em nova janela
-        window.open(`/planos-atividade/${planoAtividadeSelecionadoId}/pdf`, '_blank');
+        if (planoAtual && planoAtual.pa_situacao === 'Aprovado com Anexo') {
+            // Se situação é "Aprovado com Anexo", fazer download do arquivo anexado
+            if (!confirm('Deseja fazer o download do documento anexado?')) {
+                return;
+            }
+            window.open(`/planos-atividade/${planoAtividadeSelecionadoId}/download-assinado`, '_blank');
+        } else {
+            // Caso contrário, gerar PDF normal do plano
+            if (!confirm('Deseja gerar o PDF do plano de atividade selecionado?')) {
+                return;
+            }
+            window.open(`/planos-atividade/${planoAtividadeSelecionadoId}/pdf`, '_blank');
+        }
     }
     
     function planAtiAprovar() {
@@ -1871,6 +1863,35 @@
         document.body.appendChild(input);
         input.click();
         document.body.removeChild(input);
+    }
+    
+    // Função para remover plano assinado (apenas administradores)
+    async function removerPlanoAssinado(planoId) {
+        if (!confirm('Tem certeza que deseja remover o plano assinado? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/planos-atividade/${planoId}/remover-assinado`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Plano assinado removido com sucesso!');
+                // Recarregar os dados do plano
+                AdminDashboard.carregarPlanosAtividade(null, true);
+            } else {
+                alert('Erro ao remover plano assinado: ' + (result.message || 'Erro desconhecido'));
+            }
+        } catch (error) {
+            console.error('Erro ao remover plano assinado:', error);
+            alert('Erro ao remover plano assinado. Tente novamente.');
+        }
     }
     
 
@@ -2062,10 +2083,18 @@
     // ===== FUNÇÕES DE FREQUÊNCIA =====
     
     // Função para mostrar dados de frequência sem dados
-    function mostrarFrequenciaSemDados() {
+    function mostrarFrequenciaSemDados(mensagem = null) {
         document.getElementById('frequenciaLoading').style.display = 'none';
         document.getElementById('frequenciaData').style.display = 'none';
         document.getElementById('frequenciaSemDados').style.display = 'block';
+        
+        // Atualizar mensagem se fornecida
+        if (mensagem) {
+            const mensagemElement = document.querySelector('#frequenciaSemDados p');
+            if (mensagemElement) {
+                mensagemElement.textContent = mensagem;
+            }
+        }
         
         // Desabilitar botões
         document.getElementById('btnFreqAtiEditar').disabled = true;
@@ -2079,7 +2108,12 @@
     // Função para atualizar exibição da frequência
     function atualizarExibicaoFrequencia() {
         if (!frequencias || frequencias.length === 0) {
-            mostrarFrequenciaSemDados();
+            // Verificar se há plano de atividade selecionado para mostrar mensagem específica
+            if (planoAtividadeSelecionadoId) {
+                mostrarFrequenciaSemDados('Não existe frequência iniciada para lançamento.');
+            } else {
+                mostrarFrequenciaSemDados('Selecione um plano de atividade para visualizar as frequências');
+            }
             return;
         }
         
@@ -2087,7 +2121,12 @@
         const frequenciasParaExibir = frequenciasFiltradas.length > 0 ? frequenciasFiltradas : frequencias;
         
         if (frequenciasParaExibir.length === 0) {
-            mostrarFrequenciaSemDados();
+            // Verificar se há plano de atividade selecionado para mostrar mensagem específica
+            if (planoAtividadeSelecionadoId) {
+                mostrarFrequenciaSemDados('Não existe frequência iniciada para lançamento.');
+            } else {
+                mostrarFrequenciaSemDados('Selecione um plano de atividade para visualizar as frequências');
+            }
             return;
         }
         

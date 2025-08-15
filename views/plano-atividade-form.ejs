@@ -43,7 +43,7 @@
                              <% } else { %>
                                  Não informado
                              <% } %> - 
-                             <% if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && campoEstagio.ce_data_fim.trim() !== '') { %>
+                             <% if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && campoEstagio.ce_data_fim !== '') { %>
                                  <% try { %>
                                      <%= new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR') %>
                                  <% } catch(e) { %>
@@ -114,19 +114,20 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="data_inicial" class="form-label">Data Inicial do plano *</label>
-                            <input type="text" class="form-control" id="data_inicial" name="data_inicial" 
-                                   placeholder="DD/MM/AAAA" maxlength="10"
+                            <input type="date" class="form-control" id="data_inicial" name="data_inicial" 
                                    value="<%
                                    let dataInicialValue = '';
                                    if (plano && plano.pa_data_inicial) {
                                        try {
-                                           dataInicialValue = new Date(plano.pa_data_inicial).toLocaleDateString('pt-BR');
+                                           const date = new Date(plano.pa_data_inicial);
+                                           dataInicialValue = date.toISOString().split('T')[0];
                                        } catch(e) {
                                            dataInicialValue = '';
                                        }
                                    } else if (campoEstagio && campoEstagio.ce_data_inicio && campoEstagio.ce_data_inicio !== 'null' && typeof campoEstagio.ce_data_inicio === 'string' && campoEstagio.ce_data_inicio.trim() !== '') {
                                        try {
-                                           dataInicialValue = new Date(campoEstagio.ce_data_inicio).toLocaleDateString('pt-BR');
+                                           const date = new Date(campoEstagio.ce_data_inicio);
+                                           dataInicialValue = date.toISOString().split('T')[0];
                                        } catch(e) {
                                            dataInicialValue = '';
                                        }
@@ -137,19 +138,20 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="data_final" class="form-label">Data final do plano *</label>
-                            <input type="text" class="form-control" id="data_final" name="data_final" 
-                                   placeholder="DD/MM/AAAA" maxlength="10"
+                            <input type="date" class="form-control" id="data_final" name="data_final" 
                                    value="<%
                                    let dataFinalValue = '';
                                    if (plano && plano.pa_data_final) {
                                        try {
-                                           dataFinalValue = new Date(plano.pa_data_final).toLocaleDateString('pt-BR');
+                                           const date = new Date(plano.pa_data_final);
+                                           dataFinalValue = date.toISOString().split('T')[0];
                                        } catch(e) {
                                            dataFinalValue = '';
                                        }
                                    } else if (campoEstagio && campoEstagio.ce_data_fim && campoEstagio.ce_data_fim !== 'null' && typeof campoEstagio.ce_data_fim === 'string' && campoEstagio.ce_data_fim.trim() !== '') {
                                        try {
-                                           dataFinalValue = new Date(campoEstagio.ce_data_fim).toLocaleDateString('pt-BR');
+                                           const date = new Date(campoEstagio.ce_data_fim);
+                                           dataFinalValue = date.toISOString().split('T')[0];
                                        } catch(e) {
                                            dataFinalValue = '';
                                        }
@@ -161,7 +163,7 @@
                         <div class="mb-3">
                             <label for="cargahoraria" class="form-label">CH Semanal *</label>
                             <input type="number" class="form-control" id="cargahoraria" name="cargahoraria" 
-                                   value="<%= plano ? plano.pa_cargahoraria : '' %>" min="1" max="40" required>
+                                   value="<%= plano ? plano.pa_cargahoraria : '' %>" min="1" max="30" required>
                         </div>
                     </div>
                 </div>
@@ -233,30 +235,15 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Datas do campo de estágio para validação
-        const dataInicialCampo = new Date('<%= campoEstagio && campoEstagio.ce_data_inicio ? campoEstagio.ce_data_inicio : '' %>');
-        const dataFinalCampo = new Date('<%= campoEstagio && campoEstagio.ce_data_fim ? campoEstagio.ce_data_fim : '' %>');
+        // Datas do campo de estágio para validação (apenas data, sem horário)
+        const dataInicialCampoStr = '<%= campoEstagio && campoEstagio.ce_data_inicio ? campoEstagio.ce_data_inicio.toISOString().split("T")[0] : "" %>';
+        const dataFinalCampoStr = '<%= campoEstagio && campoEstagio.ce_data_fim ? campoEstagio.ce_data_fim.toISOString().split("T")[0] : "" %>';
+        
+        // Criar objetos Date apenas com ano, mês e dia (sem horário)
+        const dataInicialCampo = dataInicialCampoStr ? new Date(dataInicialCampoStr + 'T00:00:00') : null;
+        const dataFinalCampo = dataFinalCampoStr ? new Date(dataFinalCampoStr + 'T00:00:00') : null;
 
-        // Validação de datas
-        document.getElementById('data_inicial').addEventListener('change', function() {
-            const dataInicial = new Date(this.value);
-            const dataFinalInput = document.getElementById('data_final');
-            
-            // Validar se data inicial é >= data inicial do campo
-            if (dataInicialCampo && dataInicial < dataInicialCampo) {
-                alert('A data inicial do plano não pode ser menor que a data inicial do estágio (' + dataInicialCampo.toLocaleDateString('pt-BR') + ').');
-                this.value = '';
-                return;
-            }
-            
-            if (dataFinalInput.value) {
-                const dataFinal = new Date(dataFinalInput.value);
-                if (dataInicial >= dataFinal) {
-                    alert('A data inicial deve ser anterior à data final.');
-                    this.value = '';
-                }
-            }
-        });
+        // Validação em tempo real removida - validação será feita apenas no submit
 
         // Função para converter data brasileira (DD/MM/YYYY) para formato ISO (YYYY-MM-DD)
         function convertBRDateToISO(brDate) {
@@ -309,43 +296,25 @@
             <% if (campoEstagio && !plano) { %>
                 <% if (campoEstagio.ce_data_inicio) { %>
                     if (!dataInicialInput.value.trim()) {
-                        const dataInicialFormatada = formatarDataBR(new Date('<%= campoEstagio.ce_data_inicio %>'));
-                        if (dataInicialFormatada) {
-                            dataInicialInput.value = dataInicialFormatada;
+                        const dataInicialISO = new Date('<%= campoEstagio.ce_data_inicio %>').toISOString().split('T')[0];
+                        if (dataInicialISO) {
+                            dataInicialInput.value = dataInicialISO;
                         }
                     }
                 <% } %>
                 
                 <% if (campoEstagio.ce_data_fim) { %>
                     if (!dataFinalInput.value.trim()) {
-                        const dataFinalFormatada = formatarDataBR(new Date('<%= campoEstagio.ce_data_fim %>'));
-                        if (dataFinalFormatada) {
-                            dataFinalInput.value = dataFinalFormatada;
+                        const dataFinalISO = new Date('<%= campoEstagio.ce_data_fim %>').toISOString().split('T')[0];
+                        if (dataFinalISO) {
+                            dataFinalInput.value = dataFinalISO;
                         }
                     }
                 <% } %>
             <% } %>
         });
 
-        document.getElementById('data_final').addEventListener('change', function() {
-            const dataFinal = new Date(this.value);
-            const dataInicialInput = document.getElementById('data_inicial');
-            
-            // Validar se data final é <= data final do campo
-            if (dataFinalCampo && dataFinal > dataFinalCampo) {
-                alert('A data final do plano não pode ser maior que a data final do estágio (' + dataFinalCampo.toLocaleDateString('pt-BR') + ').');
-                this.value = '';
-                return;
-            }
-            
-            if (dataInicialInput.value) {
-                const dataInicial = new Date(dataInicialInput.value);
-                if (dataFinal <= dataInicial) {
-                    alert('A data final deve ser posterior à data inicial.');
-                    this.value = '';
-                }
-            }
-        });
+        // Validação em tempo real removida - validação será feita apenas no submit
 
         // Função para limpar formulário
         function limparFormulario() {
@@ -371,48 +340,41 @@
             }, 100);
         }
 
-        // Função para aplicar máscara de data DD/MM/YYYY
-        function aplicarMascaraData(input) {
-            input.addEventListener('input', function(e) {
-                let valor = e.target.value.replace(/\D/g, '');
-                if (valor.length >= 2) {
-                    valor = valor.substring(0,2) + '/' + valor.substring(2);
-                }
-                if (valor.length >= 5) {
-                    valor = valor.substring(0,5) + '/' + valor.substring(5,9);
-                }
-                e.target.value = valor;
-            });
-        }
 
-        // Função para converter data DD/MM/YYYY para Date
-        function converterDataBR(dataStr) {
-            if (!dataStr || dataStr.length !== 10) return null;
-            const partes = dataStr.split('/');
-            if (partes.length !== 3) return null;
-            return new Date(partes[2], partes[1] - 1, partes[0]);
-        }
 
-        // Aplicar máscaras aos campos de data
-        aplicarMascaraData(document.getElementById('data_inicial'));
-        aplicarMascaraData(document.getElementById('data_final'));
+        // Funções de conversão de data
+        function converterISOParaBR(dataISO) {
+            if (!dataISO) return '';
+            const [ano, mes, dia] = dataISO.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+        
+        function converterBRParaISO(dataBR) {
+            if (!dataBR) return '';
+            const [dia, mes, ano] = dataBR.split('/');
+            return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+        }
 
         // Validação do formulário antes do envio
         document.getElementById('formPlanoAtividade').addEventListener('submit', function(e) {
-            const dataInicial = converterDataBR(document.getElementById('data_inicial').value);
-            const dataFinal = converterDataBR(document.getElementById('data_final').value);
+            const dataInicialValue = document.getElementById('data_inicial').value;
+            const dataFinalValue = document.getElementById('data_final').value;
             
             // Validar se as datas são válidas
-            if (!dataInicial || !dataFinal) {
+            if (!dataInicialValue || !dataFinalValue) {
                 e.preventDefault();
-                alert('Por favor, insira datas válidas no formato DD/MM/AAAA.');
+                alert('Por favor, insira datas válidas.');
                 return false;
             }
+            
+            // Criar objetos Date apenas com ano, mês e dia (sem horário) para comparação
+            const dataInicial = new Date(dataInicialValue + 'T00:00:00');
+            const dataFinal = new Date(dataFinalValue + 'T00:00:00');
             
             // Validar datas em relação ao campo de estágio
             if (dataInicialCampo && dataInicial < dataInicialCampo) {
                 e.preventDefault();
-                alert('A data inicial do plano não pode ser menor que a data inicial do estágio.');
+                alert(`A data inicial do plano não pode ser menor que a data inicial do estágio.`);
                 return false;
             }
             
@@ -425,6 +387,14 @@
             if (dataInicial >= dataFinal) {
                 e.preventDefault();
                 alert('A data inicial deve ser anterior à data final.');
+                return false;
+            }
+
+            // Validar carga horária semanal
+            const cargaHoraria = document.getElementById('cargahoraria').value;
+            if (cargaHoraria && parseInt(cargaHoraria) > 30) {
+                e.preventDefault();
+                alert('A carga horária semanal não pode ser maior que 30 horas.');
                 return false;
             }
 

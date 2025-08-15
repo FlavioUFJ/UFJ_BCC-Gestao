@@ -353,9 +353,10 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
         
         // Filtro por categoria (suporta múltiplas categorias separadas por vírgula)
         if (categoria && categoria !== 'todos' && categoria.trim() !== '') {
-            // Como pessoas podem ter múltiplas categorias (ex: "1,3,5"), usar LIKE para buscar
-            whereClause += ' AND p.categoria LIKE ?';
-            params.push(`%${categoria.trim()}%`);
+            // Para categorias múltiplas separadas por vírgula, usar FIND_IN_SET ou REGEXP
+            // FIND_IN_SET funciona melhor para valores exatos separados por vírgula
+            whereClause += ' AND (FIND_IN_SET(?, p.categoria) > 0 OR p.categoria = ?)';
+            params.push(categoria.trim(), categoria.trim());
         }
         
         // Contar total de registros

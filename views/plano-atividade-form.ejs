@@ -100,12 +100,11 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="situacao" class="form-label">Situação *</label>
-                            <select class="form-select" id="situacao" name="situacao" required>
-                                <option value="Em Edição" <%= (plano && plano.pa_situacao === 'Em Edição') || !plano ? 'selected' : '' %>>Em Edição</option>
-                                <option value="Em Aprovação" <%= plano && plano.pa_situacao === 'Em Aprovação' ? 'selected' : '' %>>Em Aprovação</option>
-                                <option value="Aprovado sem Anexo" <%= plano && plano.pa_situacao === 'Aprovado sem Anexo' ? 'selected' : '' %>>Aprovado sem Anexo</option>
-                                <option value="Aprovado com Anexo" <%= plano && plano.pa_situacao === 'Aprovado com Anexo' ? 'selected' : '' %>>Aprovado com Anexo</option>
-                            </select>
+                        <select class="form-select" id="situacao" name="situacao" required>
+                            <option value="Em Edição" <%= (plano && plano.pa_situacao === 'Em Edição') || !plano ? 'selected' : '' %>>Em Edição</option>
+                            <option value="Em Aprovação" <%= plano && plano.pa_situacao === 'Em Aprovação' ? 'selected' : '' %>>Em Aprovação</option>
+                            <option value="Aprovado sem Anexo" <%= plano && plano.pa_situacao === 'Aprovado sem Anexo' ? 'selected' : '' %>>Aprovado sem Anexo</option>
+                        </select>
                         </div>
                     </div>
 

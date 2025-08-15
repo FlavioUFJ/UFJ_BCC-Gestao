@@ -516,16 +516,10 @@ class PlanoAtividadeController {
             const userNivelAcesso = user.nivelacesso;
             
             if (userNivelAcesso === 'Administrador') {
-                // Administradores só não podem editar "Aprovado com Anexo"
-                if (plano.pa_situacao === 'Aprovado com Anexo') {
-                    return res.status(403).render('error', {
-                        title: 'Erro',
-                        message: 'Plano de atividade aprovado com anexo não pode ser editado'
-                    });
-                }
+                // Administradores podem editar qualquer situação
             } else {
-                // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
-                if (plano.pa_situacao === 'Aprovado sem Anexo' || plano.pa_situacao === 'Aprovado com Anexo') {
+                // Outros usuários não podem editar "Aprovado sem Anexo"
+                if (plano.pa_situacao === 'Aprovado sem Anexo') {
                     return res.status(403).render('error', {
                         title: 'Erro',
                         message: 'Plano de atividade aprovado não pode ser editado'
@@ -603,16 +597,10 @@ class PlanoAtividadeController {
             const userNivelAcesso = user.nivelacesso;
             
             if (userNivelAcesso === 'Administrador') {
-                // Administradores só não podem editar "Aprovado com Anexo"
-                if (planoExistente.situacao === 'Aprovado com Anexo') {
-                    return res.status(403).json({
-                        success: false,
-                        message: 'Plano de atividade aprovado com anexo não pode ser editado'
-                    });
-                }
+                // Administradores podem editar qualquer situação
             } else {
-                // Outros usuários não podem editar nem "Aprovado sem Anexo" nem "Aprovado com Anexo"
-                if (planoExistente.situacao === 'Aprovado sem Anexo' || planoExistente.situacao === 'Aprovado com Anexo') {
+                // Outros usuários não podem editar "Aprovado sem Anexo"
+                if (planoExistente.situacao === 'Aprovado sem Anexo') {
                     return res.status(403).json({
                         success: false,
                         message: 'Plano de atividade aprovado não pode ser editado'
@@ -1265,7 +1253,7 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                     
                     await databaseConfig.run(
                         'UPDATE campo_estagio_planoatividade SET url_planoassinado = ?, situacao = ?, dataultimaatualizacao = CURRENT_TIMESTAMP WHERE id_planoatividade = ?',
-                        [caminhoRelativo, 'Aprovado com Anexo', plano_id]
+                        [caminhoRelativo, 'Aprovado sem Anexo', plano_id]
                     );
                     
                     console.log('Documento anexado com sucesso:', {

@@ -795,10 +795,6 @@
                         throw new Error('Resposta não é JSON - possível redirecionamento');
                     }
                     
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
                     const result = await response.json();
                     
                     if (result.success) {
@@ -811,7 +807,12 @@
                             }, 2000);
                         }
                     } else {
-                        this.showAlert('Erro ao salvar: ' + (result.message || 'Erro desconhecido'), 'danger');
+                        // Tratar especificamente erro de email duplicado
+                        if (result.message && result.message.includes('Email já está em uso')) {
+                            this.showAlert('⚠️ Este email já está cadastrado no sistema. Por favor, utilize um email diferente.', 'warning');
+                        } else {
+                            this.showAlert('Erro ao salvar: ' + (result.message || 'Erro desconhecido'), 'danger');
+                        }
                     }
                 } catch (error) {
                     console.error('Erro:', error);
@@ -868,9 +869,20 @@
             
             showAlert(message, type) {
                 const alertContainer = document.getElementById('alertContainer');
+                
+                // Definir ícone baseado no tipo
+                let icon = 'exclamation-triangle';
+                if (type === 'success') {
+                    icon = 'check-circle';
+                } else if (type === 'warning') {
+                    icon = 'exclamation-triangle';
+                } else if (type === 'danger') {
+                    icon = 'times-circle';
+                }
+                
                 const alertHtml = `
                     <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                        <i class="fas fa-${icon} me-2"></i>
                         ${message}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>

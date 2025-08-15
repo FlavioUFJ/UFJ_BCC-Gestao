@@ -82,8 +82,7 @@ const enums = {
     statusPlanoAtividade: {
         EM_EDICAO: 'Em Edição',
         EM_APROVACAO: 'Em Aprovação',
-        APROVADO_SEM_ANEXO: 'Aprovado sem Anexo',
-        APROVADO_COM_ANEXO: 'Aprovado com Anexo'
+        APROVADO_SEM_ANEXO: 'Aprovado sem Anexo'
     }
 };
 

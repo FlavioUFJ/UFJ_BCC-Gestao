@@ -1374,11 +1374,20 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
         try {
             const { id } = req.params; // ID do plano de atividade
             const userId = req.session.user.id_pessoa;
+            const userNivelAcesso = req.session.user.nivelacesso;
             
             if (!id || !userId) {
                 return res.status(400).json({ 
                     success: false, 
                     message: 'ID do plano de atividade e usuário são obrigatórios' 
+                });
+            }
+            
+            // Verificar se o usuário é um Administrador
+            if (userNivelAcesso === 'Administrador') {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: 'Você está logado como Administrador, não é possível aprovar as frequências' 
                 });
             }
             

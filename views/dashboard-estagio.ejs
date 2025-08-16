@@ -733,14 +733,18 @@
                 });
             }
             
-            // Botão Gerar PDF - desabilitado se não existir plano
+            // Botão Gerar PDF - desabilitado se não existir plano ou se situação for "Aprovado com Anexo"
             const btnGerarPDFPlano = document.getElementById('btnPlanAtiGerarPDF');
             if (btnGerarPDFPlano) {
-                const podeGerarPDF = plano !== null;
+                const podeGerarPDF = plano !== null && plano.pa_situacao !== 'Aprovado com Anexo';
                 btnGerarPDFPlano.disabled = !podeGerarPDF;
                 
-                if (!podeGerarPDF) {
+                if (!plano) {
                     btnGerarPDFPlano.title = 'Nenhum plano de atividade selecionado';
+                    btnGerarPDFPlano.classList.remove('btn-outline-info');
+                    btnGerarPDFPlano.classList.add('btn-outline-secondary');
+                } else if (plano.pa_situacao === 'Aprovado com Anexo') {
+                    btnGerarPDFPlano.title = 'Plano aprovado com anexo - use o link "Baixar plano Assinado"';
                     btnGerarPDFPlano.classList.remove('btn-outline-info');
                     btnGerarPDFPlano.classList.add('btn-outline-secondary');
                 } else {
@@ -2326,6 +2330,13 @@
         try {
             // Buscar categoria do usuário logado
             const response = await fetch(`/planos-atividade/${planoAtividadeSelecionadoId}/categoria-usuario`);
+            
+            if (response.status === 403) {
+                const result = await response.json();
+                alert(result.message || 'Você não tem permissão para aprovar frequências.');
+                return;
+            }
+            
             const result = await response.json();
             
             if (!result.success) {
@@ -2394,15 +2405,13 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">Confirmar Aprovação</h5>
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span>&times;</span>
-                                </button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <p>${mensagem}</p>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                 <button type="button" class="btn btn-primary" id="btnConfirmarAprovacao">Confirmar</button>
                             </div>
                         </div>
@@ -2417,11 +2426,13 @@
             $('body').append(modalHtml);
             
             // Mostrar modal
-            $('#modalConfirmacaoAprovacao').modal('show');
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmacaoAprovacao'));
+            modal.show();
             
             // Configurar evento de confirmação
             $('#btnConfirmarAprovacao').off('click').on('click', function() {
-                $('#modalConfirmacaoAprovacao').modal('hide');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmacaoAprovacao'));
+                modal.hide();
                 aprovarFrequencia(frequenciaSelecionadaId, categoriaEscolhida);
             });
             

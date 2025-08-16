@@ -7,7 +7,14 @@
                     <h3 class="mb-1" style="color: #333; font-weight: 600;"><i class="fas fa-graduation-cap me-2"></i>Módulo Estágio</h3>
                     <p class="mb-0" style="color: #666;">Painel Principal</p>
                 </div>
-                <div>
+                <div class="d-flex gap-2">
+                    <!-- Botão Visão Administrativa (apenas para administradores) -->
+                    <% if (user && user.nivelacesso === 'Administrador') { %>
+                        <a href="/secure/estagios/dashboard-administrativo" class="btn btn-warning btn-sm">
+                            <i class="fas fa-chart-line me-2"></i>Visão Administrativa
+                        </a>
+                    <% } %>
+                    
                     <!-- Link do WhatsApp -->
                     <a href="#" id="whatsappLink" class="btn btn-success btn-sm" style="display: none;" target="_blank">
                         <i class="fab fa-whatsapp me-2"></i>Entre no Grupo do WhatsApp

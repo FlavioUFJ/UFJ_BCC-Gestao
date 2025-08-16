@@ -1187,6 +1187,251 @@ router.post('/estagios/campo/anexar-plano', requireAuth, async (req, res) => {
     }
 });
 
+// ===== ROTAS DO DASHBOARD ADMINISTRATIVO =====
+
+/**
+ * Rota para exibir dashboard administrativo de estágios
+ */
+router.get('/estagios/dashboard-administrativo', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user) {
+            return res.redirect('/auth/login');
+        }
+        
+        // Verificar se é administrador
+        if (user.nivelacesso !== 'Administrador') {
+            return res.status(403).render('error', {
+                title: 'Acesso Negado',
+                message: 'Apenas administradores podem acessar esta página',
+                currentPage: 'error'
+            });
+        }
+        
+        res.render('dashboard-estagio-administrativo', {
+            title: 'Dashboard Administrativo - Estágios',
+            user: user,
+            currentPage: 'dashboard-estagio-administrativo'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao carregar dashboard administrativo:', error);
+        res.status(500).render('error', {
+            title: 'Erro',
+            message: 'Erro ao carregar dashboard administrativo',
+            error: error.message,
+            currentPage: 'error'
+        });
+    }
+});
+
+/**
+ * API para dados dos dashboards informativos
+ */
+router.get('/estagios/dashboard-administrativo/dados', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user || user.nivelacesso !== 'Administrador') {
+            return res.json({ success: false, message: 'Acesso negado' });
+        }
+        
+        const db = databaseConfig;
+        
+        // Dashboard 1: Campos de Estágio
+        const totalCampos = await db.get('SELECT COUNT(*) as total FROM campo_estagio');
+        const totalConcedentes = await db.get('SELECT COUNT(DISTINCT id_pessoa_concedente) as total FROM campo_estagio WHERE id_pessoa_concedente IS NOT NULL');
+        const totalEstagiarios = await db.get('SELECT COUNT(DISTINCT id_pessoa_estagiario) as total FROM campo_estagio WHERE id_pessoa_estagiario IS NOT NULL');
+        const totalSupervisores = await db.get('SELECT COUNT(DISTINCT id_pessoa_supervisor) as total FROM campo_estagio WHERE id_pessoa_supervisor IS NOT NULL');
+        const totalOrientadores = await db.get('SELECT COUNT(DISTINCT id_pessoa_orientador) as total FROM campo_estagio WHERE id_pessoa_orientador IS NOT NULL');
+        
+        // Dashboard 2: Planos de Atividade
+        const totalPlanos = await db.get('SELECT COUNT(*) as total FROM campo_estagio_planoatividade');
+        const statusPlanos = await db.all('SELECT situacao, COUNT(*) as quantidade FROM campo_estagio_planoatividade GROUP BY situacao');
+        
+        // Dashboard 3: Frequências
+        const totalFrequencias = await db.get('SELECT COUNT(*) as total FROM campo_estagio_frequencia');
+        const frequenciasAprovadas = await db.get(`
+            SELECT COUNT(*) as total FROM campo_estagio_frequencia 
+            WHERE aprovado_estagiario = 'Sim' AND aprovado_orientador = 'Sim' AND aprovado_supervisor = 'Sim'
+        `);
+        const frequenciasPendentes = await db.get(`
+            SELECT COUNT(*) as total FROM campo_estagio_frequencia 
+            WHERE NOT (aprovado_estagiario = 'Sim' AND aprovado_orientador = 'Sim' AND aprovado_supervisor = 'Sim')
+        `);
+        const frequenciasAbertas = await db.get('SELECT COUNT(*) as total FROM campo_estagio_frequencia WHERE data_encerramento IS NULL');
+        
+        const dados = {
+            campos: {
+                total: totalCampos.total,
+                concedentes: totalConcedentes.total,
+                estagiarios: totalEstagiarios.total,
+                supervisores: totalSupervisores.total,
+                orientadores: totalOrientadores.total
+            },
+            planos: {
+                total: totalPlanos.total,
+                status: statusPlanos
+            },
+            frequencias: {
+                total: totalFrequencias.total,
+                aprovadas: frequenciasAprovadas.total,
+                pendentes: frequenciasPendentes.total,
+                abertas: frequenciasAbertas.total
+            }
+        };
+        
+        res.json({ success: true, data: dados });
+        
+    } catch (error) {
+        console.error('Erro ao buscar dados dos dashboards:', error);
+        res.json({ success: false, message: 'Erro ao buscar dados' });
+    }
+});
+
+/**
+ * API para dados da tabela de campos de estágio
+ */
+router.get('/estagios/dashboard-administrativo/campos', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user || user.nivelacesso !== 'Administrador') {
+            return res.json({ success: false, message: 'Acesso negado' });
+        }
+        
+        const db = databaseConfig;
+        
+        const query = `
+            SELECT 
+                ce.id_campo_estagio,
+                ce.situacao,
+                pe.nome as nome_estagiario,
+                po.nome as nome_orientador,
+                pc.nome as nome_concedente,
+                ps.nome as nome_supervisor
+            FROM campo_estagio ce
+            LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+            LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
+            LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+            LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+            ORDER BY ce.id_campo_estagio DESC
+        `;
+        
+        const campos = await db.all(query);
+        
+        res.json({ success: true, data: campos });
+        
+    } catch (error) {
+        console.error('Erro ao buscar campos de estágio:', error);
+        res.json({ success: false, message: 'Erro ao buscar campos de estágio' });
+    }
+});
+
+/**
+ * API para dados da tabela de planos de atividade
+ */
+router.get('/estagios/dashboard-administrativo/planos/:campoId', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        const campoId = parseInt(req.params.campoId);
+        
+        if (!user || user.nivelacesso !== 'Administrador') {
+            return res.json({ success: false, message: 'Acesso negado' });
+        }
+        
+        const db = databaseConfig;
+        
+        const query = `
+            SELECT 
+                id_plano_atividade,
+                periodo,
+                data_inicio,
+                data_fim,
+                situacao,
+                aprovado_estagiario,
+                aprovado_orientador,
+                aprovado_supervisor
+            FROM campo_estagio_planoatividade
+            WHERE id_campo_estagio = ?
+            ORDER BY data_inicio DESC
+        `;
+        
+        const planos = await db.all(query, [campoId]);
+        
+        res.json({ success: true, data: planos });
+        
+    } catch (error) {
+        console.error('Erro ao buscar planos de atividade:', error);
+        res.json({ success: false, message: 'Erro ao buscar planos de atividade' });
+    }
+});
+
+/**
+ * API para dados da tabela de frequências
+ */
+router.get('/estagios/dashboard-administrativo/frequencias/:planoId', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        const planoId = parseInt(req.params.planoId);
+        
+        if (!user || user.nivelacesso !== 'Administrador') {
+            return res.json({ success: false, message: 'Acesso negado' });
+        }
+        
+        const db = databaseConfig;
+        
+        const query = `
+            SELECT 
+                cf.id_frequencia,
+                cf.mes_ano,
+                cf.data_inicio,
+                cf.data_encerramento,
+                cf.aprovado_estagiario,
+                cf.aprovado_orientador,
+                cf.aprovado_supervisor,
+                COALESCE(
+                    (
+                        SELECT SUM(
+                            CASE 
+                                WHEN fr.hora_fim IS NOT NULL AND fr.hora_inicio IS NOT NULL 
+                                THEN (strftime('%s', fr.hora_fim) - strftime('%s', fr.hora_inicio)) / 3600.0
+                                ELSE 0
+                            END
+                        )
+                        FROM frequencia_registrodiario fr 
+                        WHERE fr.id_frequencia = cf.id_frequencia
+                    ), 0
+                ) as total_horas_decimal
+            FROM campo_estagio_frequencia cf
+            WHERE cf.id_plano_atividade = ?
+            ORDER BY cf.data_inicio DESC
+        `;
+        
+        const frequencias = await db.all(query, [planoId]);
+        
+        // Converter horas decimais para formato HH:MM
+        const frequenciasFormatadas = frequencias.map(freq => {
+            const horasDecimal = freq.total_horas_decimal || 0;
+            const horas = Math.floor(horasDecimal);
+            const minutos = Math.round((horasDecimal - horas) * 60);
+            const totalHoras = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+            
+            return {
+                ...freq,
+                total_horas: totalHoras
+            };
+        });
+        
+        res.json({ success: true, data: frequenciasFormatadas });
+        
+    } catch (error) {
+        console.error('Erro ao buscar frequências:', error);
+        res.json({ success: false, message: 'Erro ao buscar frequências' });
+    }
+});
+
 // Rota para enviar notificações por email quando campo de estágio é concluído
 router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, res) => {
     console.log('[SECURE-ROUTES] Rota de envio de notificação acessada para campo ID:', req.params.id);

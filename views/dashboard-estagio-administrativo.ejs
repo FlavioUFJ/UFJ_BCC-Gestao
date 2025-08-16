@@ -1,0 +1,641 @@
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1" style="color: #333; font-weight: 600;">
+                        <i class="fas fa-chart-line me-2"></i>Dashboard Estágio - Visão Administrativa
+                    </h3>
+                    <p class="mb-0" style="color: #666;">Painel de controle administrativo para gestão de estágios</p>
+                </div>
+                <div>
+                    <a href="/secure/estagios/dashboard" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar ao Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboards Informativos -->
+    <div class="row mb-4">
+        <!-- Dashboard 1: Campos de Estágio -->
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-building me-2"></i>Campos de Estágio</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 text-primary mb-1" id="totalCampos">0</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-success mb-1" id="totalConcedentes">0</div>
+                            <small class="text-muted">Concedentes</small>
+                        </div>
+                    </div>
+                    <hr class="my-2">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h5 text-info mb-1" id="totalEstagiarios">0</div>
+                            <small class="text-muted">Estagiários</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h5 text-warning mb-1" id="totalSupervisores">0</div>
+                            <small class="text-muted">Supervisores</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h5 text-secondary mb-1" id="totalOrientadores">0</div>
+                            <small class="text-muted">Orientadores</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard 2: Planos de Atividade -->
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Planos de Atividade</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-2">
+                        <div class="col-12">
+                            <div class="h4 text-success mb-1" id="totalPlanos">0</div>
+                            <small class="text-muted">Total de Planos</small>
+                        </div>
+                    </div>
+                    <hr class="my-2">
+                    <div id="statusPlanos">
+                        <!-- Status dos planos serão carregados dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard 3: Frequências -->
+        <div class="col-lg-4 col-md-12 mb-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Frequências</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 text-info mb-1" id="totalFrequencias">0</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-success mb-1" id="frequenciasAprovadas">0</div>
+                            <small class="text-muted">Aprovadas</small>
+                        </div>
+                    </div>
+                    <hr class="my-2">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h5 text-warning mb-1" id="frequenciasPendentes">0</div>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h5 text-danger mb-1" id="frequenciasAbertas">0</div>
+                            <small class="text-muted">Não Encerradas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Principal: Campos de Estágio -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Campos de Estágio</h6>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm" id="buscaPessoa" placeholder="Buscar por nome..." style="width: 200px;">
+                        </div>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtroEmEdicao" checked>
+                                    <label class="form-check-label" for="filtroEmEdicao">
+                                        Em Edição
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtroConcluido" checked>
+                                    <label class="form-check-label" for="filtroConcluido">
+                                        Concluído
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="filtroFinalizado" checked>
+                                    <label class="form-check-label" for="filtroFinalizado">
+                                        Finalizado
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-muted">
+                                <span id="contadorRegistros">0</span> registros encontrados (máx. 50)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tabelaCamposEstagio">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Estagiário</th>
+                                    <th>Orientador</th>
+                                    <th>Supervisor</th>
+                                    <th>Concedente</th>
+                                    <th>Situação</th>
+                                    <th width="100">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaCampos">
+                                <!-- Dados carregados dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Secundária: Planos de Atividade -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="fas fa-list-alt me-2"></i>Planos de Atividade</h6>
+                    <small class="text-light">Selecione um campo de estágio para visualizar os planos</small>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tabelaPlanosAtividade">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Data Início</th>
+                                    <th>Data Fim</th>
+                                    <th>Situação</th>
+                                    <th>Aprovado Estagiário</th>
+                                    <th>Aprovado Orientador</th>
+                                    <th>Aprovado Supervisor</th>
+                                    <th width="100">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaPlanos">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-arrow-up me-2"></i>Selecione um campo de estágio acima
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Terciária: Frequências -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Frequências</h6>
+                    <small class="text-light">Selecione um plano de atividade para visualizar as frequências</small>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tabelaFrequencias">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Mês/Ano</th>
+                                    <th>Data Início</th>
+                                    <th>Data Encerramento</th>
+                                    <th>Total Horas</th>
+                                    <th>Aprovado Estagiário</th>
+                                    <th>Aprovado Orientador</th>
+                                    <th>Aprovado Supervisor</th>
+                                    <th>Status</th>
+                                    <th width="100">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaFrequencias">
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        <i class="fas fa-arrow-up me-2"></i>Selecione um plano de atividade acima
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Dashboard Administrativo de Estágios
+const DashboardAdmin = {
+    campoSelecionado: null,
+    planoSelecionado: null,
+    
+    init() {
+        this.carregarDashboards();
+        this.carregarCamposEstagio();
+        this.setupEventListeners();
+    },
+    
+    setupEventListeners() {
+        // Filtros da tabela de campos
+        document.getElementById('buscaPessoa').addEventListener('input', () => {
+            this.filtrarCamposEstagio();
+        });
+        
+        // Event listeners para filtros de situação
+        document.getElementById('filtroEmEdicao').addEventListener('change', () => {
+            this.filtrarCamposEstagio();
+        });
+        document.getElementById('filtroConcluido').addEventListener('change', () => {
+            this.filtrarCamposEstagio();
+        });
+        document.getElementById('filtroFinalizado').addEventListener('change', () => {
+            this.filtrarCamposEstagio();
+        });
+
+    },
+    
+    async carregarDashboards() {
+        try {
+            const response = await fetch('/secure/estagios/dashboard-administrativo/dados');
+            const dados = await response.json();
+            
+            if (dados.success) {
+                this.atualizarDashboards(dados.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dashboards:', error);
+        }
+    },
+    
+    atualizarDashboards(dados) {
+        // Dashboard 1: Campos de Estágio
+        document.getElementById('totalCampos').textContent = dados.campos.total || 0;
+        document.getElementById('totalConcedentes').textContent = dados.campos.concedentes || 0;
+        document.getElementById('totalEstagiarios').textContent = dados.campos.estagiarios || 0;
+        document.getElementById('totalSupervisores').textContent = dados.campos.supervisores || 0;
+        document.getElementById('totalOrientadores').textContent = dados.campos.orientadores || 0;
+        
+        // Dashboard 2: Planos de Atividade
+        document.getElementById('totalPlanos').textContent = dados.planos.total || 0;
+        
+        const statusPlanosDiv = document.getElementById('statusPlanos');
+        statusPlanosDiv.innerHTML = '';
+        
+        if (dados.planos.status && dados.planos.status.length > 0) {
+            dados.planos.status.forEach(status => {
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'row text-center mb-1';
+                statusDiv.innerHTML = `
+                    <div class="col-8 text-start">
+                        <small class="text-muted">${status.situacao}</small>
+                    </div>
+                    <div class="col-4">
+                        <span class="badge bg-secondary">${status.quantidade}</span>
+                    </div>
+                `;
+                statusPlanosDiv.appendChild(statusDiv);
+            });
+        }
+        
+        // Dashboard 3: Frequências
+        document.getElementById('totalFrequencias').textContent = dados.frequencias.total || 0;
+        document.getElementById('frequenciasAprovadas').textContent = dados.frequencias.aprovadas || 0;
+        document.getElementById('frequenciasPendentes').textContent = dados.frequencias.pendentes || 0;
+        document.getElementById('frequenciasAbertas').textContent = dados.frequencias.abertas || 0;
+    },
+    
+    async carregarCamposEstagio() {
+        try {
+            const response = await fetch('/secure/estagios/dashboard-administrativo/campos');
+            const dados = await response.json();
+            
+            if (dados.success) {
+                this.renderizarTabelaCampos(dados.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar campos de estágio:', error);
+        }
+    },
+    
+    renderizarTabelaCampos(campos) {
+        const tbody = document.getElementById('corpoTabelaCampos');
+        tbody.innerHTML = '';
+        
+        // Limitar a 50 registros
+        const camposLimitados = campos.slice(0, 50);
+        
+        if (camposLimitados.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox me-2"></i>Nenhum campo de estágio encontrado
+                    </td>
+                </tr>
+            `;
+            document.getElementById('contadorRegistros').textContent = '0';
+            return;
+        }
+        
+        camposLimitados.forEach(campo => {
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.dataset.campoId = campo.id_campo_estagio;
+            tr.dataset.situacao = campo.situacao || 'N/A';
+            
+            tr.innerHTML = `
+                <td>${campo.nome_estagiario || 'N/A'}</td>
+                <td>${campo.nome_orientador || 'N/A'}</td>
+                <td>${campo.nome_supervisor || 'N/A'}</td>
+                <td>${campo.nome_concedente || 'N/A'}</td>
+                <td>
+                    <span class="badge bg-warning text-dark">${campo.situacao || 'N/A'}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarCampo(${campo.id_campo_estagio})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            `;
+            
+            tr.addEventListener('click', () => {
+                this.selecionarCampo(campo.id_campo_estagio, tr);
+            });
+            
+            tbody.appendChild(tr);
+        });
+        
+        // Aplicar filtros iniciais
+        this.filtrarCamposEstagio();
+    },
+    
+    async selecionarCampo(campoId, tr) {
+        // Remover seleção anterior
+        document.querySelectorAll('#tabelaCamposEstagio tbody tr').forEach(row => {
+            row.classList.remove('table-active');
+        });
+        
+        // Adicionar seleção atual
+        tr.classList.add('table-active');
+        this.campoSelecionado = campoId;
+        
+        // Carregar planos de atividade
+        await this.carregarPlanosAtividade(campoId);
+        
+        // Limpar tabela de frequências
+        this.limparTabelaFrequencias();
+    },
+    
+    async carregarPlanosAtividade(campoId) {
+        try {
+            const response = await fetch(`/secure/estagios/dashboard-administrativo/planos/${campoId}`);
+            const dados = await response.json();
+            
+            if (dados.success) {
+                this.renderizarTabelaPlanos(dados.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar planos de atividade:', error);
+        }
+    },
+    
+    renderizarTabelaPlanos(planos) {
+        const tbody = document.getElementById('corpoTabelaPlanos');
+        tbody.innerHTML = '';
+        
+        if (planos.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox me-2"></i>Nenhum plano de atividade encontrado
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        planos.forEach(plano => {
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.dataset.planoId = plano.id_plano_atividade;
+            
+            tr.innerHTML = `
+                <td>${plano.periodo || 'N/A'}</td>
+                <td>${plano.data_inicio ? new Date(plano.data_inicio).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                <td>${plano.data_fim ? new Date(plano.data_fim).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                <td>
+                    <span class="badge bg-info">${plano.situacao || 'N/A'}</span>
+                </td>
+                <td>
+                    <span class="badge ${plano.aprovado_estagiario === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${plano.aprovado_estagiario || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${plano.aprovado_orientador === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${plano.aprovado_orientador || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${plano.aprovado_supervisor === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${plano.aprovado_supervisor || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarPlano(${plano.id_plano_atividade})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            `;
+            
+            tr.addEventListener('click', () => {
+                this.selecionarPlano(plano.id_plano_atividade, tr);
+            });
+            
+            tbody.appendChild(tr);
+        });
+    },
+    
+    async selecionarPlano(planoId, tr) {
+        // Remover seleção anterior
+        document.querySelectorAll('#tabelaPlanosAtividade tbody tr').forEach(row => {
+            row.classList.remove('table-active');
+        });
+        
+        // Adicionar seleção atual
+        tr.classList.add('table-active');
+        this.planoSelecionado = planoId;
+        
+        // Carregar frequências
+        await this.carregarFrequencias(planoId);
+    },
+    
+    async carregarFrequencias(planoId) {
+        try {
+            const response = await fetch(`/secure/estagios/dashboard-administrativo/frequencias/${planoId}`);
+            const dados = await response.json();
+            
+            if (dados.success) {
+                this.renderizarTabelaFrequencias(dados.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar frequências:', error);
+        }
+    },
+    
+    renderizarTabelaFrequencias(frequencias) {
+        const tbody = document.getElementById('corpoTabelaFrequencias');
+        tbody.innerHTML = '';
+        
+        if (frequencias.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox me-2"></i>Nenhuma frequência encontrada
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        frequencias.forEach(freq => {
+            const tr = document.createElement('tr');
+            
+            const status = freq.data_encerramento ? 'Encerrada' : 'Aberta';
+            const statusClass = freq.data_encerramento ? 'bg-success' : 'bg-warning text-dark';
+            
+            tr.innerHTML = `
+                <td>${freq.mes_ano || 'N/A'}</td>
+                <td>${freq.data_inicio ? new Date(freq.data_inicio).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                <td>${freq.data_encerramento ? new Date(freq.data_encerramento).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                <td>${freq.total_horas || '00:00'}</td>
+                <td>
+                    <span class="badge ${freq.aprovado_estagiario === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.aprovado_estagiario || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${freq.aprovado_orientador === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.aprovado_orientador || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${freq.aprovado_supervisor === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.aprovado_supervisor || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${statusClass}">${status}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarFrequencia(${freq.id_frequencia})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+    },
+    
+    limparTabelaFrequencias() {
+        const tbody = document.getElementById('corpoTabelaFrequencias');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="fas fa-arrow-up me-2"></i>Selecione um plano de atividade acima
+                </td>
+            </tr>
+        `;
+    },
+    
+    filtrarCamposEstagio() {
+        const busca = document.getElementById('buscaPessoa').value.toLowerCase();
+        const filtroEmEdicao = document.getElementById('filtroEmEdicao').checked;
+        const filtroConcluido = document.getElementById('filtroConcluido').checked;
+        const filtroFinalizado = document.getElementById('filtroFinalizado').checked;
+        
+        const linhas = document.querySelectorAll('#tabelaCamposEstagio tbody tr');
+        let registrosVisiveis = 0;
+        
+        linhas.forEach(linha => {
+            if (linha.children.length === 1) return; // Pular linha de "nenhum resultado"
+            
+            const estagiario = linha.children[0].textContent.toLowerCase();
+            const orientador = linha.children[1].textContent.toLowerCase();
+            const supervisor = linha.children[2].textContent.toLowerCase();
+            const concedente = linha.children[3].textContent.toLowerCase();
+            const situacao = linha.dataset.situacao;
+            
+            let mostrar = true;
+            
+            // Filtro por busca
+            if (busca) {
+                const textoCompleto = `${estagiario} ${orientador} ${supervisor} ${concedente}`;
+                mostrar = textoCompleto.includes(busca);
+            }
+            
+            // Filtro por situação
+            if (mostrar) {
+                const situacaoValida = 
+                    (filtroEmEdicao && situacao === 'Em Edição') ||
+                    (filtroConcluido && situacao === 'Concluído') ||
+                    (filtroFinalizado && situacao === 'Finalizado');
+                
+                mostrar = situacaoValida;
+            }
+            
+            linha.style.display = mostrar ? '' : 'none';
+            if (mostrar) registrosVisiveis++;
+        });
+        
+        // Atualizar contador
+        document.getElementById('contadorRegistros').textContent = registrosVisiveis;
+    },
+    
+    editarCampo(campoId) {
+        window.location.href = `/secure/estagios/campo/editar/${campoId}`;
+    },
+    
+    editarPlano(planoId) {
+        // Implementar redirecionamento para edição de plano
+        console.log('Editar plano:', planoId);
+    },
+    
+    editarFrequencia(frequenciaId) {
+        // Implementar redirecionamento para edição de frequência
+        console.log('Editar frequência:', frequenciaId);
+    }
+};
+
+// Inicializar quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', () => {
+    DashboardAdmin.init();
+});
+</script>

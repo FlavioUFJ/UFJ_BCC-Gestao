@@ -212,19 +212,19 @@
                                 </div>
                             </div>
 
-                            <!-- Linha 10: Estágio na própria instituição, Nº Convênio -->
+                            <!-- Linha 10: Nº Convênio com checkbox -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="form-check" style="margin-top: 32px;">
-                                        <input class="form-check-input" type="checkbox" id="estagiopropriainstituicao" name="estagiopropriainstituicao" value="Sim">
-                                        <label class="form-check-label" for="estagiopropriainstituicao">
-                                            Estágio na própria instituição:
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <label for="numero_convenio" class="form-label">Nº Convênio</label>
-                                    <input type="text" class="form-control" id="numero_convenio" name="numero_convenio" maxlength="12">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="text" class="form-control" id="numero_convenio" name="numero_convenio" maxlength="10" style="max-width: 200px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="estagiopropriainstituicao" name="estagiopropriainstituicao" value="Sim">
+                                            <label class="form-check-label" for="estagiopropriainstituicao">
+                                                Marque aqui se é na própria instituição
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -449,7 +449,7 @@
             if (campo.nome_seguradora) document.getElementById('nome_seguradora').value = campo.nome_seguradora;
             if (campo.tipo_estagio) document.getElementById('tipo_estagio').value = campo.tipo_estagio;
             if (campo.confirmaaptoestagio) document.getElementById('confirmaaptoestagio').value = campo.confirmaaptoestagio;
-            if (campo.estagiopropriainstituicao) document.getElementById('estagiopropriainstituicao').checked = campo.estagiopropriainstituicao === 'Sim';
+            document.getElementById('estagiopropriainstituicao').checked = campo.estagiopropriainstituicao === 'Sim';
             
             // Preencher datas (converter de ISO para formato brasileiro - corrigido para evitar problema de fuso horário)
             
@@ -1020,7 +1020,6 @@
                 'id_pessoa_concedente_nome',
                 'id_pessoa_supervisor_nome',
                 'confirmaaptoestagio',
-                'estagiopropriainstituicao',
                 'numero_convenio'
             ];
             

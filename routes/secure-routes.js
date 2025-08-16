@@ -397,7 +397,8 @@ router.post('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
             id_pessoa_supervisor,
             valor_bolsa,
             valor_valetransporte,
-            observacoes
+            observacoes,
+            estagiopropriainstituicao
         } = req.body;
 
         // Campos date já vêm no formato ISO (YYYY-MM-DD), apenas validar
@@ -441,7 +442,8 @@ router.post('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
                 id_pessoa_supervisor = ?,
                 valor_bolsa = ?,
                 valor_valetransporte = ?,
-                observacoes = ?
+                observacoes = ?,
+                estagiopropriainstituicao = ?
             WHERE id_campo_estagio = ?
         `;
         
@@ -466,6 +468,7 @@ router.post('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
             valor_bolsa || null,
             valor_valetransporte || null,
             observacoes || null,
+            estagiopropriainstituicao || 'Não',
             campoId
         ];
 
@@ -518,7 +521,8 @@ router.put('/estagios/campo/atualizar/:id', requireAuth, async (req, res) => {
             id_pessoa_supervisor,
             valor_bolsa,
             valor_valetransporte,
-            observacoes
+            observacoes,
+            estagiopropriainstituicao
         } = req.body;
 
         // Campos date já vêm no formato ISO (YYYY-MM-DD), apenas validar
@@ -562,7 +566,8 @@ router.put('/estagios/campo/atualizar/:id', requireAuth, async (req, res) => {
                 id_pessoa_supervisor = ?,
                 valor_bolsa = ?,
                 valor_valetransporte = ?,
-                observacoes = ?
+                observacoes = ?,
+                estagiopropriainstituicao = ?
             WHERE id_campo_estagio = ?
         `;
         
@@ -587,6 +592,7 @@ router.put('/estagios/campo/atualizar/:id', requireAuth, async (req, res) => {
             valor_bolsa || null,
             valor_valetransporte || null,
             observacoes || null,
+            estagiopropriainstituicao || 'Não',
             campoId
         ];
 
@@ -708,7 +714,8 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
             id_pessoa_supervisor,
             valor_bolsa,
             valor_valetransporte,
-            observacoes
+            observacoes,
+            estagiopropriainstituicao
         } = req.body;
 
         // Debug: Log dos campos recebidos
@@ -771,8 +778,8 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
             id_pessoa_curso, id_pessoa_estagiario, numero_matricula, periodo,
             id_pessoa_orientador, id_pessoa_concedente, numero_convenio,
             id_pessoa_supervisor, valor_bolsa, valor_valetransporte,
-            observacoes, dataultimaatualizacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
+            observacoes, estagiopropriainstituicao, dataultimaatualizacao
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
         
         const params = [
             situacao,
@@ -794,7 +801,8 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
             id_pessoa_supervisor ? parseInt(id_pessoa_supervisor) : null,
             valor_bolsa ? parseFloat(valor_bolsa) : null,
             valor_valetransporte ? parseFloat(valor_valetransporte) : null,
-            observacoes || null
+            observacoes || null,
+            estagiopropriainstituicao || 'Não'
         ];
 
         const result = await db.run(sql, params);

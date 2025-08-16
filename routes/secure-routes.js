@@ -1242,9 +1242,9 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <p>Informamos que, após a conclusão da documentação e a assinatura dos termos do convênio, as partes estão <b>autorizadas a iniciar as atividades de estágio</b>.</p>
             
-            <p>Reforçamos a importância de preencher corretamente os demais documentos obrigatórios: 
-			<br><b>Plano de Atividades, Controle de Frequência e Relatório Final de estágio</b>.</p>
-            <p>Este documentos devem ser preenchido no APP, no endereço https://coordenai.computacaoufj.online/</p>
+            <p>Reforçamos a importância do correto preenchimento dos documentos obrigatórios:</p> 
+			<p><b>Plano de Atividades, Controle de Frequência e Relatório Final de estágio</b>.</p>
+            <p>Esses documentos devem ser registrados exclusivamente no aplicativo, disponível em: https://coordenai.computacaoufj.online/</p>
             <p>Desejamos a todos um excelente trabalho e uma parceria produtiva.</p>
             
             <p><b>Envolvidos no estágio:</b><br>

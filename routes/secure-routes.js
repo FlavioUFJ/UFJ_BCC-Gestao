@@ -712,32 +712,32 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
         } = req.body;
 
         // Debug: Log dos campos recebidos
-        console.log('[DEBUG] Campos recebidos:', {
-            situacao,
-            tipo_estagio,
-            semestre_ano,
-            cargahoraria,
-            id_pessoa_curso,
-            numero_matricula
-        });
+        // console.log('[DEBUG] Campos recebidos:', {
+        //     situacao,
+        //     tipo_estagio,
+        //     semestre_ano,
+        //     cargahoraria,
+        //     id_pessoa_curso,
+        //     numero_matricula
+        // });
         
         // Debug específico para tipo_estagio
-        console.log('[DEBUG BACKEND] tipo_estagio recebido:', tipo_estagio);
-        console.log('[DEBUG BACKEND] tipo_estagio type:', typeof tipo_estagio);
-        console.log('[DEBUG BACKEND] tipo_estagio length:', tipo_estagio ? tipo_estagio.length : 'null/undefined');
-        console.log('[DEBUG BACKEND] tipo_estagio charCodes:', tipo_estagio ? Array.from(tipo_estagio).map(c => c.charCodeAt(0)) : 'null/undefined');
-        console.log('[DEBUG BACKEND] req.body completo:', req.body);
+        // console.log('[DEBUG BACKEND] tipo_estagio recebido:', tipo_estagio);
+        // console.log('[DEBUG BACKEND] tipo_estagio type:', typeof tipo_estagio);
+        // console.log('[DEBUG BACKEND] tipo_estagio length:', tipo_estagio ? tipo_estagio.length : 'null/undefined');
+        // console.log('[DEBUG BACKEND] tipo_estagio charCodes:', tipo_estagio ? Array.from(tipo_estagio).map(c => c.charCodeAt(0)) : 'null/undefined');
+        // console.log('[DEBUG BACKEND] req.body completo:', req.body);
         
         // Validação dos campos obrigatórios
         if (!situacao || !tipo_estagio || !semestre_ano || !cargahoraria || !id_pessoa_curso || !numero_matricula) {
-            console.log('[DEBUG] Campos faltando:', {
-                situacao: !situacao,
-                tipo_estagio: !tipo_estagio,
-                semestre_ano: !semestre_ano,
-                cargahoraria: !cargahoraria,
-                id_pessoa_curso: !id_pessoa_curso,
-                numero_matricula: !numero_matricula
-            });
+            // console.log('[DEBUG] Campos faltando:', {
+            //     situacao: !situacao,
+            //     tipo_estagio: !tipo_estagio,
+            //     semestre_ano: !semestre_ano,
+            //     cargahoraria: !cargahoraria,
+            //     id_pessoa_curso: !id_pessoa_curso,
+            //     numero_matricula: !numero_matricula
+            // });
             return res.json({ success: false, message: 'Campos obrigatórios não preenchidos' });
         }
 
@@ -957,14 +957,14 @@ router.get('/estagios/campo/:id/pdf', requireAuth, async (req, res) => {
  * Permite acesso a usuários autenticados para cadastro durante preenchimento de formulários
  */
 router.post('/pessoas/criar', requireAuth, async (req, res) => {
-    console.log('[DEBUG] Rota /pessoas/criar executada');
-    console.log('[DEBUG] Dados recebidos:', req.body);
+    // console.log('[DEBUG] Rota /pessoas/criar executada');
+    // console.log('[DEBUG] Dados recebidos:', req.body);
     let { nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo } = req.body;
     
     // Log dos valores individuais para debug
-    console.log('[DEBUG] Valores extraídos:', {
-        nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo
-    });
+    // console.log('[DEBUG] Valores extraídos:', {
+    //     nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo
+    // });
     
     // Garantir que campos undefined sejam null
     telefone = telefone || null;
@@ -981,9 +981,9 @@ router.post('/pessoas/criar', requireAuth, async (req, res) => {
         cnpj_cpf = cnpj_cpf.replace(/\D/g, '');
     }
     
-    console.log('[DEBUG] Valores após limpeza:', {
-        nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo
-    });
+    // console.log('[DEBUG] Valores após limpeza:', {
+    //     nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo
+    // });
     
     // Validação dos campos obrigatórios
     if (!nome || !tipo) {
@@ -1009,11 +1009,11 @@ router.post('/pessoas/criar', requireAuth, async (req, res) => {
                      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`;
         
         const params = [nome, email, telefone, cnpj_cpf, tipo, categoria, id_pessoaVinculo];
-        console.log('[DEBUG] SQL:', sql);
-        console.log('[DEBUG] Parâmetros:', params);
+        // console.log('[DEBUG] SQL:', sql);
+        // console.log('[DEBUG] Parâmetros:', params);
         
         const result = await db.run(sql, params);
-        console.log('[DEBUG] Resultado da inserção:', result);
+        // console.log('[DEBUG] Resultado da inserção:', result);
         
         const ultimoId = result.insertId;
         if (!ultimoId) {
@@ -1021,11 +1021,11 @@ router.post('/pessoas/criar', requireAuth, async (req, res) => {
             return res.json({ success: false, message: 'Erro ao obter ID da pessoa criada' });
         }
         
-        console.log('[DEBUG] Último ID inserido:', ultimoId);
+        // console.log('[DEBUG] Último ID inserido:', ultimoId);
         
         // Buscar a pessoa recém-criada para retornar os dados completos
         const pessoa = await db.get('SELECT * FROM pessoa WHERE id_pessoa = ?', [ultimoId]);
-        console.log('[DEBUG] Pessoa encontrada:', pessoa);
+        // console.log('[DEBUG] Pessoa encontrada:', pessoa);
         
         res.json({ success: true, pessoa: pessoa, message: 'Pessoa cadastrada com sucesso!' });
     } catch (err) {
@@ -1201,8 +1201,8 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
         `;
         
         const user = getUserFromSession(req);
-        console.log('[DEBUG NOTIFICAÇÃO] Usuário extraído da sessão:', user);
-        console.log('[DEBUG NOTIFICAÇÃO] req.session.user:', req.session.user);
+        // console.log('[DEBUG NOTIFICAÇÃO] Usuário extraído da sessão:', user);
+        // console.log('[DEBUG NOTIFICAÇÃO] req.session.user:', req.session.user);
         
         if (!user || !user.id_pessoa) {
             console.error('[ERROR NOTIFICAÇÃO] Usuário não autenticado ou sem id_pessoa:', { user, sessionUser: req.session.user });

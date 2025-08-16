@@ -291,17 +291,17 @@ class FrequenciaController {
                 resumo_atividades === undefined ? null : resumo_atividades
             ];
             
-            console.log('[DEBUG] Valores para inserção:', {
-                id_planoatividade,
-                dataAberturaAmericana,
-                dataEncerramentoAmericana,
-                mesdereferencia,
-                resumo_atividades
-            });
-            console.log('[DEBUG] Parâmetros da query:', parametros);
-            console.log('[DEBUG] Tipos dos parâmetros:', parametros.map(p => typeof p));
-            console.log('[DEBUG] Parâmetros undefined:', parametros.map((p, i) => p === undefined ? i : null).filter(i => i !== null));
-            console.log('[DEBUG] Parâmetros null:', parametros.map((p, i) => p === null ? i : null).filter(i => i !== null));
+            // console.log('[DEBUG] Valores para inserção:', {
+            //     id_planoatividade,
+            //     dataAberturaAmericana,
+            //     dataEncerramentoAmericana,
+            //     mesdereferencia,
+            //     resumo_atividades
+            // });
+            // console.log('[DEBUG] Parâmetros da query:', parametros);
+            // console.log('[DEBUG] Tipos dos parâmetros:', parametros.map(p => typeof p));
+            // console.log('[DEBUG] Parâmetros undefined:', parametros.map((p, i) => p === undefined ? i : null).filter(i => i !== null));
+            // console.log('[DEBUG] Parâmetros null:', parametros.map((p, i) => p === null ? i : null).filter(i => i !== null));
 
             // Iniciar transação
             await databaseConfig.run('START TRANSACTION');
@@ -319,8 +319,8 @@ class FrequenciaController {
                 `, parametros);
 
                 const frequenciaId = resultFrequencia.insertId;
-                console.log('[DEBUG] FrequenciaId obtido:', frequenciaId);
-                console.log('[DEBUG] Resultado completo:', resultFrequencia);
+                // console.log('[DEBUG] FrequenciaId obtido:', frequenciaId);
+                // console.log('[DEBUG] Resultado completo:', resultFrequencia);
 
                 // Inserir registros diários se fornecidos
                 if (registros_diarios && Array.isArray(registros_diarios)) {
@@ -352,13 +352,13 @@ class FrequenciaController {
                             const horaFinalNormalizada = registro.hora_final.substring(0, 5);
 
                             // Sempre recalcular total de horas no backend (não confiar no frontend)
-                            console.log(`[DEBUG] Processando registro: hora_inicial=${registro.hora_inicial}, hora_final=${registro.hora_final}`);
-                            console.log(`[DEBUG] Horas normalizadas: inicial=${horaInicialNormalizada}, final=${horaFinalNormalizada}`);
+                            // console.log(`[DEBUG] Processando registro: hora_inicial=${registro.hora_inicial}, hora_final=${registro.hora_final}`);
+                            // console.log(`[DEBUG] Horas normalizadas: inicial=${horaInicialNormalizada}, final=${horaFinalNormalizada}`);
                             
                             const horaInicial = new Date(`1970-01-01T${horaInicialNormalizada}:00`);
                             const horaFinal = new Date(`1970-01-01T${horaFinalNormalizada}:00`);
                             
-                            console.log(`[DEBUG] Objetos Date criados: horaInicial=${horaInicial}, horaFinal=${horaFinal}`);
+                            // console.log(`[DEBUG] Objetos Date criados: horaInicial=${horaInicial}, horaFinal=${horaFinal}`);
                             
                             if (isNaN(horaInicial.getTime()) || isNaN(horaFinal.getTime())) {
                                 throw new Error(`Horários inválidos: inicial=${registro.hora_inicial}, final=${registro.hora_final}`);
@@ -373,7 +373,7 @@ class FrequenciaController {
                             const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                             const totalHora = `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}:00`;
                             
-                            console.log(`[DEBUG] Total hora calculado: ${totalHora}`);
+                            // console.log(`[DEBUG] Total hora calculado: ${totalHora}`);
 
                             await databaseConfig.run(`
                                 INSERT INTO frequencia_registrodiario (
@@ -393,14 +393,14 @@ class FrequenciaController {
                                 registro.atividade_do_dia || ''
                             ]);
                             
-                            console.log('[DEBUG] Registro diário inserido:', {
-                                frequenciaId,
-                                dataFrequenciaAmericana,
-                                hora_inicial: registro.hora_inicial,
-                                hora_final: registro.hora_final,
-                                totalHora,
-                                atividade_do_dia: registro.atividade_do_dia || ''
-                            });
+                            // console.log('[DEBUG] Registro diário inserido:', {
+                            //     frequenciaId,
+                            //     dataFrequenciaAmericana,
+                            //     hora_inicial: registro.hora_inicial,
+                            //     hora_final: registro.hora_final,
+                            //     totalHora,
+                            //     atividade_do_dia: registro.atividade_do_dia || ''
+                            // });
                         }
                     }
                 }
@@ -691,13 +691,13 @@ class FrequenciaController {
                             const horaFinalNormalizada = registro.hora_final.substring(0, 5);
 
                             // Sempre recalcular total de horas no backend (não confiar no frontend)
-                            console.log(`[DEBUG] Processando registro: hora_inicial=${registro.hora_inicial}, hora_final=${registro.hora_final}`);
-                            console.log(`[DEBUG] Horas normalizadas: inicial=${horaInicialNormalizada}, final=${horaFinalNormalizada}`);
+                            // console.log(`[DEBUG] Processando registro: hora_inicial=${registro.hora_inicial}, hora_final=${registro.hora_final}`);
+                            // console.log(`[DEBUG] Horas normalizadas: inicial=${horaInicialNormalizada}, final=${horaFinalNormalizada}`);
                             
                             const horaInicial = new Date(`1970-01-01T${horaInicialNormalizada}:00`);
                             const horaFinal = new Date(`1970-01-01T${horaFinalNormalizada}:00`);
                             
-                            console.log(`[DEBUG] Objetos Date criados: horaInicial=${horaInicial}, horaFinal=${horaFinal}`);
+                            // console.log(`[DEBUG] Objetos Date criados: horaInicial=${horaInicial}, horaFinal=${horaFinal}`);
                             
                             if (isNaN(horaInicial.getTime()) || isNaN(horaFinal.getTime())) {
                                 throw new Error(`Horários inválidos: inicial=${registro.hora_inicial}, final=${registro.hora_final}`);
@@ -712,7 +712,7 @@ class FrequenciaController {
                             const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                             const totalHora = `${diffHours.toString().padStart(2, '0')}:${diffMinutes.toString().padStart(2, '0')}:00`;
                             
-                            console.log(`[DEBUG] Total hora calculado: ${totalHora}`);
+                            // console.log(`[DEBUG] Total hora calculado: ${totalHora}`);
 
                             await databaseConfig.run(`
                                 INSERT INTO frequencia_registrodiario (

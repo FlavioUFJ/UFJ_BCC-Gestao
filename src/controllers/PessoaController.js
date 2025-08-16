@@ -241,7 +241,7 @@ class PessoaController {
      * @param {Object} res - Response object
      */
     async show(req, res) {
-        console.log(`[DEBUG] Método show chamado para pessoa ID: ${req.params.id}`);
+        // console.log(`[DEBUG] Método show chamado para pessoa ID: ${req.params.id}`);
         try {
             const { id } = req.params;
             const pessoa = await this.pessoaModel.findById(id);
@@ -250,7 +250,7 @@ class PessoaController {
                 throw new Error('Pessoa não encontrada');
             }
             
-            console.log(`[DEBUG] Pessoa encontrada no show:`, { id: pessoa.id_pessoa, nome: pessoa.nome });
+            // console.log(`[DEBUG] Pessoa encontrada no show:`, { id: pessoa.id_pessoa, nome: pessoa.nome });
 
             // Buscar dados de login da pessoa
             const databaseConfig = require('../config/database');
@@ -259,7 +259,7 @@ class PessoaController {
                 [id]
             );
             
-            console.log(`[DEBUG] Dados de login para pessoa ${id}:`, loginData);
+            // console.log(`[DEBUG] Dados de login para pessoa ${id}:`, loginData);
 
             // Buscar módulos vinculados à pessoa
             const modulosVinculados = await databaseConfig.all(
@@ -267,19 +267,19 @@ class PessoaController {
                 [id]
             );
             
-            console.log(`[DEBUG] Módulos vinculados para pessoa ${id}:`, modulosVinculados);
+            // console.log(`[DEBUG] Módulos vinculados para pessoa ${id}:`, modulosVinculados);
 
             // Adicionar dados de login e módulos ao objeto pessoa
             if (loginData) {
                 pessoa.nivelAcesso = loginData.nivelacesso;
                 pessoa.statusLogin = loginData.status;
-                console.log(`[DEBUG] Dados adicionados ao objeto pessoa - nivelAcesso: ${pessoa.nivelAcesso}, statusLogin: ${pessoa.statusLogin}`);
+                // console.log(`[DEBUG] Dados adicionados ao objeto pessoa - nivelAcesso: ${pessoa.nivelAcesso}, statusLogin: ${pessoa.statusLogin}`);
             } else {
-                console.log(`[DEBUG] Nenhum dado de login encontrado para pessoa ${id}`);
+                // console.log(`[DEBUG] Nenhum dado de login encontrado para pessoa ${id}`);
             }
             
             pessoa.modulos = modulosVinculados.map(m => m.id_modulo);
-            console.log(`[DEBUG] Objeto pessoa final no show:`, { id: pessoa.id_pessoa, nome: pessoa.nome, nivelAcesso: pessoa.nivelAcesso, statusLogin: pessoa.statusLogin, modulos: pessoa.modulos });
+            // console.log(`[DEBUG] Objeto pessoa final no show:`, { id: pessoa.id_pessoa, nome: pessoa.nome, nivelAcesso: pessoa.nivelAcesso, statusLogin: pessoa.statusLogin, modulos: pessoa.modulos });
 
             // Para requisições AJAX
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
@@ -322,11 +322,11 @@ class PessoaController {
      * @param {Object} res - Response object
      */
     async edit(req, res) {
-        console.log(`[DEBUG] Método edit chamado para pessoa ID: ${req.params.id}`);
+        // console.log(`[DEBUG] Método edit chamado para pessoa ID: ${req.params.id}`);
         try {
             const { id } = req.params;
             const pessoa = await this.pessoaModel.findById(id);
-            console.log(`[DEBUG] Pessoa encontrada:`, pessoa ? { id: pessoa.id_pessoa, nome: pessoa.nome } : 'null');
+            // console.log(`[DEBUG] Pessoa encontrada:`, pessoa ? { id: pessoa.id_pessoa, nome: pessoa.nome } : 'null');
 
             if (!pessoa) {
                 throw new Error('Pessoa não encontrada');
@@ -346,7 +346,7 @@ class PessoaController {
                 [id]
             );
             
-            console.log(`[DEBUG] Dados de login para pessoa ${id}:`, loginData);
+            // console.log(`[DEBUG] Dados de login para pessoa ${id}:`, loginData);
 
             // Buscar módulos vinculados à pessoa
             const modulosVinculados = await databaseConfig.all(
@@ -354,19 +354,19 @@ class PessoaController {
                 [id]
             );
             
-            console.log(`[DEBUG] Módulos vinculados para pessoa ${id}:`, modulosVinculados);
+            // console.log(`[DEBUG] Módulos vinculados para pessoa ${id}:`, modulosVinculados);
 
             // Adicionar dados de login e módulos ao objeto pessoa
             if (loginData) {
                 pessoa.nivelAcesso = loginData.nivelacesso;
                 pessoa.statusLogin = loginData.status;
-                console.log(`[DEBUG] Dados adicionados ao objeto pessoa - nivelAcesso: ${pessoa.nivelAcesso}, statusLogin: ${pessoa.statusLogin}`);
+                // console.log(`[DEBUG] Dados adicionados ao objeto pessoa - nivelAcesso: ${pessoa.nivelAcesso}, statusLogin: ${pessoa.statusLogin}`);
             } else {
-                console.log(`[DEBUG] Nenhum dado de login encontrado para pessoa ${id}`);
+                // console.log(`[DEBUG] Nenhum dado de login encontrado para pessoa ${id}`);
             }
             
             pessoa.modulos = modulosVinculados.map(m => m.id_modulo);
-            console.log(`[DEBUG] Objeto pessoa final:`, { id: pessoa.id_pessoa, nome: pessoa.nome, nivelAcesso: pessoa.nivelAcesso, statusLogin: pessoa.statusLogin, modulos: pessoa.modulos });
+            // console.log(`[DEBUG] Objeto pessoa final:`, { id: pessoa.id_pessoa, nome: pessoa.nome, nivelAcesso: pessoa.nivelAcesso, statusLogin: pessoa.statusLogin, modulos: pessoa.modulos });
 
             res.render('admin-pessoa-form', {
                 title: `Editar Pessoa - ${pessoa.nome}`,
@@ -476,11 +476,11 @@ class PessoaController {
             }
 
             // Debug headers para verificar detecção AJAX
-            console.log('=== DEBUG HEADERS ===');
-            console.log('req.xhr:', req.xhr);
-            console.log('accept header:', req.headers.accept);
-            console.log('content-type header:', req.headers['content-type']);
-            console.log('all headers:', req.headers);
+            // console.log('=== DEBUG HEADERS ===');
+            // console.log('req.xhr:', req.xhr);
+            // console.log('accept header:', req.headers.accept);
+            // console.log('content-type header:', req.headers['content-type']);
+            // console.log('all headers:', req.headers);
             
             // Para requisições AJAX (incluindo fetch)
             const isAjax = req.xhr || 
@@ -488,10 +488,10 @@ class PessoaController {
                           req.headers['content-type']?.indexOf('json') > -1 ||
                           req.headers['x-requested-with'] === 'XMLHttpRequest';
             
-            console.log('É requisição AJAX?', isAjax);
+            // console.log('É requisição AJAX?', isAjax);
             
             if (isAjax) {
-                console.log('Retornando JSON response');
+                // console.log('Retornando JSON response');
                 return res.json({
                     success: true,
                     data: pessoaAtualizada,
@@ -499,7 +499,7 @@ class PessoaController {
                 });
             }
             
-            console.log('Fazendo redirecionamento...');
+            // console.log('Fazendo redirecionamento...');
 
             // Verificar se é atualização de perfil (quando vem da rota /pessoas/profile)
             const isProfileUpdate = req.originalUrl.includes('/profile') || req.path.includes('/profile');

@@ -580,12 +580,15 @@
             // Definir cor da situação conforme solicitado
             let situacaoColor = '#6c757d'; // cor padrão
             const situacao = plano.pa_situacao || 'Em Edição';
+            const userNivelAcesso = '<%= user.nivelacesso %>';
             if (situacao === 'Em Edição') {
                 situacaoColor = '#ffc107'; // amarelo
             } else if (situacao === 'Em Aprovação') {
                 situacaoColor = '#17a2b8'; // azul claro
             } else if (situacao === 'Aprovado sem Anexo') {
-                    situacaoColor = '#28a745'; // verde
+                situacaoColor = '#28a745'; // verde
+            } else if (situacao === 'Aprovado com Anexo') {
+                situacaoColor = '#007bff'; // azul
             }
             
             // Usar os campos corretos da query
@@ -638,7 +641,12 @@
                     </div>
                     
                     <div class="mt-2">
-                        <p class="mb-1 text-muted"><small><a href="#" onclick="anexarDocumentoPDF(${plano.pa_id_planoatividade})" class="text-decoration-none"><i class="fas fa-paperclip me-1"></i>Anexar plano Assinado</a></small></p>
+                        ${situacao === 'Aprovado com Anexo' ? `
+                            <p class="mb-1 text-muted"><small><a href="/planos-atividade/${plano.pa_id_planoatividade}/download-assinado" class="text-decoration-none"><i class="fas fa-download me-1"></i>Baixar plano Assinado</a></small></p>
+                            ${userNivelAcesso === 'Administrador' ? `<p class="mb-1 text-muted"><small><a href="#" onclick="removerPlanoAssinado(${plano.pa_id_planoatividade})" class="text-decoration-none text-danger"><i class="fas fa-trash me-1"></i>Remover Plano Assinado</a></small></p>` : ''}
+                        ` : `
+                            <p class="mb-1 text-muted"><small><a href="#" onclick="anexarDocumentoPDF(${plano.pa_id_planoatividade})" class="text-decoration-none"><i class="fas fa-paperclip me-1"></i>Anexar plano Assinado</a></small></p>
+                        `}
                     </div>
                 </div>
             `;
@@ -683,12 +691,16 @@
                 if (!plano) {
                     podeEditar = false;
                     motivoDesabilitado = 'Nenhum plano de atividade selecionado';
+                } else if (plano.pa_situacao === 'Aprovado com Anexo') {
+                    // Ninguém pode editar planos "Aprovado com Anexo", nem mesmo administradores
+                    podeEditar = false;
+                    motivoDesabilitado = 'Planos aprovados com anexo não podem ser editados';
                 } else if (userNivelAcesso === 'Administrador') {
-                    // Administradores podem editar qualquer situação
+                    // Administradores podem editar outras situações
                     podeEditar = true;
                 } else {
-                    // Outros usuários não podem editar "Aprovado sem Anexo"
-                    podeEditar = plano.pa_situacao !== 'Aprovado sem Anexo';
+                    // Outros usuários não podem editar "Aprovado sem Anexo" e "Aprovado com Anexo"
+                    podeEditar = plano.pa_situacao !== 'Aprovado sem Anexo' && plano.pa_situacao !== 'Aprovado com Anexo';
                     if (!podeEditar) {
                         motivoDesabilitado = 'Planos aprovados não podem ser editados';
                     }
@@ -1650,7 +1662,23 @@
             return;
         }
         
-        // Gerar PDF do plano
+        const planoAtual = planosAtividade.find(p => p.pa_id_planoatividade == planoAtividadeSelecionadoId);
+        if (!planoAtual) {
+            alert('Plano de atividade não encontrado.');
+            return;
+        }
+        
+        // Se a situação for "Aprovado com Anexo", fazer download do arquivo anexado
+        if (planoAtual.pa_situacao === 'Aprovado com Anexo') {
+            if (planoAtual.pa_url_planoassinado) {
+                window.open(`/planos-atividade/${planoAtividadeSelecionadoId}/download-assinado`, '_blank');
+            } else {
+                alert('Arquivo anexado não encontrado.');
+            }
+            return;
+        }
+        
+        // Caso contrário, gerar PDF do plano
         if (!confirm('Deseja gerar o PDF do plano de atividade selecionado?')) {
             return;
         }
@@ -2496,6 +2524,35 @@
                     <p class="text-muted mt-2 mb-0">Carregando planos de atividade...</p>
                 </div>
             `;
+        }
+    }
+
+    // Função para remover plano assinado (apenas para administradores)
+    async function removerPlanoAssinado(planoId) {
+        if (!confirm('Tem certeza que deseja remover o plano assinado?\n\nEsta ação não pode ser desfeita e o status será alterado para "Aprovado sem Anexo".')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/planos-atividade/${planoId}/remover-assinado`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Plano assinado removido com sucesso!');
+                // Recarregar a página para atualizar a interface
+                window.location.reload();
+            } else {
+                alert(result.message || 'Erro ao remover plano assinado');
+            }
+        } catch (error) {
+            console.error('Erro ao remover plano assinado:', error);
+            alert('Erro ao remover plano assinado');
         }
     }
 

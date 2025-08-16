@@ -2180,9 +2180,38 @@
         definirBadge(aprovadoOrientador, frequencia.aprovado_orientador);
         definirBadge(aprovadoSupervisor, frequencia.aprovado_supervisor);
         
-        // Habilitar botões
-        document.getElementById('btnFreqAtiEditar').disabled = false;
-                document.getElementById('btnFreqAtiLancar').disabled = false;
+        // Verificar se há pelo menos uma aprovação
+        const temAprovacao = frequencia.aprovado_estagiario === 'Sim' || 
+                           frequencia.aprovado_orientador === 'Sim' || 
+                           frequencia.aprovado_supervisor === 'Sim';
+        
+        // Controlar botões Editar e Lançar Dia baseado nas aprovações
+        const btnEditar = document.getElementById('btnFreqAtiEditar');
+        const btnLancar = document.getElementById('btnFreqAtiLancar');
+        
+        if (temAprovacao) {
+            // Desabilitar botões quando há aprovação
+            btnEditar.disabled = true;
+            btnLancar.disabled = true;
+            btnEditar.title = 'Não é possível editar frequência com aprovação';
+            btnLancar.title = 'Não é possível lançar dias em frequência com aprovação';
+            btnEditar.classList.remove('btn-outline-primary');
+            btnEditar.classList.add('btn-outline-secondary');
+            btnLancar.classList.remove('btn-warning');
+            btnLancar.classList.add('btn-outline-secondary');
+        } else {
+            // Habilitar botões quando não há aprovação
+            btnEditar.disabled = false;
+            btnLancar.disabled = false;
+            btnEditar.title = 'Editar frequência selecionada';
+            btnLancar.title = 'Lançar dia na frequência selecionada';
+            btnEditar.classList.remove('btn-outline-secondary');
+            btnEditar.classList.add('btn-outline-primary');
+            btnLancar.classList.remove('btn-outline-secondary');
+            btnLancar.classList.add('btn-warning');
+        }
+        
+        // Botão Gerar PDF sempre habilitado
         document.getElementById('btnFreqAtiGerarPDF').disabled = false;
         document.getElementById('linkFreqAtiAprovar').style.display = 'inline';
         

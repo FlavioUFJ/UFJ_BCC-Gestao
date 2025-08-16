@@ -1231,15 +1231,8 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                             .replace(/\s+/g, '_')
                             .toLowerCase();
                         
-                        // Gerar data e hora atual
-                        const agora = new Date();
-                        const dataHora = agora.toISOString()
-                            .replace(/T/, '_')
-                            .replace(/:/g, '-')
-                            .replace(/\..*/, '');
-                        
                         const extension = path.extname(req.file.originalname);
-                        nomeArquivoFinal = `${nomeEstagiario}-planoAtividade-${dataHora}${extension}`;
+                        nomeArquivoFinal = `${nomeEstagiario}_PlanoAtividade_assinado${extension}`;
                         
                         // Renomear o arquivo
                         const caminhoAntigo = req.file.path;
@@ -1253,7 +1246,7 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                     
                     await databaseConfig.run(
                         'UPDATE campo_estagio_planoatividade SET url_planoassinado = ?, situacao = ?, dataultimaatualizacao = CURRENT_TIMESTAMP WHERE id_planoatividade = ?',
-                        [caminhoRelativo, 'Aprovado sem Anexo', plano_id]
+                        [caminhoRelativo, 'Aprovado com Anexo', plano_id]
                     );
                     
                     console.log('Documento anexado com sucesso:', {

@@ -721,6 +721,13 @@ router.post('/estagios/campo/criar', requireAuth, async (req, res) => {
             numero_matricula
         });
         
+        // Debug específico para tipo_estagio
+        console.log('[DEBUG BACKEND] tipo_estagio recebido:', tipo_estagio);
+        console.log('[DEBUG BACKEND] tipo_estagio type:', typeof tipo_estagio);
+        console.log('[DEBUG BACKEND] tipo_estagio length:', tipo_estagio ? tipo_estagio.length : 'null/undefined');
+        console.log('[DEBUG BACKEND] tipo_estagio charCodes:', tipo_estagio ? Array.from(tipo_estagio).map(c => c.charCodeAt(0)) : 'null/undefined');
+        console.log('[DEBUG BACKEND] req.body completo:', req.body);
+        
         // Validação dos campos obrigatórios
         if (!situacao || !tipo_estagio || !semestre_ano || !cargahoraria || !id_pessoa_curso || !numero_matricula) {
             console.log('[DEBUG] Campos faltando:', {

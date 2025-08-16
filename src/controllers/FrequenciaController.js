@@ -833,15 +833,23 @@ class FrequenciaController {
             
             const registros = await databaseConfig.all(registrosQuery, [id]);
             
-            // Determinar quem aprovou
-              let aprovadoPor = 'Não aprovado';
-              if (frequencia.aprovado_supervisor === 'Sim') {
-                  aprovadoPor = `Aprovado por: ${frequencia.nome_supervisor} (Supervisor)`;
-              } else if (frequencia.aprovado_orientador === 'Sim') {
-                  aprovadoPor = `Aprovado por: ${frequencia.nome_orientador} (Orientador)`;
-              } else if (frequencia.aprovado_estagiario === 'Sim') {
-                  aprovadoPor = `Aprovado por: ${frequencia.nome_estagiario} (Estagiário)`;
-              }
+            // Determinar aprovações para tabela
+            const aprovacaoEstagiario = frequencia.aprovado_estagiario === 'Sim' ? frequencia.nome_estagiario : '';
+            const aprovacaoOrientador = frequencia.aprovado_orientador === 'Sim' ? frequencia.nome_orientador : '';
+            const aprovacaoSupervisor = frequencia.aprovado_supervisor === 'Sim' ? frequencia.nome_supervisor : '';
+            
+            const temAprovacao = aprovacaoEstagiario || aprovacaoOrientador || aprovacaoSupervisor;
+            
+            // Formatar data da última atualização
+            const dataUltimaAtualizacao = frequencia.dataultimaatualizacao 
+                ? new Date(frequencia.dataultimaatualizacao).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                : 'Data não disponível';
             
             // Organizar registros em 4 colunas
             const registrosPorColuna = [];
@@ -954,6 +962,39 @@ class FrequenciaController {
                         color: #2c5aa0;
                         margin-top: 15px;
                     }
+                    .tabela-aprovacao {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 15px;
+                    }
+                    .tabela-aprovacao th {
+                        background-color: #f8f9fa;
+                        padding: 10px;
+                        text-align: center;
+                        font-weight: bold;
+                        border: 1px solid #ddd;
+                    }
+                    .tabela-aprovacao td {
+                        padding: 10px;
+                        text-align: center;
+                        border: 1px solid #ddd;
+                        vertical-align: top;
+                    }
+                    .nome-aprovador {
+                        font-weight: bold;
+                        color: #2c5aa0;
+                    }
+                    .categoria-aprovador {
+                        font-size: 10px;
+                        color: #666;
+                        margin-top: 3px;
+                    }
+                    .nao-aprovado {
+                        text-align: center;
+                        font-weight: bold;
+                        color: #dc3545;
+                        padding: 15px;
+                    }
                 </style>
             </head>
             <body>
@@ -969,10 +1010,18 @@ class FrequenciaController {
                          <span>${frequencia.tipo_estagio}</span>
                      </div>
                      <div class="info-row">
-                         <span class="info-label">Período:</span>
-                         <span>${frequencia.mesdereferencia} - ${frequencia.semestre_ano}</span>
+                         <span class="info-label">Orientador:</span>
+                         <span>${frequencia.nome_orientador}</span>
                          <span class="info-label" style="margin-left: 50px;">Total de Horas:</span>
                          <span>${frequencia.total_hora_mesreferencia || '0'}h</span>
+                     </div>
+                     <div class="info-row">
+                         <span class="info-label">Supervisor:</span>
+                         <span>${frequencia.nome_supervisor}</span>
+                     </div>
+                     <div class="info-row">
+                         <span class="info-label">Período:</span>
+                         <span>${frequencia.mesdereferencia} - ${frequencia.semestre_ano}</span>
                      </div>
                  </div>
                 
@@ -1001,25 +1050,47 @@ class FrequenciaController {
                 ` : ''}
                 
                 <div class="footer">
-                    <div class="assinaturas">
-                        <div class="assinatura">
-                            <div class="linha-assinatura"></div>
-                            <div class="nome-pessoa">${frequencia.nome_estagiario}</div>
-                            <div class="cargo-pessoa">Estagiário</div>
-                        </div>
-                        <div class="assinatura">
-                            <div class="linha-assinatura"></div>
-                            <div class="nome-pessoa">${frequencia.nome_supervisor || 'N/A'}</div>
-                            <div class="cargo-pessoa">Supervisor</div>
-                        </div>
-                        <div class="assinatura">
-                            <div class="linha-assinatura"></div>
-                            <div class="nome-pessoa">${frequencia.nome_orientador || 'N/A'}</div>
-                            <div class="cargo-pessoa">Orientador</div>
-                        </div>
-                    </div>
-                    <div class="aprovacao">
-                        ${aprovadoPor}
+                    ${temAprovacao ? `
+                        <table class="tabela-aprovacao">
+                            <thead>
+                                <tr>
+                                    <th colspan="3">Relatório aprovado por</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        ${aprovacaoEstagiario ? `
+                                            <div class="nome-aprovador">${aprovacaoEstagiario}</div>
+                                            <div class="categoria-aprovador">Estagiário</div>
+                                        ` : ''}
+                                    </td>
+                                    <td>
+                                        ${aprovacaoOrientador ? `
+                                            <div class="nome-aprovador">${aprovacaoOrientador}</div>
+                                            <div class="categoria-aprovador">Orientador</div>
+                                        ` : ''}
+                                    </td>
+                                    <td>
+                                        ${aprovacaoSupervisor ? `
+                                            <div class="nome-aprovador">${aprovacaoSupervisor}</div>
+                                            <div class="categoria-aprovador">Supervisor</div>
+                                        ` : ''}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    ` : `
+                        <table class="tabela-aprovacao">
+                            <tbody>
+                                <tr>
+                                    <td colspan="3" class="nao-aprovado">Relatório não aprovado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    `}
+                    <div class="data-atualizacao" style="text-align: center; margin-top: 15px; font-size: 12px; color: #666;">
+                        Registro das frequências atualizado pela última vez em ${dataUltimaAtualizacao}
                     </div>
                 </div>
             </body>

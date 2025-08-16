@@ -1389,8 +1389,9 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
                     ce.id_pessoa_estagiario,
                     ce.id_pessoa_orientador,
                     ce.id_pessoa_supervisor
-                FROM campo_estagio ce
-                WHERE ce.id_campo_estagio = ?
+                FROM campo_estagio_planoatividade pa
+                INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
+                WHERE pa.id_planoatividade = ?
             `;
             
             const result = await databaseConfig.get(query, [id]);

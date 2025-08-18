@@ -70,9 +70,9 @@
                                 <button type="button" class="btn btn-success btn-sm" id="btnSalvarCabecalho" onclick="salvarCampoEstagio()">
                                     <i class="fas fa-save me-1"></i>Salvar
                                 </button>
-                                <a href="/estagios/dashboard" class="btn btn-light btn-sm">
+                                <button type="button" class="btn btn-light btn-sm" onclick="voltarPaginaAnterior()">
                                     <i class="fas fa-arrow-left me-1"></i>Voltar
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1165,11 +1165,17 @@
         }
 
         function voltarPaginaAnterior() {
-            // Tentar voltar para a página anterior
-            if (window.history.length > 1) {
+            // Verificar se há parâmetro referrer passado pelo servidor
+            const referrer = '<%= typeof referrer !== "undefined" && referrer ? referrer : "" %>';
+            
+            if (referrer === 'dashboard-administrativo') {
+                // Voltar para o dashboard administrativo
+                window.location.href = '/secure/estagios/dashboard-administrativo';
+            } else if (window.history.length > 1) {
+                // Tentar voltar para a página anterior
                 window.history.back();
             } else {
-                // Se não há histórico, ir para o dashboard
+                // Se não há histórico, ir para o dashboard padrão
                 window.location.href = '/estagios/dashboard';
             }
             

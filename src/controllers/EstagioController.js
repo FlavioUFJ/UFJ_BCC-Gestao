@@ -746,6 +746,42 @@ class EstagioController {
             });
         }
     }
+
+    /**
+     * Busca frequências por plano de atividade (para dashboard administrativo)
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async buscarFrequenciasPorPlano(req, res) {
+        try {
+            const { planoId } = req.params;
+            const user = req.session.user;
+
+            // Verificar se o usuário tem permissão (apenas administradores)
+            if (user.nivelacesso !== 'Administrador') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.'
+                });
+            }
+
+            // Buscar frequências do plano de atividade
+            const frequencias = await this.frequenciaService.buscarFrequenciasPorPlanoAtividade(planoId);
+
+            // Retornar dados em formato JSON
+            res.json({
+                success: true,
+                data: frequencias
+            });
+
+        } catch (error) {
+            console.error('Erro ao buscar frequências por plano:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
 }
 
 module.exports = EstagioController;

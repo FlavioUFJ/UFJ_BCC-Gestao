@@ -437,6 +437,53 @@ class FrequenciaService {
     }
     
     /**
+     * Busca frequências por plano de atividade (para dashboard administrativo)
+     * @param {number} planoAtividadeId - ID do plano de atividade
+     * @returns {Promise<Array>}
+     */
+    async buscarFrequenciasPorPlanoAtividade(planoAtividadeId) {
+        try {
+            const query = `
+                SELECT 
+                    cef.id_campo_estagio_frequencia,
+                    cef.id_planoatividade,
+                    cef.data_abertura,
+                    cef.data_encerramento,
+                    cef.mesdereferencia,
+                    cef.total_hora_mesreferencia,
+                    cef.aprovado_estagiario,
+                    cef.aprovado_orientador,
+                    cef.aprovado_supervisor,
+                    cef.resumo_atividades,
+                    cef.dataultimaatualizacao,
+                    pe.nome AS nome_estagiario,
+                    po.nome AS nome_orientador,
+                    ps.nome AS nome_supervisor,
+                    pc.nome AS nome_concedente,
+                    ce.tipo_estagio,
+                    ce.semestre_ano,
+                    ce.situacao AS ce_situacao,
+                    pa.situacao AS pa_situacao
+                FROM campo_estagio_frequencia cef
+                INNER JOIN campo_estagio_planoatividade pa ON cef.id_planoatividade = pa.id_planoatividade
+                INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                WHERE cef.id_planoatividade = ?
+                ORDER BY cef.mesdereferencia DESC, cef.dataultimaatualizacao DESC
+            `;
+
+            const frequencias = await databaseConfig.all(query, [planoAtividadeId]);
+            return frequencias || [];
+        } catch (error) {
+            console.error('Erro ao buscar frequências por plano de atividade:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Método auxiliar para calcular total de horas
      * @param {string} horaInicial - Hora inicial no formato HH:MM
      * @param {string} horaFinal - Hora final no formato HH:MM

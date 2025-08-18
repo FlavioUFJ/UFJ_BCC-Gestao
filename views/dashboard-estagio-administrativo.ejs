@@ -187,13 +187,12 @@
                         <table class="table table-hover mb-0" id="tabelaPlanosAtividade">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Período</th>
-                                    <th>Data Início</th>
-                                    <th>Data Fim</th>
                                     <th>Situação</th>
-                                    <th>Aprovado Estagiário</th>
-                                    <th>Aprovado Orientador</th>
-                                    <th>Aprovado Supervisor</th>
+                                    <th>Data Inicial</th>
+                                    <th>Data Final</th>
+                                    <th>Carga Horária</th>
+                                    <th>Atividades</th>
+                                    <th>Última Atualização</th>
                                     <th width="100">Ações</th>
                                 </tr>
                             </thead>
@@ -224,10 +223,8 @@
                         <table class="table table-hover mb-0" id="tabelaFrequencias">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Mês/Ano</th>
-                                    <th>Data Início</th>
-                                    <th>Data Encerramento</th>
-                                    <th>Total Horas</th>
+                                    <th>Mês de Referência</th>
+                                    <th>Total de Horas</th>
                                     <th>Aprovado Estagiário</th>
                                     <th>Aprovado Orientador</th>
                                     <th>Aprovado Supervisor</th>
@@ -440,46 +437,51 @@ const DashboardAdmin = {
             return;
         }
         
-        planos.forEach(plano => {
+        planos.forEach((plano, index) => {
             const tr = document.createElement('tr');
             tr.style.cursor = 'pointer';
-            tr.dataset.planoId = plano.id_plano_atividade;
+            tr.dataset.planoId = plano.id_planoatividade;
             
             tr.innerHTML = `
-                <td>${plano.periodo || 'N/A'}</td>
-                <td>${plano.data_inicio ? new Date(plano.data_inicio).toLocaleDateString('pt-BR') : 'N/A'}</td>
-                <td>${plano.data_fim ? new Date(plano.data_fim).toLocaleDateString('pt-BR') : 'N/A'}</td>
                 <td>
                     <span class="badge bg-info">${plano.situacao || 'N/A'}</span>
                 </td>
+                <td>${plano.data_inicial ? new Date(plano.data_inicial).toLocaleDateString('pt-BR') : 'N/A'}</td>
+                <td>${plano.data_final ? new Date(plano.data_final).toLocaleDateString('pt-BR') : 'N/A'}</td>
                 <td>
-                    <span class="badge ${plano.aprovado_estagiario === 'Sim' ? 'bg-success' : 'bg-secondary'}">
-                        ${plano.aprovado_estagiario || 'Não'}
+                    <span class="badge bg-primary">
+                        ${plano.cargahoraria || 'N/A'}h
                     </span>
                 </td>
                 <td>
-                    <span class="badge ${plano.aprovado_orientador === 'Sim' ? 'bg-success' : 'bg-secondary'}">
-                        ${plano.aprovado_orientador || 'Não'}
+                    <span class="text-truncate" style="max-width: 200px; display: inline-block;" title="${plano.atividades || 'N/A'}">
+                        ${plano.atividades || 'N/A'}
                     </span>
                 </td>
+                <td>${plano.dataultimaatualizacao || 'N/A'}</td>
                 <td>
-                    <span class="badge ${plano.aprovado_supervisor === 'Sim' ? 'bg-success' : 'bg-secondary'}">
-                        ${plano.aprovado_supervisor || 'Não'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarPlano(${plano.id_plano_atividade})">
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarPlano(${plano.id_planoatividade})">
                         <i class="fas fa-edit"></i>
                     </button>
                 </td>
             `;
             
             tr.addEventListener('click', () => {
-                this.selecionarPlano(plano.id_plano_atividade, tr);
+                this.selecionarPlano(plano.id_planoatividade, tr);
             });
             
             tbody.appendChild(tr);
         });
+        
+        // Se houver apenas um plano, selecioná-lo automaticamente
+        if (planos.length === 1) {
+            const primeiraLinha = tbody.querySelector('tr');
+            if (primeiraLinha) {
+                setTimeout(() => {
+                    this.selecionarPlano(planos[0].id_planoatividade, primeiraLinha);
+                }, 100);
+            }
+        }
     },
     
     async selecionarPlano(planoId, tr) {
@@ -498,7 +500,7 @@ const DashboardAdmin = {
     
     async carregarFrequencias(planoId) {
         try {
-            const response = await fetch(`/secure/estagios/dashboard-administrativo/frequencias/${planoId}`);
+            const response = await fetch(`/estagios/dashboard-administrativo/frequencias/${planoId}`);
             const dados = await response.json();
             
             if (dados.success) {
@@ -527,14 +529,9 @@ const DashboardAdmin = {
         frequencias.forEach(freq => {
             const tr = document.createElement('tr');
             
-            const status = freq.data_encerramento ? 'Encerrada' : 'Aberta';
-            const statusClass = freq.data_encerramento ? 'bg-success' : 'bg-warning text-dark';
-            
             tr.innerHTML = `
-                <td>${freq.mes_ano || 'N/A'}</td>
-                <td>${freq.data_inicio ? new Date(freq.data_inicio).toLocaleDateString('pt-BR') : 'N/A'}</td>
-                <td>${freq.data_encerramento ? new Date(freq.data_encerramento).toLocaleDateString('pt-BR') : 'N/A'}</td>
-                <td>${freq.total_horas || '00:00'}</td>
+                <td>${freq.mesdereferencia || 'N/A'}</td>
+                <td>${freq.total_hora_mesreferencia || '0'}</td>
                 <td>
                     <span class="badge ${freq.aprovado_estagiario === 'Sim' ? 'bg-success' : 'bg-secondary'}">
                         ${freq.aprovado_estagiario || 'Não'}
@@ -551,10 +548,7 @@ const DashboardAdmin = {
                     </span>
                 </td>
                 <td>
-                    <span class="badge ${statusClass}">${status}</span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarFrequencia(${freq.id_frequencia})">
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarFrequencia(${freq.id_frequencia || 0})">
                         <i class="fas fa-edit"></i>
                     </button>
                 </td>
@@ -620,12 +614,12 @@ const DashboardAdmin = {
     },
     
     editarCampo(campoId) {
-        window.location.href = `/secure/estagios/campo/editar/${campoId}`;
+        window.location.href = `/secure/estagios/campo/editar/${campoId}?referrer=dashboard-administrativo`;
     },
     
     editarPlano(planoId) {
-        // Implementar redirecionamento para edição de plano
-        console.log('Editar plano:', planoId);
+        // Redirecionar para o formulário de lançamento de frequência
+        window.location.href = `/frequencias/novo?planoAtividadeId=${planoId}&referrer=dashboard-administrativo`;
     },
     
     editarFrequencia(frequenciaId) {

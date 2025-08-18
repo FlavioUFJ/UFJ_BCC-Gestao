@@ -66,4 +66,7 @@ router.delete('/:id',
 // GET /estagios/api/user/:userId/:userType - Buscar estágios por usuário
 router.get('/api/user/:userId/:userType', (req, res) => estagioController.getByUser(req, res));
 
+// GET /estagios/dashboard-administrativo/frequencias/:planoId - Buscar frequências por plano de atividade (dashboard administrativo)
+router.get('/dashboard-administrativo/frequencias/:planoId', (req, res) => estagioController.buscarFrequenciasPorPlano(req, res));
+
 module.exports = router;

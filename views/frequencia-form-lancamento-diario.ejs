@@ -155,10 +155,18 @@
         
         // Função para voltar ao formulário anterior
         function voltarFormularioAnterior() {
-            // Voltar para a página anterior ou dashboard
-            if (window.history.length > 1) {
+            // Verificar se foi chamado do dashboard administrativo
+            const urlParams = new URLSearchParams(window.location.search);
+            const referrer = urlParams.get('referrer');
+            
+            if (referrer === 'dashboard-administrativo') {
+                // Voltar para o dashboard administrativo
+                window.location.href = '/estagios/dashboard-administrativo';
+            } else if (window.history.length > 1) {
+                // Voltar para a página anterior
                 window.history.back();
             } else {
+                // Fallback para o dashboard padrão
                 window.location.href = '/estagios/dashboard';
             }
         }

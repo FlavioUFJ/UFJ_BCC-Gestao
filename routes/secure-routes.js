@@ -351,7 +351,8 @@ router.get('/estagios/campo/editar/:id', requireAuth, async (req, res) => {
             isAdmin: await dbHelper.isAdmin(user),
             currentPage: 'campo-estagio-editar',
             campoEstagio: campoEstagio,
-            isEdicao: true
+            isEdicao: true,
+            referrer: req.query.referrer || null
         });
 
     } catch (error) {
@@ -1345,17 +1346,21 @@ router.get('/estagios/dashboard-administrativo/planos/:campoId', requireAuth, as
         
         const query = `
             SELECT 
-                id_plano_atividade,
-                periodo,
-                data_inicio,
-                data_fim,
-                situacao,
-                aprovado_estagiario,
-                aprovado_orientador,
-                aprovado_supervisor
-            FROM campo_estagio_planoatividade
-            WHERE id_campo_estagio = ?
-            ORDER BY data_inicio DESC
+                ce.id_planoatividade, 
+                ce.id_campo_estagio, 
+                ce.situacao, 
+                ce.data_inicial, 
+                ce.data_final, 
+                ce.cargahoraria, 
+                ce.atividades, 
+                ce.dataultimaatualizacao, 
+                ce.url_planoassinado
+            FROM 
+                campo_estagio_planoatividade AS ce 
+            WHERE 
+                ce.id_campo_estagio = ?
+            GROUP BY ce.id_planoatividade
+            ORDER BY ce.dataultimaatualizacao DESC
         `;
         
         const planos = await db.all(query, [campoId]);
@@ -1384,43 +1389,27 @@ router.get('/estagios/dashboard-administrativo/frequencias/:planoId', requireAut
         
         const query = `
             SELECT 
-                cf.id_frequencia,
-                cf.mes_ano,
-                cf.data_inicio,
-                cf.data_encerramento,
-                cf.aprovado_estagiario,
-                cf.aprovado_orientador,
-                cf.aprovado_supervisor,
-                COALESCE(
-                    (
-                        SELECT SUM(
-                            CASE 
-                                WHEN fr.hora_fim IS NOT NULL AND fr.hora_inicio IS NOT NULL 
-                                THEN (strftime('%s', fr.hora_fim) - strftime('%s', fr.hora_inicio)) / 3600.0
-                                ELSE 0
-                            END
-                        )
-                        FROM frequencia_registrodiario fr 
-                        WHERE fr.id_frequencia = cf.id_frequencia
-                    ), 0
-                ) as total_horas_decimal
-            FROM campo_estagio_frequencia cf
-            WHERE cf.id_plano_atividade = ?
-            ORDER BY cf.data_inicio DESC
+                cef.mesdereferencia, 
+                cef.total_hora_mesreferencia, 
+                cef.aprovado_estagiario, 
+                cef.aprovado_orientador, 
+                cef.aprovado_supervisor
+            FROM 
+                campo_estagio_frequencia AS cef
+            WHERE cef.id_planoatividade = ?
+            ORDER BY cef.mesdereferencia DESC
         `;
         
         const frequencias = await db.all(query, [planoId]);
         
-        // Converter horas decimais para formato HH:MM
+        // Formatar dados das frequências
         const frequenciasFormatadas = frequencias.map(freq => {
-            const horasDecimal = freq.total_horas_decimal || 0;
-            const horas = Math.floor(horasDecimal);
-            const minutos = Math.round((horasDecimal - horas) * 60);
-            const totalHoras = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
-            
             return {
-                ...freq,
-                total_horas: totalHoras
+                mesdereferencia: freq.mesdereferencia,
+                total_hora_mesreferencia: freq.total_hora_mesreferencia,
+                aprovado_estagiario: freq.aprovado_estagiario,
+                aprovado_orientador: freq.aprovado_orientador,
+                aprovado_supervisor: freq.aprovado_supervisor
             };
         });
         

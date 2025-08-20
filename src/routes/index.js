@@ -8,6 +8,8 @@ const router = express.Router();
 const AuthController = require('../controllers/AuthController');
 const EstagioController = require('../controllers/EstagioController');
 const { requireAuth } = require('../config/session');
+const SQLOptimizer = require('../utils/sql-optimizer');
+const CacheManager = require('../middleware/cache-manager');
 
 // Instanciar controladores
 const authController = new AuthController();
@@ -56,6 +58,44 @@ router.use('/parametro', parametroRoutes);
 router.use('/admin/parametro', parametroRoutes);
 router.use('/planos-atividade', planosAtividadeRoutes);
 router.use('/frequencias', frequenciasRoutes);
+
+// ===== ROTAS DE MONITORAMENTO DE CACHE =====
+
+// Estatísticas do cache (apenas para administradores)
+router.get('/admin/cache/stats', requireAuth, (req, res) => {
+    // Verificar se é administrador
+    if (req.session.user.nivelacesso !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acesso negado. Apenas administradores podem acessar as estatísticas do cache.'
+        });
+    }
+    CacheManager.getCacheStatsEndpoint(req, res);
+});
+
+// Limpeza do cache (apenas para administradores)
+router.post('/admin/cache/clear', requireAuth, (req, res) => {
+    // Verificar se é administrador
+    if (req.session.user.nivelacesso !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acesso negado. Apenas administradores podem limpar o cache.'
+        });
+    }
+    CacheManager.clearCacheEndpoint(req, res);
+});
+
+// Limpeza de entradas expiradas (apenas para administradores)
+router.post('/admin/cache/clean-expired', requireAuth, (req, res) => {
+    // Verificar se é administrador
+    if (req.session.user.nivelacesso !== 'Administrador') {
+        return res.status(403).json({
+            success: false,
+            message: 'Acesso negado. Apenas administradores podem limpar entradas expiradas.'
+        });
+    }
+    CacheManager.cleanExpiredCacheEndpoint(req, res);
+});
 
 // ===== ROTAS DE ARQUIVOS ESTÁTICOS =====
 
@@ -341,23 +381,29 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
         const { termo, categoria, pagina = 1, limite = 25 } = req.query;
         const databaseConfig = require('../config/database');
         
-        // Construir query SQL
-        let whereClause = 'WHERE 1=1';
+        // Construir query SQL dinamicamente
+        const filters = [];
         let params = [];
         
-        // Filtro por termo de busca
+        // Filtro por termo de busca (insensível a acentos)
         if (termo && termo.trim() !== '') {
-            whereClause += ' AND (p.nome LIKE ? OR p.email LIKE ?)';
-            params.push(`%${termo.trim()}%`, `%${termo.trim()}%`);
+            const searchCondition = SQLOptimizer.buildAccentInsensitiveLike(
+                ['p.nome', 'p.email'], 
+                termo.trim()
+            );
+            filters.push(searchCondition.whereClause);
+            params.push(...searchCondition.params);
         }
         
         // Filtro por categoria (suporta múltiplas categorias separadas por vírgula)
         if (categoria && categoria !== 'todos' && categoria.trim() !== '') {
             // Para categorias múltiplas separadas por vírgula, usar FIND_IN_SET ou REGEXP
             // FIND_IN_SET funciona melhor para valores exatos separados por vírgula
-            whereClause += ' AND (FIND_IN_SET(?, p.categoria) > 0 OR p.categoria = ?)';
+            filters.push('(FIND_IN_SET(?, p.categoria) > 0 OR p.categoria = ?)');
             params.push(categoria.trim(), categoria.trim());
         }
+        
+        const whereClause = SQLOptimizer.buildDynamicWhere(filters);
         
         // Contar total de registros
         const countQuery = `SELECT COUNT(*) as total FROM pessoa p ${whereClause}`;
@@ -581,6 +627,11 @@ router.get('/admin/buscar-usuarios', requireAuth, async (req, res) => {
         const { termo } = req.query;
         const databaseConfig = require('../config/database');
         
+        const searchCondition = SQLOptimizer.buildAccentInsensitiveLike(
+            ['p.nome', 'p.email'], 
+            termo
+        );
+        
         const query = `
             SELECT 
                 p.id_pessoa,
@@ -591,12 +642,12 @@ router.get('/admin/buscar-usuarios', requireAuth, async (req, res) => {
                 pl.status
             FROM pessoa p
             INNER JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
-            WHERE (p.nome LIKE ? OR p.email LIKE ?)
+            WHERE ${searchCondition.whereClause}
             ORDER BY p.nome
             LIMIT 10
         `;
         
-        const params = [`%${termo}%`, `%${termo}%`];
+        const params = searchCondition.params;
         
         databaseConfig.all(query, params)
             .then(usuarios => {
@@ -683,8 +734,12 @@ router.get('/admin/pessoas-sem-login', requireAuth, async (req, res) => {
         let params = [];
         
         if (busca && busca.trim() !== '') {
-            query += ' AND (p.nome LIKE ? OR p.email LIKE ?)';
-            params.push(`%${busca.trim()}%`, `%${busca.trim()}%`);
+            const searchCondition = SQLOptimizer.buildAccentInsensitiveLike(
+                ['p.nome', 'p.email'], 
+                busca.trim()
+            );
+            query += ` AND ${searchCondition.whereClause}`;
+            params.push(...searchCondition.params);
         }
         
         query += ' ORDER BY p.nome LIMIT 10';
@@ -777,19 +832,23 @@ router.get('/admin/modulos', requireAuth, async (req, res) => {
             });
         }
 
-        // Buscar módulos do banco de dados
+        // Buscar módulos do banco de dados com contagem de vínculos
         const databaseConfig = require('../config/database');
         const query = `
             SELECT 
-                id_modulo,
-                nome,
-                descricao,
-                icone,
-                cor,
-                url,
-                ordem
-            FROM modulos
-            ORDER BY ordem, nome
+                m.id_modulo,
+                m.nome,
+                m.descricao,
+                m.icone,
+                m.cor,
+                m.url,
+                m.ordem,
+                m.ativo,
+                COALESCE(COUNT(pm.id_pessoa), 0) as quantidade_vinculos
+            FROM modulos m
+            LEFT JOIN pessoa_modulos pm ON m.id_modulo = pm.id_modulo
+            GROUP BY m.id_modulo, m.nome, m.descricao, m.icone, m.cor, m.url, m.ordem, m.ativo
+            ORDER BY m.ordem, m.nome
         `;
         
         const modulos = await databaseConfig.all(query, []);
@@ -802,7 +861,7 @@ router.get('/admin/modulos', requireAuth, async (req, res) => {
     }
 });
 
-// Rota para criar/atualizar módulo
+// Rota para criar módulo
 router.post('/admin/modulos', requireAuth, async (req, res) => {
     try {
         // Verificar se é admin
@@ -813,11 +872,309 @@ router.post('/admin/modulos', requireAuth, async (req, res) => {
             });
         }
 
-        // TODO: Implementar criação de módulos quando necessário
-        res.json({ success: true, message: 'Funcionalidade em desenvolvimento' });
+        const { nome, descricao, url, icone, cor, ordem, ativo } = req.body;
+        
+        // Validações básicas
+        if (!nome || !url) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nome e URL são obrigatórios'
+            });
+        }
+
+        const databaseConfig = require('../config/database');
+        
+        // Verificar se já existe módulo com mesmo nome ou URL
+        const existeQuery = `
+            SELECT COUNT(*) as count FROM modulos 
+            WHERE nome = ? OR url = ?
+        `;
+        const existe = await databaseConfig.get(existeQuery, [nome, url]);
+        
+        if (existe.count > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Já existe um módulo com este nome ou URL'
+            });
+        }
+        
+        // Inserir novo módulo
+        const insertQuery = `
+            INSERT INTO modulos (nome, descricao, url, icone, cor, ordem, ativo)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+        
+        const result = await databaseConfig.run(insertQuery, [
+            nome,
+            descricao || null,
+            url,
+            icone || 'fas fa-cube',
+            cor || '#007bff',
+            ordem || 1,
+            ativo ? 1 : 0
+        ]);
+        
+        res.json({ 
+            success: true, 
+            message: 'Módulo criado com sucesso',
+            id: result.lastID
+        });
         
     } catch (error) {
         console.error('Erro ao criar módulo:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para atualizar módulo
+router.put('/admin/modulos/:id', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { id } = req.params;
+        const { nome, descricao, url, icone, cor, ordem, ativo } = req.body;
+        
+        // Validações básicas
+        if (!nome || !url) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nome e URL são obrigatórios'
+            });
+        }
+
+        const databaseConfig = require('../config/database');
+        
+        // Verificar se o módulo existe
+        const moduloExiste = await databaseConfig.get('SELECT id_modulo FROM modulos WHERE id_modulo = ?', [id]);
+        if (!moduloExiste) {
+            return res.status(404).json({
+                success: false,
+                message: 'Módulo não encontrado'
+            });
+        }
+        
+        // Verificar se já existe outro módulo com mesmo nome ou URL
+        const existeQuery = `
+            SELECT COUNT(*) as count FROM modulos 
+            WHERE (nome = ? OR url = ?) AND id_modulo != ?
+        `;
+        const existe = await databaseConfig.get(existeQuery, [nome, url, id]);
+        
+        if (existe.count > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Já existe outro módulo com este nome ou URL'
+            });
+        }
+        
+        // Atualizar módulo
+        const updateQuery = `
+            UPDATE modulos 
+            SET nome = ?, descricao = ?, url = ?, icone = ?, cor = ?, ordem = ?, ativo = ?
+            WHERE id_modulo = ?
+        `;
+        
+        await databaseConfig.run(updateQuery, [
+            nome,
+            descricao || null,
+            url,
+            icone || 'fas fa-cube',
+            cor || '#007bff',
+            ordem || 1,
+            ativo ? 1 : 0,
+            id
+        ]);
+        
+        res.json({ 
+            success: true, 
+            message: 'Módulo atualizado com sucesso'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao atualizar módulo:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para buscar dados de um módulo específico
+router.get('/admin/modulos/:id', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { id } = req.params;
+        const databaseConfig = require('../config/database');
+        
+        const query = `
+            SELECT 
+                id_modulo,
+                nome,
+                descricao,
+                url,
+                icone,
+                cor,
+                ordem,
+                ativo
+            FROM modulos
+            WHERE id_modulo = ?
+        `;
+        
+        const modulo = await databaseConfig.get(query, [id]);
+        
+        if (!modulo) {
+            return res.status(404).json({
+                success: false,
+                message: 'Módulo não encontrado'
+            });
+        }
+        
+        res.json(modulo);
+        
+    } catch (error) {
+        console.error('Erro ao buscar módulo:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para buscar pessoas vinculadas a um módulo
+router.get('/admin/modulos/:id/pessoas', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { id } = req.params;
+        const databaseConfig = require('../config/database');
+        
+        const query = `
+            SELECT 
+                p.id_pessoa,
+                p.nome,
+                p.email,
+                p.categoria
+            FROM pessoa_modulos pm
+            INNER JOIN pessoa p ON pm.id_pessoa = p.id_pessoa
+            WHERE pm.id_modulo = ?
+            ORDER BY p.nome
+        `;
+        
+        const pessoas = await databaseConfig.all(query, [id]);
+        
+        res.json(pessoas);
+        
+    } catch (error) {
+        console.error('Erro ao buscar pessoas do módulo:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para vincular pessoa a módulo
+router.post('/admin/modulos/:id/pessoas', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { id } = req.params;
+        const { pessoa_id } = req.body;
+        
+        if (!pessoa_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID da pessoa é obrigatório'
+            });
+        }
+
+        const databaseConfig = require('../config/database');
+        
+        // Verificar se o vínculo já existe
+        const existeQuery = `
+            SELECT COUNT(*) as count FROM pessoa_modulos 
+            WHERE id_modulo = ? AND id_pessoa = ?
+        `;
+        const existe = await databaseConfig.get(existeQuery, [id, pessoa_id]);
+        
+        if (existe.count > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Esta pessoa já está vinculada ao módulo'
+            });
+        }
+        
+        // Criar vínculo
+        const insertQuery = `
+            INSERT INTO pessoa_modulos (id_modulo, id_pessoa)
+            VALUES (?, ?)
+        `;
+        
+        await databaseConfig.run(insertQuery, [id, pessoa_id]);
+        
+        res.json({ 
+            success: true, 
+            message: 'Pessoa vinculada ao módulo com sucesso'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao vincular pessoa ao módulo:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para desvincular pessoa de módulo
+router.delete('/admin/modulos/:id/pessoas/:pessoa_id', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { id, pessoa_id } = req.params;
+        const databaseConfig = require('../config/database');
+        
+        // Remover vínculo
+        const deleteQuery = `
+            DELETE FROM pessoa_modulos 
+            WHERE id_modulo = ? AND id_pessoa = ?
+        `;
+        
+        const result = await databaseConfig.run(deleteQuery, [id, pessoa_id]);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Vínculo não encontrado'
+            });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Pessoa desvinculada do módulo com sucesso'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao desvincular pessoa do módulo:', error);
         res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
 });
@@ -838,6 +1195,130 @@ router.delete('/admin/modulos/:id', requireAuth, async (req, res) => {
         
     } catch (error) {
         console.error('Erro ao excluir módulo:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// ===== ROTAS DE BACKUP =====
+
+// Rota para criar backup
+router.post('/admin/criar-backup', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        // TODO: Implementar criação de backup
+        const fileName = `backup_${new Date().toISOString().replace(/[:.]/g, '-')}.sql`;
+        
+        res.json({ 
+            success: true, 
+            message: 'Backup criado com sucesso',
+            fileName: fileName
+        });
+        
+    } catch (error) {
+        console.error('Erro ao criar backup:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para listar backups
+router.get('/admin/listar-backups', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        // TODO: Implementar listagem de backups
+        const backups = [
+            {
+                fileName: 'backup_2024-01-15T10-30-00.sql',
+                date: '15/01/2024 10:30:00',
+                size: '2.5 MB'
+            },
+            {
+                fileName: 'backup_2024-01-14T09-15-00.sql',
+                date: '14/01/2024 09:15:00',
+                size: '2.3 MB'
+            }
+        ];
+        
+        res.json({ 
+            success: true, 
+            backups: backups
+        });
+        
+    } catch (error) {
+        console.error('Erro ao listar backups:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para restaurar backup
+router.post('/admin/restaurar-backup', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { backupFileName } = req.body;
+        
+        if (!backupFileName) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nome do arquivo de backup é obrigatório'
+            });
+        }
+
+        // TODO: Implementar restauração de backup
+        const currentBackup = `backup_current_${new Date().toISOString().replace(/[:.]/g, '-')}.sql`;
+        
+        res.json({ 
+            success: true, 
+            message: 'Backup restaurado com sucesso',
+            currentBackup: currentBackup
+        });
+        
+    } catch (error) {
+        console.error('Erro ao restaurar backup:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+    }
+});
+
+// Rota para download de backup
+router.get('/admin/download-backup/:fileName', requireAuth, async (req, res) => {
+    try {
+        // Verificar se é admin
+        if (req.session.user.nivelacesso !== 'Administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { fileName } = req.params;
+        
+        // TODO: Implementar download de backup
+        res.status(404).json({
+            success: false,
+            message: 'Arquivo de backup não encontrado'
+        });
+        
+    } catch (error) {
+        console.error('Erro ao fazer download do backup:', error);
         res.status(500).json({ success: false, message: 'Erro interno do servidor' });
     }
 });

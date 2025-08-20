@@ -5,6 +5,7 @@
 
 const databaseConfig = require('../config/database');
 const { enums, messages } = require('../config');
+const SQLOptimizer = require('../utils/sql-optimizer');
 
 class CampoEstagioService {
     constructor() {
@@ -19,6 +20,15 @@ class CampoEstagioService {
      */
     async buscarCamposEstagiosPorUsuario(idUsuario, nivelAcesso) {
         try {
+            // Definir campos necessários para otimizar JOINs
+            const requiredFields = [
+                'nome_estagiario', 'nome_orientador', 'nome_concedente', 
+                'nome_supervisor', 'nome_curso'
+            ];
+            
+            // Construir JOINs otimizados
+            const optimizedJoins = SQLOptimizer.buildOptimizedJoins(requiredFields, 'ce');
+            
             let sql = `
                 SELECT 
                     ce.id_campo_estagio,
@@ -34,94 +44,20 @@ class CampoEstagioService {
                     pc.nome as nome_concedente,
                     ps.nome as nome_supervisor,
                     pcr.nome as nome_curso,
-                    ce.dataultimaatualizacao
+                    ce.dataultimaatualizacao,
+                    cepa.plano_anexado_sei
                 FROM campo_estagio ce
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-                LEFT JOIN pessoa pcr ON ce.id_pessoa_curso = pcr.id_pessoa
+                LEFT JOIN campo_estagio_planoatividade cepa ON ce.id_campo_estagio = cepa.id_campo_estagio
+                ${optimizedJoins}
             `;
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso e categoria do usuário
-            if (nivelAcesso !== 'Administrador') {
-                // Buscar a categoria do usuário
-                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-                const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
-                const categoriaUsuario = usuario?.categoria;
-                
-                // Aplicar restrições baseadas na categoria
-                // Agora considerando que o usuário pode ter múltiplas funções
-                const condicoes = [];
-                
-                switch (categoriaUsuario) {
-                    case '1': // Coordenador - nenhuma restrição, recupera todos os dados
-                        break;
-                        
-                    case '2': // Professor/Orientador - estágios onde é orientador
-                        condicoes.push('ce.id_pessoa_orientador = ?');
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '3': // Aluno/Estagiário - apenas seus próprios estágios
-                        condicoes.push('ce.id_pessoa_estagiario = ?');
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '4': // Concedente/Local de Estágio - estágios onde é concedente
-                        condicoes.push('ce.id_pessoa_concedente = ?');
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '5': // Supervisor - estágios onde é supervisor
-                        condicoes.push('ce.id_pessoa_supervisor = ?');
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '6': // Instituição/Curso - estágios relacionados via id_pessoa_curso
-                        condicoes.push('ce.id_pessoa_curso = ?');
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '99': // Usuário Geral - sem acesso aos dados
-                        sql += ' WHERE 1 = 0'; // Retorna vazio
-                        break;
-                        
-                    default: // Categoria não reconhecida - apenas seus próprios estágios
-                        condicoes.push('ce.id_pessoa_estagiario = ?');
-                        params.push(idUsuario);
-                        break;
-                }
-                
-                // Além da categoria principal, verificar se o usuário está vinculado em outras funções
-                // Isso permite que um usuário veja estágios onde participa em qualquer função
-                if (categoriaUsuario !== '1' && categoriaUsuario !== '99') {
-                    // Adicionar condições para verificar se o usuário está em outras funções
-                    const funcoesAdicionais = [
-                        'ce.id_pessoa_estagiario = ?',
-                        'ce.id_pessoa_orientador = ?',
-                        'ce.id_pessoa_supervisor = ?',
-                        'ce.id_pessoa_concedente = ?',
-                        'ce.id_pessoa_curso = ?'
-                    ];
-                    
-                    // Remover a condição já adicionada pela categoria principal
-                    const condicaoExistente = condicoes[0];
-                    const funcoesParaAdicionar = funcoesAdicionais.filter(funcao => funcao !== condicaoExistente);
-                    
-                    // Adicionar todas as outras funções possíveis
-                    funcoesParaAdicionar.forEach(funcao => {
-                        condicoes.push(funcao);
-                        params.push(idUsuario);
-                    });
-                }
-                
-                // Aplicar as condições com OR se houver múltiplas
-                if (condicoes.length > 0) {
-                    sql += ' WHERE (' + condicoes.join(' OR ') + ')';
-                }
+            // Aplicar filtro baseado no nível de acesso (otimizado)
+            const accessConditions = SQLOptimizer.buildUserAccessConditions(idUsuario, nivelAcesso, 'ce');
+            if (accessConditions.whereClause) {
+                sql += ` WHERE ${accessConditions.whereClause}`;
+                params.push(...accessConditions.params);
             }
             
             sql += ' ORDER BY ce.dataultimaatualizacao DESC';
@@ -142,63 +78,29 @@ class CampoEstagioService {
      */
     async buscarEstatisticasCampoEstagio(idUsuario = null, nivelAcesso = null) {
         try {
+            // Usar SQLOptimizer para otimizar CASE WHEN
+            const caseConditions = [
+                { condition: "situacao = 'Aprovado'", alias: 'aprovados' },
+                { condition: "situacao = 'Em Edição'", alias: 'em_edicao' },
+                { condition: "situacao = 'Cancelado'", alias: 'cancelados' }
+            ];
+            
+            const optimizedCaseStatements = SQLOptimizer.buildOptimizedCase(caseConditions);
+            
             let sql = `
                 SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN situacao = 'Aprovado' THEN 1 ELSE 0 END) as aprovados,
-                    SUM(CASE WHEN situacao = 'Em Edição' THEN 1 ELSE 0 END) as em_edicao,
-                    SUM(CASE WHEN situacao = 'Cancelado' THEN 1 ELSE 0 END) as cancelados
+                    ${optimizedCaseStatements}
                 FROM campo_estagio
             `;
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso e categoria do usuário
+            // Aplicar filtro baseado no nível de acesso usando SQLOptimizer
             if (nivelAcesso !== 'Administrador' && idUsuario) {
-                // Buscar a categoria do usuário
-                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-                const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
-                const categoriaUsuario = usuario?.categoria;
-                
-                // Aplicar restrições baseadas na categoria
-                switch (categoriaUsuario) {
-                    case '1': // Coordenador - nenhuma restrição, recupera todos os dados
-                        break;
-                        
-                    case '2': // Professor/Orientador - estágios onde é orientador
-                        sql += ' WHERE id_pessoa_orientador = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '3': // Aluno/Estagiário - apenas seus próprios estágios
-                        sql += ' WHERE id_pessoa_estagiario = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '4': // Concedente/Local de Estágio - estágios onde é concedente
-                        sql += ' WHERE id_pessoa_concedente = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '5': // Supervisor - estágios onde é supervisor
-                        sql += ' WHERE id_pessoa_supervisor = ?';
-                        params.push(idUsuario);
-                        break;
-                        
-                    case '6': // Instituição/Curso - estágios relacionados via id_pessoa_curso
-                         sql += ' WHERE id_pessoa_curso = ?';
-                         params.push(idUsuario);
-                         break;
-                        
-                    case '99': // Usuário Geral - sem acesso aos dados
-                        sql += ' WHERE 1 = 0'; // Retorna vazio
-                        break;
-                        
-                    default: // Categoria não reconhecida - apenas seus próprios estágios
-                        sql += ' WHERE id_pessoa_estagiario = ?';
-                        params.push(idUsuario);
-                        break;
-                }
+                const whereClause = SQLOptimizer.buildUserAccessConditions(idUsuario, '');
+                sql += ` ${whereClause}`;
+                params.push(idUsuario, idUsuario, idUsuario, idUsuario);
             }
             
             const result = await databaseConfig.get(sql, params);
@@ -227,6 +129,15 @@ class CampoEstagioService {
      */
     async buscarCampoEstagioPorId(id) {
         try {
+            // Definir campos necessários para otimizar JOINs
+            const requiredFields = [
+                'nome_estagiario', 'nome_orientador', 'nome_concedente', 
+                'nome_supervisor', 'nome_curso'
+            ];
+            
+            // Construir JOINs otimizados
+            const optimizedJoins = SQLOptimizer.buildOptimizedJoins(requiredFields, 'ce');
+            
             const sql = `
                 SELECT 
                     ce.*,
@@ -236,11 +147,7 @@ class CampoEstagioService {
                     ps.nome as nome_supervisor,
                     pcr.nome as nome_curso
                 FROM campo_estagio ce
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-                LEFT JOIN pessoa pcr ON ce.id_pessoa_curso = pcr.id_pessoa
+                ${optimizedJoins}
                 WHERE ce.id_campo_estagio = ?
             `;
             
@@ -272,10 +179,8 @@ class CampoEstagioService {
                 return false;
             }
 
-            // Buscar a categoria do usuário
-            const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-            const usuario = await databaseConfig.get(usuarioSql, [idUsuario]);
-            const categoriaUsuario = usuario?.categoria;
+            // Buscar a categoria do usuário com cache (otimizado)
+            const categoriaUsuario = await SQLOptimizer.getUserCategoryWithCache(idUsuario, databaseConfig);
 
             // Verificar permissão baseada na categoria
             switch (categoriaUsuario) {

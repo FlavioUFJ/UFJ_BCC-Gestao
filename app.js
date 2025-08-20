@@ -26,6 +26,7 @@ const accessControlMiddleware = require('./middleware/access-control');
 const validationMiddleware = require('./src/middleware/validation');
 const LoggingMiddleware = require('./src/middleware/logging');
 const securityErrorHandler = require('./src/middleware/security-error-handler');
+const CacheManager = require('./src/middleware/cache-manager');
 
 // Importar rotas
 const routes = require('./src/routes');
@@ -106,6 +107,10 @@ class App {
 			};
 			
 			this.sessionStore = new MySQLStore(sessionStoreOptions);
+			
+			// Inicializar gerenciador de cache
+			CacheManager.initialize();
+			console.log('✅ Gerenciador de cache inicializado');
 			
 		} catch (error) {
 			console.error('❌ Erro ao conectar com banco de dados:', error.message);

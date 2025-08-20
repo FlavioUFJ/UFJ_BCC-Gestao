@@ -346,9 +346,9 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h4><i class="fas fa-cubes me-2"></i>Módulos</h4>
-                        <p class="text-muted mb-0">Gerencie módulos do sistema e vínculos com usuários.</p>
+                        <p class="text-muted mb-0">Gerencie módulos do sistema e vínculos com pessoas.</p>
                     </div>
-                    <button type="button" class="btn btn-success" id="btnNovoModulo">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoModulo">
                         <i class="fas fa-plus me-2"></i>Novo Módulo
                     </button>
                 </div>
@@ -366,8 +366,8 @@
                     <div class="col-md-6">
                         <select class="form-select" id="filtroStatusModulo">
                             <option value="">Todos os status</option>
-                            <option value="ativo">Ativo</option>
-                            <option value="inativo">Inativo</option>
+                            <option value="1">Ativo</option>
+                            <option value="0">Inativo</option>
                         </select>
                     </div>
                 </div>
@@ -381,9 +381,9 @@
                                     <th>Nome</th>
                                     <th>Descrição</th>
                                     <th>URL</th>
-                                    <th>Status</th>
-                                    <th>Usuários Vinculados</th>
-                                    <th>Ações</th>
+                                    <th width="80">Status</th>
+                                    <th width="100">Quant. de Vínculos</th>
+                                    <th width="150">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="corpoTabelaModulos">
@@ -397,61 +397,238 @@
                         </table>
                     </div>
                 </div>
-                
-                <!-- Seção de Vínculos de Usuários -->
-                <div class="card mt-4" id="vinculosUsuarios" style="display: none;">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Usuários Vinculados ao Módulo: <span id="nomeModuloSelecionado"></span></h5>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnFecharVinculos">
-                            <i class="fas fa-times me-1"></i>Fechar
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="buscaUsuarioVinculo" placeholder="Buscar usuário para vincular...">
-                                    <button class="btn btn-success" type="button" id="btnVincularUsuario">
-                                        <i class="fas fa-plus"></i> Vincular
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <button type="button" class="btn btn-warning" id="btnDesvincularSelecionados">
-                                    <i class="fas fa-unlink me-2"></i>Desvincular Selecionados
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th width="50">
-                                            <input type="checkbox" id="selecionarTodosUsuarios" class="form-check-input">
-                                        </th>
-                                        <th>Nome</th>
-                                        <th>Email</th>
-                                        <th>Nível de Acesso</th>
-                                        <th>Data Vínculo</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="corpoUsuariosVinculados">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-3">
-                                            <i class="fas fa-users fa-2x mb-2"></i><br>
-                                            Nenhum usuário vinculado
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             </div>
                     
 
+                </div>
+            </div>
+
+            <!-- Modal Novo Módulo -->
+            <div class="modal fade" id="modalNovoModulo" tabindex="-1" aria-labelledby="modalNovoModuloLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalNovoModuloLabel">
+                                <i class="fas fa-cube me-2"></i>Cadastrar Novo Módulo
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="formNovoModulo">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="nomeModulo" class="form-label">Nome do Módulo *</label>
+                                            <input type="text" class="form-control" id="nomeModulo" name="nome" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="urlModulo" class="form-label">URL *</label>
+                                            <input type="text" class="form-control" id="urlModulo" name="url" placeholder="/exemplo/dashboard" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="descricaoModulo" class="form-label">Descrição</label>
+                                    <textarea class="form-control" id="descricaoModulo" name="descricao" rows="3" placeholder="Descrição do módulo..."></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="iconeModulo" class="form-label">Ícone</label>
+                                            <input type="text" class="form-control" id="iconeModulo" name="icone" placeholder="fas fa-cube" value="fas fa-cube">
+                                            <small class="text-muted">Use classes do Font Awesome</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="corModulo" class="form-label">Cor</label>
+                                            <input type="color" class="form-control form-control-color" id="corModulo" name="cor" value="#007bff">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="ordemModulo" class="form-label">Ordem</label>
+                                            <input type="number" class="form-control" id="ordemModulo" name="ordem" min="1" value="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ativoModulo" name="ativo" checked>
+                                        <label class="form-check-label" for="ativoModulo">
+                                            Módulo ativo
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar Módulo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Editar Módulo -->
+            <div class="modal fade" id="modalEditarModulo" tabindex="-1" aria-labelledby="modalEditarModuloLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalEditarModuloLabel">
+                                <i class="fas fa-edit me-2"></i>Editar Módulo
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="formEditarModulo">
+                            <input type="hidden" id="editIdModulo" name="id_modulo">
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="editNomeModulo" class="form-label">Nome do Módulo *</label>
+                                            <input type="text" class="form-control" id="editNomeModulo" name="nome" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="editUrlModulo" class="form-label">URL *</label>
+                                            <input type="text" class="form-control" id="editUrlModulo" name="url" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editDescricaoModulo" class="form-label">Descrição</label>
+                                    <textarea class="form-control" id="editDescricaoModulo" name="descricao" rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editIconeModulo" class="form-label">Ícone</label>
+                                            <input type="text" class="form-control" id="editIconeModulo" name="icone">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editCorModulo" class="form-label">Cor</label>
+                                            <input type="color" class="form-control form-control-color" id="editCorModulo" name="cor">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editOrdemModulo" class="form-label">Ordem</label>
+                                            <input type="number" class="form-control" id="editOrdemModulo" name="ordem" min="1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="editAtivoModulo" name="ativo">
+                                        <label class="form-check-label" for="editAtivoModulo">
+                                            Módulo ativo
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Vincular Pessoas -->
+            <div class="modal fade" id="modalVincularPessoas" tabindex="-1" aria-labelledby="modalVincularPessoasLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalVincularPessoasLabel">
+                                <i class="fas fa-users me-2"></i>Gerenciar Vínculos do Módulo
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="vinculoIdModulo">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-search me-2"></i>Buscar Pessoas</h6>
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="buscaPessoaVinculo" placeholder="Nome, email ou CPF...">
+                                    </div>
+                                    <div class="mb-3">
+                                        <select class="form-select" id="categoriaPessoaVinculo">
+                                            <option value="">Todas as categorias</option>
+                                            <option value="1">Coordenador</option>
+                                            <option value="2">Professor Orientador</option>
+                                            <option value="3">Aluno/Estagiário</option>
+                                            <option value="4">Concedente/Local de Estágio</option>
+                                            <option value="5">Supervisor</option>
+                                            <option value="6">Curso/Instituição de Ensino</option>
+                                            <option value="99">Usuário Geral</option>
+                                        </select>
+                                    </div>
+                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="50">Ação</th>
+                                                    <th>Nome</th>
+                                                    <th>Email</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="listaPessoasDisponiveis">
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted py-3">
+                                                        <i class="fas fa-search fa-2x mb-2"></i><br>
+                                                        Digite para buscar pessoas
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-link me-2"></i>Pessoas Vinculadas</h6>
+                                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="50">Ação</th>
+                                                    <th>Nome</th>
+                                                    <th>Email</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="listaPessoasVinculadas">
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted py-3">
+                                                        <i class="fas fa-users fa-2x mb-2"></i><br>
+                                                        Nenhuma pessoa vinculada
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Fechar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -539,6 +716,17 @@
                 document.getElementById('criarBackupBtn')?.addEventListener('click', () => this.criarBackup());
                 document.getElementById('listarBackupsBtn')?.addEventListener('click', () => this.listarBackups());
                 document.getElementById('atualizarBackupsBtn')?.addEventListener('click', () => this.listarBackups());
+                
+                // Listener para quando a aba Gestão dos Dados for ativada
+                document.addEventListener('click', (e) => {
+                    if (e.target.matches('button[data-bs-target="#importar"]') || e.target.closest('button[data-bs-target="#importar"]')) {
+                        // Aguardar um pouco para o DOM da aba ser renderizado
+                        setTimeout(() => {
+                            // Carregar lista de backups automaticamente
+                            this.listarBackups();
+                        }, 100);
+                    }
+                });
             },
 
             // Configurar event listeners do modal
@@ -760,6 +948,7 @@
         };
 
         // ===== FUNCIONALIDADE DA ABA PESSOAS =====
+        /*
         console.log('Definindo GerenciadorPessoas...');
         const GerenciadorPessoas = {
             paginaAtual: 1,
@@ -773,28 +962,38 @@
             
             bindEvents() {
                 // Busca por Enter
-                document.getElementById('buscaPessoa').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.buscarPessoas();
-                    }
-                });
+                const buscaPessoa = document.getElementById('buscaPessoa');
+                if (buscaPessoa) {
+                    buscaPessoa.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.buscarPessoas();
+                        }
+                    });
+                }
                 
                 // Busca por botão
-                document.getElementById('btnBuscarPessoa').addEventListener('click', () => {
-                    this.buscarPessoas();
-                });
-                
-
+                const btnBuscarPessoa = document.getElementById('btnBuscarPessoa');
+                if (btnBuscarPessoa) {
+                    btnBuscarPessoa.addEventListener('click', () => {
+                        this.buscarPessoas();
+                    });
+                }
                 
                 // Mudança de categoria
-                document.getElementById('categoriaPessoa').addEventListener('change', () => {
-                    this.buscarPessoas();
-                });
+                const categoriaPessoa = document.getElementById('categoriaPessoa');
+                if (categoriaPessoa) {
+                    categoriaPessoa.addEventListener('change', () => {
+                        this.buscarPessoas();
+                    });
+                }
             },
             
             buscarPessoas(pagina = 1) {
-                const termo = document.getElementById('buscaPessoa').value.trim();
-                const categoria = document.getElementById('categoriaPessoa').value;
+                const buscaPessoaElement = document.getElementById('buscaPessoa');
+                const categoriaPessoaElement = document.getElementById('categoriaPessoa');
+                
+                const termo = buscaPessoaElement ? buscaPessoaElement.value.trim() : '';
+                const categoria = categoriaPessoaElement ? categoriaPessoaElement.value : '';
                 
                 this.paginaAtual = pagina;
                 
@@ -820,7 +1019,8 @@
                         this.mostrarErro('Erro ao buscar pessoas');
                     });
             },
-            
+            */
+            /*
             renderizarTabela(pessoas) {
                 const tbody = document.getElementById('corpoTabelaPessoas');
                 
@@ -859,7 +1059,8 @@
                 
                 tbody.innerHTML = html;
             },
-            
+            */
+            /*
             renderizarPaginacao(total) {
                 this.totalPaginas = Math.ceil(total / this.itensPorPagina);
                 const paginacao = document.getElementById('paginacaoPessoas');
@@ -907,7 +1108,9 @@
                 
                 ul.innerHTML = html;
             },
+            */
             
+            /*
             formatarCategoria(categoria) {
                 const categorias = {
                     1: 'Coordenador',
@@ -933,9 +1136,10 @@
                 
                 return nomesCategorias.length > 0 ? nomesCategorias.join(', ') : 'Categoria não definida';
             },
+            */
             
 
-            
+            /*
             async editarPessoa(id) {
                 console.log('editarPessoa chamada com ID:', id);
                 console.log('pessoaManager disponível:', typeof window.pessoaManager);
@@ -967,7 +1171,8 @@
                     console.error('Erro ao carregar dados da pessoa');
                 }
             },
-            
+            */
+            /*
             excluirPessoa(id, nome) {
                 if (confirm(`Tem certeza que deseja excluir a pessoa "${nome}"?`)) {
                     fetch(`/api/pessoas/${id}`, {
@@ -993,6 +1198,7 @@
                 AdminRotinas.showAlert(mensagem, 'error');
             }
         };
+        */
 
         // Inicializar quando o DOM estiver carregado
         // Event listener consolidado removido - será usado o do final do arquivo
@@ -1011,9 +1217,9 @@
                     // Abrir modal para cadastrar nova pessoa
                     pessoaManager.abrirModal('', function(id, nome) {
                         // Após cadastrar, recarregar a lista de pessoas com delay para evitar conflitos
-                        setTimeout(() => {
-                            GerenciadorPessoas.buscarPessoas();
-                        }, 100);
+                        // setTimeout(() => {
+                        //     GerenciadorPessoas.buscarPessoas();
+                        // }, 100);
                     }, {
                         showBuscarTab: false,
                         showTabs: false,
@@ -1097,11 +1303,110 @@
 
     <script>
         // ===== FUNCIONALIDADE DE MÓDULOS E USUÁRIOS =====
-        const GerenciadorModulos = {
+        const GerenciadorParametros = {
+            parametros: [],
+            
             init() {
                 this.bindEvents();
-                this.carregarUsuarios();
-                this.carregarModulos();
+                // Só carregar parâmetros se a aba estiver ativa
+                if (document.getElementById('corpoTabelaParametros')) {
+                    this.carregarParametros();
+                }
+            },
+            
+            bindEvents() {
+                // Listener para quando a aba Parâmetros for ativada
+                document.addEventListener('click', (e) => {
+                    if (e.target.matches('button[data-bs-target="#parametros"]') || e.target.closest('button[data-bs-target="#parametros"]')) {
+                        // Aguardar um pouco para o DOM da aba ser renderizado
+                        setTimeout(() => {
+                            if (document.getElementById('corpoTabelaParametros') && (!this.parametros || this.parametros.length === 0)) {
+                                this.carregarParametros();
+                            }
+                        }, 100);
+                    }
+                });
+            },
+            
+            async carregarParametros() {
+                try {
+                    const response = await fetch('/secure/parametros/buscar');
+                    const data = await response.json();
+                    
+                    if (!response.ok || !data.success) {
+                        console.error('Erro ao carregar parâmetros:', data.message);
+                        AdminRotinas.mostrarMensagem(data.message || 'Erro ao carregar parâmetros', 'error');
+                        return;
+                    }
+                    
+                    this.parametros = Array.isArray(data.parametros) ? data.parametros : [];
+                    this.renderizarTabelaParametros();
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar parâmetros:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao carregar parâmetros', 'error');
+                }
+            },
+            
+            renderizarTabelaParametros() {
+                const tbody = document.getElementById('corpoTabelaParametros');
+                if (!tbody) return;
+                
+                if (!this.parametros || this.parametros.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-sliders-h fa-2x mb-2"></i><br>
+                                Nenhum parâmetro encontrado
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = this.parametros.map(parametro => `
+                    <tr>
+                        <td>${parametro.identificador}</td>
+                        <td>${parametro.descricao || '-'}</td>
+                        <td><span class="badge bg-info">${parametro.tipo || 'Texto'}</span></td>
+                        <td><small>${parametro.valor || '-'}</small></td>
+                        <td>
+                            <span class="badge bg-${parametro.ativo ? 'success' : 'secondary'}">
+                                ${parametro.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="GerenciadorParametros.editarParametro(${parametro.id_parametro})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="GerenciadorParametros.excluirParametro(${parametro.id_parametro})" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+            
+            editarParametro(id) {
+                console.log('Editar parâmetro:', id);
+                // TODO: Implementar edição de parâmetro
+            },
+            
+            excluirParametro(id) {
+                console.log('Excluir parâmetro:', id);
+                // TODO: Implementar exclusão de parâmetro
+            }
+        };
+
+        const GerenciadorModulos = {
+            moduloAtual: null,
+            
+            init() {
+                this.bindEvents();
+                // Só carregar módulos se a aba estiver ativa
+                if (document.getElementById('corpoTabelaModulos')) {
+                    this.carregarModulos();
+                }
                 this.limparFormularioCriarLogin();
             },
             
@@ -1112,162 +1417,60 @@
                     this.criarLogin();
                 });
                 
-                // Busca dinâmica de pessoas
+                // Busca dinâmica de pessoas - DESABILITADO
+                /*
                 const buscaPessoa = document.getElementById('buscaPessoaLogin');
                 if (buscaPessoa) {
                     buscaPessoa.addEventListener('input', (e) => {
                         this.buscarPessoas(e.target.value);
                     });
-                    
-                    buscaPessoa.addEventListener('blur', () => {
-                        setTimeout(() => {
-                            document.getElementById('resultadosBuscaPessoa').style.display = 'none';
-                        }, 200);
-                    });
                 }
+                */
                 
-                // Formulário de novo módulo
+                // Formulários de módulos
                 document.getElementById('novoModuloForm')?.addEventListener('submit', (e) => {
                     e.preventDefault();
                     this.criarModulo();
                 });
                 
-                // Busca dinâmica de usuários para vínculos
-                const buscaUsuarioVinculo = document.getElementById('buscaUsuarioVinculo');
-                if (buscaUsuarioVinculo) {
-                    buscaUsuarioVinculo.addEventListener('input', (e) => {
-                        this.buscarUsuariosVinculo(e.target.value);
-                    });
-                    
-                    buscaUsuarioVinculo.addEventListener('blur', () => {
+                document.getElementById('editarModuloForm')?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.salvarEdicaoModulo();
+                });
+                
+                // Busca e filtros de módulos
+                document.getElementById('buscaModulo')?.addEventListener('input', (e) => {
+                    this.filtrarModulos();
+                });
+                
+                document.getElementById('filtroStatusModulo')?.addEventListener('change', (e) => {
+                    this.filtrarModulos();
+                });
+                
+                // Busca de pessoas para vinculação
+                document.getElementById('buscaPessoaVinculo')?.addEventListener('input', (e) => {
+                    this.buscarPessoasVinculo(e.target.value);
+                });
+                
+                // Listener para quando a aba Módulos for ativada
+                document.addEventListener('click', (e) => {
+                    if (e.target.matches('button[data-bs-target="#modulos"]') || e.target.closest('button[data-bs-target="#modulos"]')) {
+                        // Aguardar um pouco para o DOM da aba ser renderizado
                         setTimeout(() => {
-                            document.getElementById('resultadosBuscaUsuario').style.display = 'none';
-                        }, 200);
-                    });
-                }
-                
-                // Botões da nova interface de vínculos
-                document.getElementById('btnLimparBuscaUsuario')?.addEventListener('click', () => {
-                    this.limparBuscaUsuario();
-                });
-                
-                document.getElementById('btnSalvarVinculosLote')?.addEventListener('click', () => {
-                    this.salvarVinculosLote();
-                });
-                
-                document.getElementById('btnLimparTudo')?.addEventListener('click', () => {
-                    this.limparTudoVinculos();
-                });
-                
-                document.getElementById('btnSelecionarTodosModulos')?.addEventListener('click', () => {
-                    this.selecionarTodosModulos();
-                });
-                
-                document.getElementById('btnLimparModulos')?.addEventListener('click', () => {
-                    this.limparSelecaoModulos();
-                });
-                
-                // Seleção de usuário para desvinculação
-                document.getElementById('usuarioDesvinculo')?.addEventListener('change', (e) => {
-                    this.carregarVinculosParaDesvinculo(e.target.value);
-                });
-                
-                // Botões de desvinculação
-                document.getElementById('btnDesvincularSelecionados')?.addEventListener('click', () => {
-                    this.desvincularSelecionados();
-                });
-                
-                document.getElementById('btnDesvincularTodos')?.addEventListener('click', () => {
-                    this.desvincularTodos();
-                });
-                
-                // Checkbox para selecionar todos os vínculos
-                document.getElementById('selecionarTodosVinculos')?.addEventListener('change', (e) => {
-                    this.selecionarTodosVinculosDesvinculo(e.target.checked);
+                            if (document.getElementById('corpoTabelaModulos') && (!this.modulos || this.modulos.length === 0)) {
+                                this.carregarModulos();
+                            }
+                        }, 100);
+                    }
                 });
             },
             
-            async carregarUsuarios() {
-                try {
-                    const response = await fetch('/admin/usuarios');
-                    const data = await response.json();
-                    
-                    // Verificar se houve erro de autenticação
-                    if (data.error || data.redirect) {
-                        console.error('Erro de autenticação:', data.error);
-                        AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        }
-                        return;
-                    }
-                    
-                    // Verificar se a resposta é um array
-                    const usuarios = Array.isArray(data) ? data : [];
-                    
-                    const tbody = document.getElementById('corpoTabelaUsuarios');
-                    const selectVinculo = document.getElementById('usuarioVinculo');
-                    
-                    if (usuarios.length === 0) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="fas fa-users fa-2x mb-2"></i><br>
-                                    Nenhum usuário cadastrado
-                                </td>
-                            </tr>
-                        `;
-                        return;
-                    }
-                    
-                    tbody.innerHTML = usuarios.map(usuario => `
-                        <tr>
-                            <td>${usuario.nome}</td>
-                            <td>${usuario.email || 'N/A'}</td>
-                            <td>
-                                <span class="badge bg-${usuario.status === 'Ativo' ? 'success' : 'secondary'}">
-                                    ${usuario.status}
-                                </span>
-                            </td>
-                            <td>
-                                <select class="form-select form-select-sm" onchange="GerenciadorModulos.alterarNivelAcesso(${usuario.id_pessoa}, this.value)" style="width: auto; display: inline-block;">
-                                <option value="Administrador" ${usuario.nivelacesso === 'Administrador' ? 'selected' : ''}>Administrador</option>
-                                <option value="Operacional" ${usuario.nivelacesso === 'Operacional' ? 'selected' : ''}>Operacional</option>
-                                <option value="Visitante" ${usuario.nivelacesso === 'Visitante' ? 'selected' : ''}>Visitante</option>
-                                </select>
-                            </td>
-                            <td>${new Date(usuario.dataultimaatualizacao).toLocaleDateString('pt-BR')}</td>
-                            <td>
-                                ${usuario.status === 'Ativo' ? 
-                                    `<button class="btn btn-sm btn-outline-danger" onclick="GerenciadorModulos.desativarUsuario(${usuario.id_pessoa})" title="Desativar usuário">
-                                        <i class="fas fa-user-times"></i>
-                                    </button>` :
-                                    `<button class="btn btn-sm btn-outline-success" onclick="GerenciadorModulos.ativarUsuario(${usuario.id_pessoa})" title="Ativar usuário">
-                                        <i class="fas fa-user-check"></i>
-                                    </button>`
-                                }
-                            </td>
-                        </tr>
-                    `).join('');
-                    
-                    // Preencher select de desvinculação
-                    const selectDesvinculo = document.getElementById('usuarioDesvinculo');
-                    if (selectDesvinculo) {
-                        selectDesvinculo.innerHTML = '<option value="">Selecione um usuário...</option>' +
-                            usuarios.map(usuario => `<option value="${usuario.id_pessoa}">${usuario.nome}</option>`).join('');
-                    }
-                        
-                } catch (error) {
-                    console.error('Erro ao carregar usuários:', error);
-                    AdminRotinas.mostrarMensagem('Erro ao carregar usuários', 'error');
-                }
-            },
+
             
             async buscarPessoas(termo) {
-                if (termo.length < 2) {
-                    document.getElementById('resultadosBuscaPessoa').style.display = 'none';
-                    return;
-                }
+                // Funcionalidade de usuários desabilitada
+                console.log('Funcionalidade de busca de pessoas desabilitada');
+                return;
                 
                 try {
                     const response = await fetch(`/admin/pessoas-sem-login?busca=${encodeURIComponent(termo)}`);
@@ -1283,32 +1486,18 @@
                         return;
                     }
                     
-                    // Verificar se a resposta é um array
-                    const pessoas = Array.isArray(data) ? data : [];
-                    
-                    const resultados = document.getElementById('resultadosBuscaPessoa');
-                    
-                    if (pessoas.length === 0) {
-                        resultados.innerHTML = '<div class="p-2 text-muted">Nenhuma pessoa encontrada</div>';
-                    } else {
-                        resultados.innerHTML = pessoas.map(pessoa => 
-                            `<div class="p-2 border-bottom cursor-pointer hover-bg-light" onclick="GerenciadorModulos.selecionarPessoa(${pessoa.id_pessoa}, '${pessoa.nome.replace(/'/g, "\\'")}')">` +
-                            `<strong>${pessoa.nome}</strong><br>` +
-                            `<small class="text-muted">${pessoa.email || 'Sem email'}</small>` +
-                            `</div>`
-                        ).join('');
-                    }
-                    
-                    resultados.style.display = 'block';
+                    // Funcionalidade de usuários desabilitada
+                    console.log('Funcionalidade de busca de pessoas desabilitada');
+                    return;
                 } catch (error) {
                     console.error('Erro ao buscar pessoas:', error);
                 }
             },
             
             selecionarPessoa(id, nome) {
-                document.getElementById('buscaPessoaLogin').value = nome;
-                document.getElementById('pessoaLoginId').value = id;
-                document.getElementById('resultadosBuscaPessoa').style.display = 'none';
+                // Funcionalidade de usuários desabilitada
+                console.log('Funcionalidade de seleção de pessoa desabilitada');
+                return;
             },
             
             async carregarPessoasSemLogin() {
@@ -1350,8 +1539,8 @@
                         document.getElementById('nivelAcessoLogin').value = '';
                         document.getElementById('resultadosBuscaPessoa').style.display = 'none';
                         
-                        // Atualizar tabela de usuários cadastrados
-                        this.carregarUsuarios();
+                        // Funcionalidade de usuários desabilitada
+                        // this.carregarUsuarios();
                     } else {
                         AdminRotinas.mostrarMensagem(result.error || 'Erro ao criar login', 'error');
                     }
@@ -1366,7 +1555,6 @@
                     const response = await fetch('/admin/modulos');
                     const data = await response.json();
                     
-                    // Verificar se houve erro de autenticação
                     if (data.error || data.redirect) {
                         console.error('Erro de autenticação:', data.error);
                         AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
@@ -1376,66 +1564,115 @@
                         return;
                     }
                     
-                    // Verificar se a resposta é um array
-                    const modulos = Array.isArray(data) ? data : [];
-                    
-                    const lista = document.getElementById('listaModulos');
-                    const checkboxContainer = document.getElementById('checkboxModulos');
-                    
-                    if (modulos.length === 0) {
-                        lista.innerHTML = `
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-th-large fa-2x mb-2"></i><br>
-                                Nenhum módulo cadastrado
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    lista.innerHTML = modulos.map(modulo => `
-                        <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
-                            <div class="d-flex align-items-center">
-                                <i class="${modulo.icone} me-2" style="color: ${modulo.cor};"></i>
-                                <div>
-                                    <strong>${modulo.nome}</strong><br>
-                                    <small class="text-muted">${modulo.descricao}</small>
-                                </div>
-                            </div>
-                            <div>
-                                <span class="badge bg-${modulo.ativo ? 'success' : 'secondary'} me-2">
-                                    ${modulo.ativo ? 'Ativo' : 'Inativo'}
-                                </span>
-                                <button class="btn btn-sm btn-outline-${modulo.ativo ? 'warning' : 'success'}" onclick="GerenciadorModulos.toggleModulo(${modulo.id_modulo}, ${!modulo.ativo})">
-                                    <i class="fas fa-${modulo.ativo ? 'pause' : 'play'}"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-                    
-                    // Preencher lista de módulos disponíveis para seleção
-                    const listaModulosDisponiveis = document.getElementById('listaModulosDisponiveis');
-                    if (listaModulosDisponiveis) {
-                        listaModulosDisponiveis.innerHTML = modulos.map(modulo => `
-                            <div class="form-check mb-2">
-                                <input class="form-check-input modulo-checkbox" type="checkbox" value="${modulo.id_modulo}" id="modulo_disp_${modulo.id_modulo}" onchange="GerenciadorModulos.atualizarContadorModulos()">
-                                <label class="form-check-label d-flex align-items-center" for="modulo_disp_${modulo.id_modulo}">
-                                    <i class="${modulo.icone} me-2" style="color: ${modulo.cor};"></i>
-                                    <div>
-                                        <div>${modulo.nome}</div>
-                                        <small class="text-muted">${modulo.descricao}</small>
-                                    </div>
-                                </label>
-                            </div>
-                        `).join('');
-                        
-                        // Atualizar contador inicial
-                        this.atualizarContadorModulos();
-                    }
+                    this.modulos = Array.isArray(data) ? data : [];
+                    this.renderizarTabelaModulos();
                     
                 } catch (error) {
                     console.error('Erro ao carregar módulos:', error);
                     AdminRotinas.mostrarMensagem('Erro ao carregar módulos', 'error');
                 }
+            },
+            
+            renderizarTabelaModulos() {
+                const tbody = document.getElementById('corpoTabelaModulos');
+                if (!tbody) return;
+                
+                if (!this.modulos || this.modulos.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-th-large fa-2x mb-2"></i><br>
+                                Nenhum módulo encontrado
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = this.modulos.map(modulo => `
+                    <tr>
+                        <td>${modulo.nome}</td>
+                        <td>${modulo.descricao || '-'}</td>
+                        <td><small>${modulo.url || '-'}</small></td>
+                        <td>
+                            <span class="badge bg-${modulo.ativo ? 'success' : 'secondary'}">
+                                ${modulo.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info">${modulo.quantidade_vinculos || 0}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="GerenciadorModulos.editarModulo(${modulo.id_modulo})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="GerenciadorModulos.vincularPessoas(${modulo.id_modulo})" title="Vincular Pessoas">
+                                <i class="fas fa-users"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+            
+            filtrarModulos() {
+                const busca = document.getElementById('buscaModulo')?.value.toLowerCase() || '';
+                const status = document.getElementById('filtroStatusModulo')?.value || '';
+                
+                if (!this.modulos) return;
+                
+                let modulosFiltrados = this.modulos;
+                
+                if (busca) {
+                    modulosFiltrados = modulosFiltrados.filter(modulo => 
+                        modulo.nome.toLowerCase().includes(busca) ||
+                        (modulo.descricao && modulo.descricao.toLowerCase().includes(busca))
+                    );
+                }
+                
+                if (status !== '') {
+                    modulosFiltrados = modulosFiltrados.filter(modulo => 
+                        modulo.ativo === (status === '1')
+                    );
+                }
+                
+                const tbody = document.getElementById('corpoTabelaModulos');
+                if (!tbody) return;
+                
+                if (modulosFiltrados.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-search fa-2x mb-2"></i><br>
+                                Nenhum módulo encontrado com os filtros aplicados
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = modulosFiltrados.map(modulo => `
+                    <tr>
+                        <td>${modulo.nome}</td>
+                        <td>${modulo.descricao || '-'}</td>
+                        <td><small>${modulo.url || '-'}</small></td>
+                        <td>
+                            <span class="badge bg-${modulo.ativo ? 'success' : 'secondary'}">
+                                ${modulo.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-info">${modulo.quantidade_vinculos || 0}</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="GerenciadorModulos.editarModulo(${modulo.id_modulo})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="GerenciadorModulos.vincularPessoas(${modulo.id_modulo})" title="Vincular Pessoas">
+                                <i class="fas fa-users"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
             },
             
             async criarModulo() {
@@ -1454,19 +1691,17 @@
                             icone: formData.get('icone'),
                             cor: formData.get('cor'),
                             url: formData.get('url'),
-                            ordem: formData.get('ordem')
+                            ordem: formData.get('ordem'),
+                            ativo: formData.get('ativo') === '1'
                         })
                     });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
                     
                     const result = await response.json();
                     
                     if (response.ok) {
                         AdminRotinas.mostrarMensagem('Módulo criado com sucesso!', 'success');
                         form.reset();
+                        bootstrap.Modal.getInstance(document.getElementById('modalNovoModulo')).hide();
                         this.carregarModulos();
                     } else {
                         AdminRotinas.mostrarMensagem(result.error || 'Erro ao criar módulo', 'error');
@@ -1477,7 +1712,285 @@
                 }
             },
             
+            async editarModulo(id) {
+                try {
+                    const response = await fetch(`/admin/modulos/${id}`);
+                    const modulo = await response.json();
+                    
+                    if (response.ok) {
+                        this.moduloAtual = modulo;
+                        
+                        // Preencher formulário de edição
+                        document.getElementById('editarModuloId').value = modulo.id_modulo;
+                        document.getElementById('editarModuloNome').value = modulo.nome;
+                        document.getElementById('editarModuloDescricao').value = modulo.descricao || '';
+                        document.getElementById('editarModuloIcone').value = modulo.icone || '';
+                        document.getElementById('editarModuloCor').value = modulo.cor || '';
+                        document.getElementById('editarModuloUrl').value = modulo.url || '';
+                        document.getElementById('editarModuloOrdem').value = modulo.ordem || '';
+                        document.getElementById('editarModuloAtivo').value = modulo.ativo ? '1' : '0';
+                        
+                        // Abrir modal
+                        new bootstrap.Modal(document.getElementById('modalEditarModulo')).show();
+                    } else {
+                        AdminRotinas.mostrarMensagem(modulo.error || 'Erro ao carregar dados do módulo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar módulo:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao carregar dados do módulo', 'error');
+                }
+            },
+            
+            async salvarEdicaoModulo() {
+                const form = document.getElementById('editarModuloForm');
+                const formData = new FormData(form);
+                const id = formData.get('id');
+                
+                try {
+                    const response = await fetch(`/admin/modulos/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nome: formData.get('nome'),
+                            descricao: formData.get('descricao'),
+                            icone: formData.get('icone'),
+                            cor: formData.get('cor'),
+                            url: formData.get('url'),
+                            ordem: formData.get('ordem'),
+                            ativo: formData.get('ativo') === '1'
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Módulo atualizado com sucesso!', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('modalEditarModulo')).hide();
+                        this.carregarModulos();
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao atualizar módulo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar módulo:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao atualizar módulo', 'error');
+                }
+            },
+            
+            async vincularPessoas(idModulo) {
+                try {
+                    // Buscar dados do módulo
+                    const responseModulo = await fetch(`/admin/modulos/${idModulo}`);
+                    const modulo = await responseModulo.json();
+                    
+                    if (!responseModulo.ok) {
+                        AdminRotinas.mostrarMensagem(modulo.error || 'Erro ao carregar dados do módulo', 'error');
+                        return;
+                    }
+                    
+                    this.moduloAtual = modulo;
+                    
+                    // Atualizar título do modal
+                    document.getElementById('tituloVincularPessoas').textContent = `Vincular Pessoas - ${modulo.nome}`;
+                    
+                    // Carregar pessoas vinculadas
+                    await this.carregarPessoasVinculadas(idModulo);
+                    
+                    // Limpar busca
+                    const buscaPessoaVinculo = document.getElementById('buscaPessoaVinculo');
+                    const resultadosBusca = document.getElementById('resultadosBuscaPessoaVinculo');
+                    if (buscaPessoaVinculo) buscaPessoaVinculo.value = '';
+                    if (resultadosBusca) resultadosBusca.innerHTML = '';
+                    
+                    // Abrir modal
+                    new bootstrap.Modal(document.getElementById('modalVincularPessoas')).show();
+                    
+                } catch (error) {
+                    console.error('Erro ao abrir modal de vinculação:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao abrir modal de vinculação', 'error');
+                }
+            },
+            
+            async carregarPessoasVinculadas(idModulo) {
+                try {
+                    const response = await fetch(`/admin/modulos/${idModulo}/pessoas`);
+                    const pessoas = await response.json();
+                    
+                    const tbody = document.getElementById('corpoPessoasVinculadas');
+                    
+                    if (!response.ok) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="3" class="text-center text-danger">
+                                    Erro ao carregar pessoas vinculadas
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    if (pessoas.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">
+                                    <i class="fas fa-users fa-2x mb-2"></i><br>
+                                    Nenhuma pessoa vinculada a este módulo
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    tbody.innerHTML = pessoas.map(pessoa => `
+                        <tr>
+                            <td>${pessoa.nome}</td>
+                            <td>${pessoa.email || '-'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="GerenciadorModulos.desvincularPessoa(${this.moduloAtual.id_modulo}, ${pessoa.id_pessoa})" title="Desvincular">
+                                    <i class="fas fa-unlink"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Erro ao carregar pessoas vinculadas:', error);
+                    const tbody = document.getElementById('corpoPessoasVinculadas');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center text-danger">
+                                Erro ao carregar pessoas vinculadas
+                            </td>
+                        </tr>
+                    `;
+                }
+            },
+            
+            async buscarPessoasVinculo(termo) {
+                if (!termo || termo.length < 2) {
+                    const resultadosBusca = document.getElementById('resultadosBuscaPessoaVinculo');
+                    if (resultadosBusca) resultadosBusca.innerHTML = '';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/pessoas?busca=${encodeURIComponent(termo)}`);
+                    const pessoas = await response.json();
+                    
+                    const resultados = document.getElementById('resultadosBuscaPessoaVinculo');
+                    
+                    if (!resultados) return;
+                    
+                    if (!response.ok || pessoas.length === 0) {
+                        resultados.innerHTML = `
+                            <div class="list-group-item text-muted text-center">
+                                Nenhuma pessoa encontrada
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    resultados.innerHTML = pessoas.slice(0, 10).map(pessoa => `
+                        <div class="list-group-item list-group-item-action" onclick="GerenciadorModulos.vincularPessoa(${pessoa.id_pessoa}, '${pessoa.nome}')" style="cursor: pointer;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${pessoa.nome}</strong><br>
+                                    <small class="text-muted">${pessoa.email || 'Sem email'}</small>
+                                </div>
+                                <i class="fas fa-plus text-success"></i>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                } catch (error) {
+                    console.error('Erro ao buscar pessoas:', error);
+                    const resultadosBusca = document.getElementById('resultadosBuscaPessoaVinculo');
+                    if (resultadosBusca) resultadosBusca.innerHTML = `
+                        <div class="list-group-item text-danger text-center">
+                            Erro ao buscar pessoas
+                        </div>
+                    `;
+                }
+            },
+            
+            async vincularPessoa(idPessoa, nomePessoa) {
+                if (!this.moduloAtual) {
+                    AdminRotinas.mostrarMensagem('Erro: módulo não selecionado', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/modulos/${this.moduloAtual.id_modulo}/pessoas`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_pessoa: idPessoa
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem(`${nomePessoa} vinculado(a) com sucesso!`, 'success');
+                        
+                        // Limpar busca
+                        document.getElementById('buscaPessoaVinculo').value = '';
+                        const resultadosBusca = document.getElementById('resultadosBuscaPessoaVinculo');
+                if (resultadosBusca) resultadosBusca.innerHTML = '';
+                        
+                        // Recarregar lista de pessoas vinculadas
+                        await this.carregarPessoasVinculadas(this.moduloAtual.id_modulo);
+                        
+                        // Recarregar tabela de módulos para atualizar contador
+                        await this.carregarModulos();
+                        
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao vincular pessoa', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao vincular pessoa:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao vincular pessoa', 'error');
+                }
+            },
+            
+            async desvincularPessoa(idModulo, idPessoa) {
+                if (!confirm('Tem certeza que deseja desvincular esta pessoa do módulo?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/admin/modulos/${idModulo}/pessoas/${idPessoa}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        AdminRotinas.mostrarMensagem('Pessoa desvinculada com sucesso!', 'success');
+                        
+                        // Recarregar lista de pessoas vinculadas
+                        await this.carregarPessoasVinculadas(idModulo);
+                        
+                        // Recarregar tabela de módulos para atualizar contador
+                        await this.carregarModulos();
+                        
+                    } else {
+                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao desvincular pessoa', 'error');
+                    }
+                } catch (error) {
+                    console.error('Erro ao desvincular pessoa:', error);
+                    AdminRotinas.mostrarMensagem('Erro ao desvincular pessoa', 'error');
+                }
+            },
+            
             async carregarVinculosUsuario(idPessoa) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 if (!idPessoa) {
                     document.getElementById('modulosVinculo').style.display = 'none';
                     document.getElementById('vinculosAtuais').style.display = 'none';
@@ -1536,9 +2049,14 @@
                     console.error('Erro ao carregar vínculos:', error);
                     AdminRotinas.mostrarMensagem('Erro ao carregar vínculos do usuário', 'error');
                 }
+                */
             },
             
             async salvarVinculos() {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 const idPessoa = document.getElementById('usuarioVinculo').value;
                 if (!idPessoa) {
                     AdminRotinas.mostrarMensagem('Selecione um usuário', 'error');
@@ -1575,143 +2093,14 @@
                     console.error('Erro ao salvar vínculos:', error);
                     AdminRotinas.mostrarMensagem('Erro ao salvar vínculos', 'error');
                 }
+                */
             },
             
-            // ===== NOVAS FUNCIONALIDADES DE VÍNCULOS =====
+
             
-            usuariosSelecionados: new Set(),
+            // Função buscarUsuariosVinculo removida - funcionalidade de usuários desabilitada
             
-            async buscarUsuariosVinculo(termo) {
-                if (termo.length < 2) {
-                    document.getElementById('resultadosBuscaUsuario').style.display = 'none';
-                    return;
-                }
-                
-                try {
-                    const response = await fetch(`/admin/buscar-usuarios?termo=${encodeURIComponent(termo)}`, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const usuarios = await response.json();
-                    
-                    const resultados = document.querySelector('#resultadosBuscaUsuario .list-group');
-                    
-                    if (usuarios.length === 0) {
-                        resultados.innerHTML = '<div class="list-group-item">Nenhum usuário encontrado</div>';
-                    } else {
-                        resultados.innerHTML = usuarios.map(usuario => `
-                            <div class="list-group-item list-group-item-action" onclick="GerenciadorModulos.adicionarUsuario(${usuario.id_pessoa}, '${usuario.nome.replace(/'/g, "\\'")}')"
-                                 style="cursor: pointer;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>${usuario.nome}</strong><br>
-                                        <small class="text-muted">${usuario.email || 'Sem email'}</small>
-                                    </div>
-                                    <span class="badge bg-${usuario.status === 'Ativo' ? 'success' : 'secondary'}">
-                                        ${usuario.status}
-                                    </span>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                    
-                    document.getElementById('resultadosBuscaUsuario').style.display = 'block';
-                } catch (error) {
-                    console.error('Erro ao buscar usuários:', error);
-                }
-            },
-            
-            adicionarUsuario(id, nome) {
-                if (this.usuariosSelecionados.has(id)) {
-                    AdminRotinas.mostrarMensagem('Usuário já foi selecionado', 'warning');
-                    return;
-                }
-                
-                this.usuariosSelecionados.add(id);
-                this.atualizarListaUsuarios();
-                this.limparBuscaUsuario();
-            },
-            
-            removerUsuario(id) {
-                this.usuariosSelecionados.delete(id);
-                this.atualizarListaUsuarios();
-            },
-            
-            async atualizarListaUsuarios() {
-                const container = document.getElementById('listaUsuariosSelecionados');
-                const contador = document.getElementById('contadorUsuarios');
-                
-                if (this.usuariosSelecionados.size === 0) {
-                    container.innerHTML = `
-                        <div class="text-center text-muted py-3">
-                            <i class="fas fa-user-plus fa-2x mb-2"></i><br>
-                            Nenhum usuário selecionado
-                        </div>
-                    `;
-                    contador.textContent = '0';
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/admin/todos-usuarios', {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    // Verificar se houve erro de autenticação
-                    if (data.error || data.redirect) {
-                        console.error('Erro de autenticação:', data.error);
-                        AdminRotinas.mostrarMensagem('Erro de autenticação. Faça login novamente.', 'error');
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        }
-                        return;
-                    }
-                    
-                    // Verificar se a resposta é um array
-                    const todosUsuarios = Array.isArray(data) ? data : [];
-                    
-                    const usuariosSelecionadosData = todosUsuarios.filter(u => this.usuariosSelecionados.has(u.id_pessoa));
-                    
-                    container.innerHTML = usuariosSelecionadosData.map(usuario => `
-                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-                            <div>
-                                <strong>${usuario.nome}</strong><br>
-                                <small class="text-muted">${usuario.email || 'Sem email'}</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-danger" onclick="GerenciadorModulos.removerUsuario(${usuario.id_pessoa})" title="Remover usuário">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `).join('');
-                    
-                    contador.textContent = this.usuariosSelecionados.size;
-                } catch (error) {
-                    console.error('Erro ao atualizar lista de usuários:', error);
-                }
-            },
-            
-            limparBuscaUsuario() {
-                document.getElementById('buscaUsuarioVinculo').value = '';
-                document.getElementById('resultadosBuscaUsuario').style.display = 'none';
-            },
+            // Funções de usuários removidas - funcionalidade desabilitada
             
             atualizarContadorModulos() {
                 const checkboxes = document.querySelectorAll('.modulo-checkbox:checked');
@@ -1732,59 +2121,15 @@
                 this.atualizarContadorModulos();
             },
             
-            async salvarVinculosLote() {
-                if (this.usuariosSelecionados.size === 0) {
-                    AdminRotinas.mostrarMensagem('Selecione pelo menos um usuário', 'error');
-                    return;
-                }
-                
-                const modulosSelecionados = Array.from(document.querySelectorAll('.modulo-checkbox:checked')).map(cb => cb.value);
-                
-                if (modulosSelecionados.length === 0) {
-                    AdminRotinas.mostrarMensagem('Selecione pelo menos um módulo', 'error');
-                    return;
-                }
-                
-
-                
-                try {
-                    const response = await fetch('/admin/vincular-modulos-lote', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            usuarios: Array.from(this.usuariosSelecionados),
-                            modulos: modulosSelecionados
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        AdminRotinas.mostrarMensagem(`Vínculos salvos com sucesso! ${result.vinculosCriados} vínculos criados.`, 'success');
-                        this.limparTudoVinculos();
-                    } else {
-                        AdminRotinas.mostrarMensagem(result.error || 'Erro ao salvar vínculos', 'error');
-                    }
-                } catch (error) {
-                    console.error('Erro ao salvar vínculos:', error);
-                    AdminRotinas.mostrarMensagem('Erro ao salvar vínculos', 'error');
-                }
-            },
-            
-            limparTudoVinculos() {
-                this.usuariosSelecionados.clear();
-                this.atualizarListaUsuarios();
-                this.limparSelecaoModulos();
-                this.limparBuscaUsuario();
-            },
+            // Funções salvarVinculosLote e limparTudoVinculos removidas - funcionalidade de usuários desabilitada
             
             // ===== FUNCIONALIDADES DE DESVINCULAÇÃO =====
             
             async carregarVinculosParaDesvinculo(idPessoa) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 if (!idPessoa) {
                     document.getElementById('vinculosAtuaisDesvinculo').style.display = 'none';
                     return;
@@ -1824,8 +2169,9 @@
                             </td>
                             <td>${new Date(vinculo.dataCadastro).toLocaleDateString('pt-BR')}</td>
                             <td>
-                                <button class="btn btn-sm btn-outline-warning" onclick="GerenciadorModulos.desvincularIndividual(${idPessoa}, ${vinculo.id_modulo})" title="Desvincular este módulo">
-                                    <i class="fas fa-unlink"></i>
+                                <!-- Funcionalidade de usuários desabilitada -->
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Funcionalidade desabilitada">
+                                    <i class="fas fa-ban"></i>
                                 </button>
                             </td>
                         </tr>
@@ -1835,15 +2181,25 @@
                     console.error('Erro ao carregar vínculos:', error);
                     AdminRotinas.mostrarMensagem('Erro ao carregar vínculos do usuário', 'error');
                 }
+                */
             },
             
             selecionarTodosVinculosDesvinculo(checked) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 document.querySelectorAll('.vinculo-checkbox').forEach(cb => {
                     cb.checked = checked;
                 });
+                */
             },
             
             async desvincularSelecionados() {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 const idPessoa = document.getElementById('usuarioDesvinculo').value;
                 if (!idPessoa) {
                     AdminRotinas.mostrarMensagem('Selecione um usuário', 'error');
@@ -1887,9 +2243,14 @@
                     console.error('Erro ao desvincular módulos:', error);
                     AdminRotinas.mostrarMensagem('Erro ao desvincular módulos', 'error');
                 }
+                */
             },
             
             async desvincularTodos() {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 const idPessoa = document.getElementById('usuarioDesvinculo').value;
                 if (!idPessoa) {
                     AdminRotinas.mostrarMensagem('Selecione um usuário', 'error');
@@ -1922,9 +2283,14 @@
                     console.error('Erro ao desvincular módulos:', error);
                     AdminRotinas.mostrarMensagem('Erro ao desvincular módulos', 'error');
                 }
+                */
             },
             
             async desvincularIndividual(idPessoa, idModulo) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 if (!confirm('Deseja desvincular este módulo do usuário?')) {
                     return;
                 }
@@ -1959,6 +2325,7 @@
                     console.error('Erro ao desvincular módulo:', error);
                     AdminRotinas.mostrarMensagem('Erro ao desvincular módulo', 'error');
                 }
+                */
             },
             
             async toggleModulo(idModulo, ativo) {
@@ -1984,6 +2351,10 @@
             },
             
             async desativarUsuario(idPessoa) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 if (!confirm('Deseja realmente desativar este usuário?')) {
                     return;
                 }
@@ -1999,7 +2370,7 @@
                     
                     if (response.ok) {
                         AdminRotinas.mostrarMensagem('Usuário desativado com sucesso!', 'success');
-                        this.carregarUsuarios();
+                        // this.carregarUsuarios();
                     } else {
                         AdminRotinas.mostrarMensagem('Erro ao desativar usuário', 'error');
                     }
@@ -2007,9 +2378,14 @@
                     console.error('Erro ao desativar usuário:', error);
                     AdminRotinas.mostrarMensagem('Erro ao desativar usuário', 'error');
                 }
+                */
             },
             
             async ativarUsuario(idPessoa) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 if (!confirm('Deseja realmente ativar este usuário?')) {
                     return;
                 }
@@ -2025,7 +2401,7 @@
                     
                     if (response.ok) {
                         AdminRotinas.mostrarMensagem('Usuário ativado com sucesso!', 'success');
-                        this.carregarUsuarios();
+                        // this.carregarUsuarios();
                     } else {
                         AdminRotinas.mostrarMensagem('Erro ao ativar usuário', 'error');
                     }
@@ -2033,9 +2409,14 @@
                     console.error('Erro ao ativar usuário:', error);
                     AdminRotinas.mostrarMensagem('Erro ao ativar usuário', 'error');
                 }
+                */
             },
             
             async alterarNivelAcesso(idPessoa, novoNivelAcesso) {
+                // Funcionalidade de usuários desabilitada
+                AdminRotinas.mostrarMensagem('Funcionalidade de usuários desabilitada', 'error');
+                return;
+                /*
                 try {
                     const response = await fetch(`/admin/usuarios/${idPessoa}`, {
                         method: 'PUT',
@@ -2050,17 +2431,21 @@
                     } else {
                         AdminRotinas.mostrarMensagem('Erro ao alterar tipo de acesso', 'error');
                         // Recarregar a lista para reverter a mudança visual
-                        this.carregarUsuarios();
+                        // this.carregarUsuarios();
                     }
                 } catch (error) {
                     console.error('Erro ao alterar tipo de acesso:', error);
                     AdminRotinas.mostrarMensagem('Erro ao alterar tipo de acesso', 'error');
                     // Recarregar a lista para reverter a mudança visual
-                    this.carregarUsuarios();
+                    // this.carregarUsuarios();
                 }
+                */
             },
             
             filtrarUsuarios() {
+                // Funcionalidade de usuários desabilitada
+                return;
+                /*
                 const filtro = document.getElementById('filtroUsuarios').value.toLowerCase();
                 const tabela = document.getElementById('tabelaUsuarios');
                 const linhas = tabela.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
@@ -2078,21 +2463,23 @@
                         }
                     }
                 }
+                */
             },
             
             limparFormularioCriarLogin() {
                 // Garantir que os campos estejam vazios na inicialização
-                const buscaPessoa = document.getElementById('buscaPessoaLogin');
-                const senhaLogin = document.getElementById('senhaLogin');
-                const pessoaId = document.getElementById('pessoaLoginId');
-                const nivelAcesso = document.getElementById('nivelAcessoLogin');
-                const resultados = document.getElementById('resultadosBuscaPessoa');
+                // Funcionalidade de usuários desabilitada - elementos removidos
+                // const buscaPessoa = document.getElementById('buscaPessoaLogin');
+                // const senhaLogin = document.getElementById('senhaLogin');
+                // const pessoaId = document.getElementById('pessoaLoginId');
+                // const nivelAcesso = document.getElementById('nivelAcessoLogin');
+                // const resultados = document.getElementById('resultadosBuscaPessoa');
                 
-                if (buscaPessoa) buscaPessoa.value = '';
-                if (senhaLogin) senhaLogin.value = '';
-                if (pessoaId) pessoaId.value = '';
-                if (nivelAcesso) nivelAcesso.value = '';
-                if (resultados) resultados.style.display = 'none';
+                // if (buscaPessoa) buscaPessoa.value = '';
+                // if (senhaLogin) senhaLogin.value = '';
+                // if (pessoaId) pessoaId.value = '';
+                // if (nivelAcesso) nivelAcesso.value = '';
+                // if (resultados) resultados.style.display = 'none';
             }
         };
 
@@ -2127,13 +2514,23 @@
             // Inicializar AdminRotinas
             if (typeof AdminRotinas !== 'undefined') AdminRotinas.init();
             
-            // Inicializar GerenciadorPessoas
+            // Inicializar GerenciadorPessoas - DESABILITADO
+            /*
             console.log('Verificando GerenciadorPessoas:', typeof GerenciadorPessoas);
             if (typeof GerenciadorPessoas !== 'undefined') {
                 console.log('Inicializando GerenciadorPessoas...');
                 GerenciadorPessoas.init();
             } else {
                 console.error('GerenciadorPessoas não está definido!');
+            }
+            */
+            
+            // Inicializar GerenciadorParametros
+            if (typeof GerenciadorParametros !== 'undefined') {
+                console.log('Inicializando GerenciadorParametros...');
+                GerenciadorParametros.init();
+            } else {
+                console.error('GerenciadorParametros não está definido!');
             }
             
             // Inicializar GerenciadorModulos

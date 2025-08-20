@@ -831,8 +831,33 @@ router.get('/parametros/buscar', requireAuth, async (req, res) => {
     try {
         const { identificador } = req.query;
         
+        // Se não há identificador, retornar todos os parâmetros
         if (!identificador) {
-            return res.json({ success: false, message: 'Identificador é obrigatório' });
+            const db = databaseConfig;
+            const parametros = await db.all('SELECT * FROM parametro ORDER BY identificador');
+            
+            const parametrosComValores = [];
+            for (const parametro of parametros) {
+                const valores = await db.all('SELECT * FROM parametrovalor WHERE id_parametro = ?', [parametro.id_parametro]);
+                
+                const valoresFormatados = {};
+                valores.forEach(valor => {
+                    if (valor.identificadorvalor && valor.valor) {
+                        valoresFormatados[valor.identificadorvalor] = valor.valor;
+                    }
+                });
+                
+                parametrosComValores.push({
+                    ...parametro,
+                    valores: valoresFormatados,
+                    valor: valores.length > 0 ? valores.map(v => v.valor).join('|') : ''
+                });
+            }
+            
+            return res.json({
+                success: true,
+                parametros: parametrosComValores
+            });
         }
 
         const db = databaseConfig;

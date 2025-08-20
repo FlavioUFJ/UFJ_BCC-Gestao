@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const databaseConfig = require('../config/database');
+const SQLOptimizer = require('../utils/sql-optimizer');
 
 /**
  * Classe para logging e auditoria
@@ -286,33 +287,36 @@ class LoggingMiddleware {
             const db = databaseConfig;
             await db.connect();
 
-            let sql = 'SELECT * FROM auditoria WHERE 1=1';
+            const filterConditions = [];
             const params = [];
 
             if (filters.userId) {
-                sql += ' AND id_usuario = ?';
+                filterConditions.push('id_usuario = ?');
                 params.push(filters.userId);
             }
 
             if (filters.entity) {
-                sql += ' AND entidade = ?';
+                filterConditions.push('entidade = ?');
                 params.push(filters.entity);
             }
 
             if (filters.action) {
-                sql += ' AND acao = ?';
+                filterConditions.push('acao = ?');
                 params.push(filters.action);
             }
 
             if (filters.startDate) {
-                sql += ' AND data_hora >= ?';
+                filterConditions.push('data_hora >= ?');
                 params.push(filters.startDate);
             }
 
             if (filters.endDate) {
-                sql += ' AND data_hora <= ?';
+                filterConditions.push('data_hora <= ?');
                 params.push(filters.endDate);
             }
+
+            const whereClause = SQLOptimizer.buildDynamicWhere(filterConditions);
+            const sql = `SELECT * FROM auditoria ${whereClause}`;
 
             sql += ' ORDER BY data_hora DESC';
 

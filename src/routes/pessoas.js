@@ -9,6 +9,7 @@ const PessoaController = require('../controllers/PessoaController');
 const AuthController = require('../controllers/AuthController');
 const { requireAuth, requireAdmin, requirePermissions } = require('../config/session');
 const { enums } = require('../config');
+const SQLOptimizer = require('../utils/sql-optimizer');
 
 // Instanciar controladores
 const pessoaController = new PessoaController();
@@ -87,24 +88,29 @@ router.get('/buscar', async (req, res) => {
         const { termo, categoria, pagina = 1, limite = 25 } = req.query;
         const databaseConfig = require('../config/database');
         
-        // Construir query SQL
-        let whereClause = 'WHERE 1=1';
+        // Construir query SQL dinamicamente
+        const filters = [];
         let params = [];
         
-        // Filtro por termo de busca
+        // Filtro por termo de busca (insensível a acentos)
         if (termo && termo.trim() !== '') {
-            whereClause += ' AND (p.nome LIKE ? OR p.email LIKE ? OR p.cnpj_cpf LIKE ?)';
-            const searchTerm = `%${termo.trim()}%`;
-            params.push(searchTerm, searchTerm, searchTerm);
+            const searchCondition = SQLOptimizer.buildAccentInsensitiveLike(
+                ['p.nome', 'p.email', 'p.cnpj_cpf'], 
+                termo.trim()
+            );
+            filters.push(searchCondition.whereClause);
+            params.push(...searchCondition.params);
         }
         
         // Filtro por categoria
         if (categoria && categoria.trim() !== '' && categoria !== 'todas') {
             // Para categorias múltiplas separadas por vírgula, usar FIND_IN_SET ou REGEXP
             // FIND_IN_SET funciona melhor para valores exatos separados por vírgula
-            whereClause += ' AND (FIND_IN_SET(?, p.categoria) > 0 OR p.categoria = ?)';
+            filters.push('(FIND_IN_SET(?, p.categoria) > 0 OR p.categoria = ?)');
             params.push(categoria, categoria);
         }
+        
+        const whereClause = SQLOptimizer.buildDynamicWhere(filters);
         
         // Query para contar total
         const countQuery = `SELECT COUNT(*) as total FROM pessoa p ${whereClause}`;

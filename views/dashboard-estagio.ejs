@@ -2196,7 +2196,11 @@
                            frequencia.aprovado_orientador === 'Sim' || 
                            frequencia.aprovado_supervisor === 'Sim';
         
-        // Controlar botões Editar e Lançar Dia baseado nas aprovações
+        // Verificar categoria do usuário para edição
+        const userCategoria = '<%= user.categoria %>';
+        const podeEditarPorCategoria = userCategoria === '1' || userCategoria === '2' || userCategoria === '5'; // Coordenador, Professor/Orientador ou Supervisor
+        
+        // Controlar botões Editar e Lançar Dia baseado nas aprovações e categoria
         const btnEditar = document.getElementById('btnFreqAtiEditar');
         const btnLancar = document.getElementById('btnFreqAtiLancar');
         
@@ -2210,8 +2214,18 @@
             btnEditar.classList.add('btn-outline-secondary');
             btnLancar.classList.remove('btn-warning');
             btnLancar.classList.add('btn-outline-secondary');
+        } else if (!podeEditarPorCategoria) {
+            // Desabilitar botões quando usuário não tem permissão por categoria
+            btnEditar.disabled = true;
+            btnLancar.disabled = true;
+            btnEditar.title = 'Apenas Coordenadores, Supervisores e Orientadores podem editar frequências';
+            btnLancar.title = 'Apenas Coordenadores, Supervisores e Orientadores podem lançar dias';
+            btnEditar.classList.remove('btn-outline-primary');
+            btnEditar.classList.add('btn-outline-secondary');
+            btnLancar.classList.remove('btn-warning');
+            btnLancar.classList.add('btn-outline-secondary');
         } else {
-            // Habilitar botões quando não há aprovação
+            // Habilitar botões quando não há aprovação e usuário tem permissão
             btnEditar.disabled = false;
             btnLancar.disabled = false;
             btnEditar.title = 'Editar frequência selecionada';

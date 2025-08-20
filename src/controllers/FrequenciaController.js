@@ -560,10 +560,30 @@ class FrequenciaController {
             // Incluir registros diários no objeto frequência
             frequencia.registros_diarios = registrosDiarios;
 
+            // Buscar dados do plano de atividade
+            const planoAtividade = await databaseConfig.get(`
+                SELECT 
+                    pa.*,
+                    ce.tipo_estagio,
+                    ce.semestre_ano,
+                    pe.nome AS nome_estagiario,
+                    po.nome AS nome_orientador,
+                    ps.nome AS nome_supervisor,
+                    pc.nome AS nome_concedente
+                FROM campo_estagio_planoatividade pa
+                INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
+                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
+                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
+                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
+                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                WHERE pa.id_planoatividade = ?
+            `, [frequencia.id_planoatividade]);
+
             res.render('frequencia-form', {
                 title: 'Editar Frequência - CoordenAI - Gestão',
                 frequencia,
                 registrosDiarios,
+                planoAtividade,
                 planoAtividadeId: frequencia.id_planoatividade,
                 user: req.session.user,
                 currentPage: 'frequencia-form',

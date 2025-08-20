@@ -5,6 +5,7 @@
 
 const databaseConfig = require('../config/database');
 const { enums, messages } = require('../config');
+const SQLOptimizer = require('../utils/sql-optimizer');
 
 class PlanoAtividadeService {
     constructor() {
@@ -92,27 +93,29 @@ class PlanoAtividadeService {
      */
     async buscarEstatisticasPlanoAtividade(idUsuario = null, nivelAcesso = null) {
         try {
+            // Usar SQLOptimizer para otimizar CASE WHEN
+            const caseConditions = [
+                { condition: "pa.situacao = 'Aprovado'", alias: 'aprovados' },
+                { condition: "pa.situacao = 'Em edição'", alias: 'em_edicao' },
+                { condition: "pa.situacao = 'Pendente'", alias: 'pendentes' }
+            ];
+            
+            const optimizedCaseStatements = SQLOptimizer.buildOptimizedCase(caseConditions);
+            
             let sql = `
                 SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN pa.situacao = 'Aprovado' THEN 1 ELSE 0 END) as aprovados,
-                    SUM(CASE WHEN pa.situacao = 'Em edição' THEN 1 ELSE 0 END) as em_edicao,
-                    SUM(CASE WHEN pa.situacao = 'Pendente' THEN 1 ELSE 0 END) as pendentes
+                    ${optimizedCaseStatements}
                 FROM campo_estagio_planoatividade pa
                 INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
             `;
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso
+            // Aplicar filtro baseado no nível de acesso usando SQLOptimizer
             if (nivelAcesso !== 'Administrador' && idUsuario) {
-                // Para usuários não-administradores, mostrar apenas registros onde
-                // o ID da pessoa aparece em qualquer uma das 4 chaves estrangeiras:
-                // orientador, supervisor, estagiário ou concedente
-                sql += ` WHERE (ce.id_pessoa_orientador = ? OR 
-                               ce.id_pessoa_supervisor = ? OR 
-                               ce.id_pessoa_estagiario = ? OR 
-                               ce.id_pessoa_concedente = ?)`;
+                const whereClause = SQLOptimizer.buildUserAccessConditions(idUsuario, 'ce');
+                sql += ` ${whereClause}`;
                 params.push(idUsuario, idUsuario, idUsuario, idUsuario);
             }
             

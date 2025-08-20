@@ -4,8 +4,12 @@
  */
 
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const FrequenciaController = require('../controllers/FrequenciaController');
+
+// Configurar multer para processar FormData (sem arquivos)
+const upload = multer();
 
 // Instanciar o controller
 const frequenciaController = new FrequenciaController();
@@ -106,7 +110,7 @@ router.get('/lancamento-diario/:id', async (req, res) => {
 });
 
 // POST /frequencias/lancamento-diario - Salvar lançamento diário
-router.post('/lancamento-diario', async (req, res) => {
+router.post('/lancamento-diario', upload.none(), async (req, res) => {
     await frequenciaController.salvarLancamentoDiario(req, res);
 });
 

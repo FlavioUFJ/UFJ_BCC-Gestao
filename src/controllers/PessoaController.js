@@ -745,12 +745,12 @@ class PessoaController {
                     pessoas = await this.pessoaModel.findByNivelAcesso(tipo);
             }
 
-            // Filtrar por busca se fornecida
+            // Filtrar por busca se fornecida (insensível a acentos)
             if (search) {
-                const searchLower = search.toLowerCase();
+                const SQLOptimizer = require('../utils/sql-optimizer');
                 pessoas = pessoas.filter(pessoa => 
-                    pessoa.nome.toLowerCase().includes(searchLower) ||
-                    pessoa.email.toLowerCase().includes(searchLower)
+                    SQLOptimizer.accentInsensitiveIncludes(pessoa.nome, search) ||
+                    SQLOptimizer.accentInsensitiveIncludes(pessoa.email, search)
                 );
             }
 

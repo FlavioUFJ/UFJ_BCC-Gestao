@@ -128,24 +128,30 @@
                 
                 let diferencaMinutos = finalMinutos - inicialMinutos;
                 
-                // Se a hora final for menor que a inicial, assumir que passou da meia-noite
-                if (diferencaMinutos < 0) {
-                    diferencaMinutos += 24 * 60;
+                // Validação: hora final não pode ser menor ou igual à inicial
+                if (diferencaMinutos <= 0) {
+                    alert('A hora final deve ser maior que a hora inicial.');
+                    document.getElementById('hora_final').value = '';
+                    totalHoraElement.textContent = '00:00';
+                    document.getElementById('hora_final').focus();
+                    return;
                 }
                 
                 const horas = Math.floor(diferencaMinutos / 60);
                 const minutos = diferencaMinutos % 60;
                 
-                // Validar se não excede 6 horas (360 minutos)
+                // Validação: não pode exceder 6 horas (360 minutos)
                 if (diferencaMinutos > 360) {
-                    totalHoraElement.textContent = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
-                    totalHoraElement.style.color = 'red';
-                    totalHoraElement.title = 'Atenção: Lançamento não pode exceder 6 horas!';
-                } else {
-                    totalHoraElement.textContent = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
-                    totalHoraElement.style.color = '';
-                    totalHoraElement.title = '';
+                    alert('O total de horas não pode exceder 6 horas por dia.');
+                    document.getElementById('hora_final').value = '';
+                    totalHoraElement.textContent = '00:00';
+                    document.getElementById('hora_final').focus();
+                    return;
                 }
+                
+                totalHoraElement.textContent = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+                totalHoraElement.style.color = '';
+                totalHoraElement.title = '';
             } else {
                 totalHoraElement.textContent = '00:00';
                 totalHoraElement.style.color = '';
@@ -161,13 +167,13 @@
             
             if (referrer === 'dashboard-administrativo') {
                 // Voltar para o dashboard administrativo
-                window.location.href = '/estagios/dashboard-administrativo';
+                window.location.href = '/secure/estagios/dashboard-administrativo';
             } else if (window.history.length > 1) {
                 // Voltar para a página anterior
                 window.history.back();
             } else {
                 // Fallback para o dashboard padrão
-                window.location.href = '/estagios/dashboard';
+                window.location.href = '/secure/estagios/dashboard';
             }
         }
         
@@ -257,14 +263,20 @@
             horaInicial.addEventListener('blur', function() {
                 if (this.value && !validarHora(this.value)) {
                     alert('Hora inicial inválida. Use o formato HH:MM');
+                    this.value = '';
                     this.focus();
+                } else if (this.value) {
+                    calcularTotalHoras();
                 }
             });
             
             horaFinal.addEventListener('blur', function() {
                 if (this.value && !validarHora(this.value)) {
                     alert('Hora final inválida. Use o formato HH:MM');
+                    this.value = '';
                     this.focus();
+                } else if (this.value) {
+                    calcularTotalHoras();
                 }
             });
             

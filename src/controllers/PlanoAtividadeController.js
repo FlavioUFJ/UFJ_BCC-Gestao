@@ -75,6 +75,16 @@ class PlanoAtividadeController {
                 return res.status(400).json({ success: false, message: 'Dados do usuário incompletos' });
             }
             
+            // Definir campos necessários para otimizar JOINs
+            const requiredFields = [
+                'pe.nome', 'po.nome', 'ps.nome', 'pc.nome',
+                'po.categoria', 'pc.categoria', 'pe.categoria', 'ps.categoria'
+            ];
+            
+            // Construir JOINs otimizados
+            const SQLOptimizer = require('../utils/sql-optimizer');
+            const optimizedJoins = SQLOptimizer.buildOptimizedJoins(requiredFields, 'ce');
+            
             let query = `
                 SELECT 
                     ce.tipo_estagio AS ce_tipo_estagio, 
@@ -110,10 +120,7 @@ class PlanoAtividadeController {
                     pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
                 FROM campo_estagio_planoatividade pa 
                 LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                ${optimizedJoins}
             `;
             
             const params = [];
@@ -461,6 +468,16 @@ class PlanoAtividadeController {
         try {
             const { id } = req.params;
             
+            // Definir campos necessários para otimizar JOINs
+            const requiredFields = [
+                'pe.nome', 'po.nome', 'ps.nome', 'pc.nome',
+                'po.categoria', 'pc.categoria', 'pe.categoria', 'ps.categoria'
+            ];
+            
+            // Construir JOINs otimizados
+            const SQLOptimizer = require('../utils/sql-optimizer');
+            const optimizedJoins = SQLOptimizer.buildOptimizedJoins(requiredFields, 'ce');
+            
             // Buscar plano de atividade com dados do campo de estágio
             const plano = await databaseConfig.get(`
                 SELECT 
@@ -497,10 +514,7 @@ class PlanoAtividadeController {
                     pa.dataultimaatualizacao AS pa_dataultimaatualizacao 
                 FROM campo_estagio_planoatividade pa 
                 LEFT JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio 
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa 
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa 
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa 
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                ${optimizedJoins}
                 WHERE pa.id_planoatividade = ?
             `, [id]);
 
@@ -1560,6 +1574,49 @@ WHERE ce.id_campo_estagio is not NULL AND pa.id_planoatividade = ?
             
         } catch (error) {
             console.error('Erro ao remover documento assinado:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
+
+    /**
+     * Atualizar status do anexo SEI
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async updateAnexoSei(req, res) {
+        try {
+            const { id } = req.params;
+            const { plano_anexado_sei } = req.body;
+
+            // Validar se o valor é válido
+            if (!['Sim', 'Não'].includes(plano_anexado_sei)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Valor inválido para anexo SEI. Use "Sim" ou "Não".'
+                });
+            }
+
+            // Atualizar no banco de dados
+            const sql = `
+                UPDATE campo_estagio_planoatividade 
+                SET plano_anexado_sei = ?, 
+                    dataultimaatualizacao = CURRENT_TIMESTAMP 
+                WHERE id_planoatividade = ?
+            `;
+
+            await databaseConfig.run(sql, [plano_anexado_sei, id]);
+
+            res.json({
+                success: true,
+                message: 'Anexo SEI atualizado com sucesso',
+                data: { plano_anexado_sei }
+            });
+
+        } catch (error) {
+            console.error('Erro ao atualizar anexo SEI:', error);
             res.status(500).json({
                 success: false,
                 message: 'Erro interno do servidor'

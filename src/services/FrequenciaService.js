@@ -6,6 +6,7 @@
 
 const databaseConfig = require('../config/database');
 const { enums, messages } = require('../config');
+const SQLOptimizer = require('../utils/sql-optimizer');
 
 class FrequenciaService {
     constructor() {
@@ -20,6 +21,14 @@ class FrequenciaService {
      */
     async buscarFrequenciasPorUsuario(idUsuario, nivelAcesso) {
         try {
+            // Definir campos necessários para otimizar JOINs
+            const requiredFields = [
+                'nome_estagiario', 'nome_orientador', 'nome_supervisor', 'nome_concedente'
+            ];
+            
+            // Construir JOINs otimizados
+            const optimizedJoins = SQLOptimizer.buildOptimizedJoins(requiredFields, 'ce');
+            
             let query = `
                 SELECT 
                     cef.id_campo_estagio_frequencia,
@@ -44,21 +53,16 @@ class FrequenciaService {
                 FROM campo_estagio_frequencia cef
                 INNER JOIN campo_estagio_planoatividade pa ON cef.id_planoatividade = pa.id_planoatividade
                 INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                ${optimizedJoins}
             `;
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso
-            if (nivelAcesso !== 'Administrador') {
-                query += ` WHERE (ce.id_pessoa_orientador = ? OR 
-                                 ce.id_pessoa_supervisor = ? OR 
-                                 ce.id_pessoa_estagiario = ? OR 
-                                 ce.id_pessoa_concedente = ?)`;
-                params.push(idUsuario, idUsuario, idUsuario, idUsuario);
+            // Aplicar filtro baseado no nível de acesso (otimizado)
+            const accessConditions = SQLOptimizer.buildUserAccessConditions(idUsuario, nivelAcesso, 'ce');
+            if (accessConditions.whereClause) {
+                query += ` WHERE ${accessConditions.whereClause}`;
+                params.push(...accessConditions.params);
             }
             
             query += ` ORDER BY cef.dataultimaatualizacao DESC`;
@@ -78,11 +82,18 @@ class FrequenciaService {
      */
     async buscarEstatisticasFrequencia(idUsuario = null, nivelAcesso = null) {
         try {
+            // Usar SQLOptimizer para otimizar CASE WHEN
+            const caseConditions = [
+                { condition: "cef.aprovado_estagiario = 'Sim' AND cef.aprovado_orientador = 'Sim' AND cef.aprovado_supervisor = 'Sim'", alias: 'aprovadas' },
+                { condition: "cef.aprovado_estagiario = 'Não' OR cef.aprovado_orientador = 'Não' OR cef.aprovado_supervisor = 'Não'", alias: 'pendentes' }
+            ];
+            
+            const optimizedCaseStatements = SQLOptimizer.buildOptimizedCase(caseConditions);
+            
             let query = `
                 SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN cef.aprovado_estagiario = 'Sim' AND cef.aprovado_orientador = 'Sim' AND cef.aprovado_supervisor = 'Sim' THEN 1 ELSE 0 END) as aprovadas,
-                    SUM(CASE WHEN cef.aprovado_estagiario = 'Não' OR cef.aprovado_orientador = 'Não' OR cef.aprovado_supervisor = 'Não' THEN 1 ELSE 0 END) as pendentes
+                    ${optimizedCaseStatements}
                 FROM campo_estagio_frequencia cef
                 INNER JOIN campo_estagio_planoatividade pa ON cef.id_planoatividade = pa.id_planoatividade
                 INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
@@ -90,12 +101,10 @@ class FrequenciaService {
             
             const params = [];
             
-            // Aplicar filtro baseado no nível de acesso
+            // Aplicar filtro baseado no nível de acesso usando SQLOptimizer
             if (nivelAcesso !== 'Administrador' && idUsuario) {
-                query += ` WHERE (ce.id_pessoa_orientador = ? OR 
-                                 ce.id_pessoa_supervisor = ? OR 
-                                 ce.id_pessoa_estagiario = ? OR 
-                                 ce.id_pessoa_concedente = ?)`;
+                const whereClause = SQLOptimizer.buildUserAccessConditions(idUsuario, 'ce');
+                query += ` ${whereClause}`;
                 params.push(idUsuario, idUsuario, idUsuario, idUsuario);
             }
             
@@ -125,6 +134,14 @@ class FrequenciaService {
      */
     async buscarFrequenciaPorId(id) {
         try {
+            // Definir campos necessários para otimizar JOINs
+            const requiredFields = [
+                'nome_estagiario', 'nome_orientador', 'nome_supervisor', 'nome_concedente'
+            ];
+            
+            // Construir JOINs otimizados
+            const optimizedJoins = SQLOptimizer.buildOptimizedJoins(requiredFields, 'ce');
+            
             const frequencia = await databaseConfig.get(`
                 SELECT 
                     cef.*,
@@ -138,10 +155,7 @@ class FrequenciaService {
                 FROM campo_estagio_frequencia cef
                 INNER JOIN campo_estagio_planoatividade pa ON cef.id_planoatividade = pa.id_planoatividade
                 INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
-                LEFT JOIN pessoa pe ON ce.id_pessoa_estagiario = pe.id_pessoa
-                LEFT JOIN pessoa po ON ce.id_pessoa_orientador = po.id_pessoa
-                LEFT JOIN pessoa ps ON ce.id_pessoa_supervisor = ps.id_pessoa
-                LEFT JOIN pessoa pc ON ce.id_pessoa_concedente = pc.id_pessoa
+                ${optimizedJoins}
                 WHERE cef.id_campo_estagio_frequencia = ?
             `, [id]);
             

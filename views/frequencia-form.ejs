@@ -265,11 +265,11 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Hora Inicial</label>
-                            <input type="time" class="form-control registro-hora-inicial" name="registros[${contadorRegistros}][hora_inicial]" value="${dadosRegistro ? dadosRegistro.hora_inicial : ''}" onchange="calcularTotalHoras(${contadorRegistros})" required>
+                            <input type="text" class="form-control registro-hora-inicial" name="registros[${contadorRegistros}][hora_inicial]" value="${dadosRegistro ? dadosRegistro.hora_inicial : ''}" placeholder="HH:MM" maxlength="5" onchange="calcularTotalHoras(${contadorRegistros})" required>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Hora Final</label>
-                            <input type="time" class="form-control registro-hora-final" name="registros[${contadorRegistros}][hora_final]" value="${dadosRegistro ? dadosRegistro.hora_final : ''}" onchange="calcularTotalHoras(${contadorRegistros})" required>
+                            <input type="text" class="form-control registro-hora-final" name="registros[${contadorRegistros}][hora_final]" value="${dadosRegistro ? dadosRegistro.hora_final : ''}" placeholder="HH:MM" maxlength="5" onchange="calcularTotalHoras(${contadorRegistros})" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Quant. Horas</label>
@@ -309,6 +309,27 @@
                 });
             });
             
+            // Aplicar máscara e validação aos campos de hora recém-criados
+            const novosCamposHora = document.querySelectorAll(`[data-contador="${contadorRegistros}"] .registro-hora-inicial, [data-contador="${contadorRegistros}"] .registro-hora-final`);
+            novosCamposHora.forEach(function(input) {
+                input.addEventListener('input', function() {
+                    aplicarMascaraHora(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                     if (this.value && !validarHora(this.value)) {
+                         alert('Hora inválida. Use o formato HH:MM');
+                         this.value = ''; // Resetar o campo para evitar loop
+                         this.focus();
+                     } else if (this.value) {
+                         // Calcular total de horas e aplicar validações
+                         calcularTotalHoras(contadorRegistros);
+                     }
+                 });
+                 
+                 input.setAttribute('data-listeners-applied', 'true');
+             });
+            
             // Se tem dados existentes, calcular total de horas
             if (dadosRegistro) {
                 calcularTotalHoras(contadorRegistros);
@@ -339,15 +360,29 @@
                 const minutosIniciais = horaIni * 60 + minIni;
                 const minutosFinais = horaFim * 60 + minFim;
                 
-                let diferencaMinutos = minutosFinais - minutosIniciais;
-                
-                // Se a hora final for menor que a inicial, assumir que passou da meia-noite
-                if (diferencaMinutos < 0) {
-                    diferencaMinutos += 24 * 60;
+                // Validação 1: Hora final não pode ser menor que hora inicial
+                if (minutosFinais <= minutosIniciais) {
+                    alert('A Hora Final deve ser maior que a Hora Inicial.');
+                    registro.querySelector('.registro-hora-final').value = '';
+                    registro.querySelector('.registro-total-horas').value = '00:00';
+                    registro.querySelector('.registro-hora-final').focus();
+                    atualizarTotalGeral();
+                    return;
                 }
                 
+                const diferencaMinutos = minutosFinais - minutosIniciais;
                 const horas = Math.floor(diferencaMinutos / 60);
                 const minutos = diferencaMinutos % 60;
+                
+                // Validação 2: Não pode exceder 6 horas por dia
+                if (horas > 6 || (horas === 6 && minutos > 0)) {
+                    alert('A quantidade de horas não pode ser maior que 6 horas por dia.');
+                    registro.querySelector('.registro-hora-final').value = '';
+                    registro.querySelector('.registro-total-horas').value = '00:00';
+                    registro.querySelector('.registro-hora-final').focus();
+                    atualizarTotalGeral();
+                    return;
+                }
                 
                 const totalFormatado = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
                 registro.querySelector('.registro-total-horas').value = totalFormatado;
@@ -459,9 +494,9 @@
             const referrer = urlParams.get('referrer');
             
             if (referrer === 'dashboard-administrativo') {
-                window.location.href = '/estagios/dashboard-administrativo';
+                window.location.href = '/secure/estagios/dashboard-administrativo';
             } else {
-                window.location.href = '/estagios/dashboard';
+                window.location.href = '/secure/estagios/dashboard';
             }
         }
         
@@ -547,6 +582,21 @@
             return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
         }
         
+        // Função para aplicar máscara de hora (HH:MM)
+        function aplicarMascaraHora(campo) {
+            let valor = campo.value.replace(/\D/g, '');
+            if (valor.length >= 2) {
+                valor = valor.substring(0, 2) + ':' + valor.substring(2, 4);
+            }
+            campo.value = valor;
+        }
+        
+        // Função para validar hora (HH:MM)
+        function validarHora(hora) {
+            const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+            return regex.test(hora);
+        }
+        
         // Aplicar máscara aos campos de data quando o documento carregar
         document.addEventListener('DOMContentLoaded', function() {
             // Aplicar máscara aos campos existentes
@@ -561,6 +611,30 @@
                         this.focus();
                     }
                 });
+            });
+            
+            // Aplicar máscara e validação aos campos de hora existentes (apenas se não foram criados dinamicamente)
+            document.querySelectorAll('.registro-hora-inicial:not([data-listeners-applied]), .registro-hora-final:not([data-listeners-applied])').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    aplicarMascaraHora(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (this.value && !validarHora(this.value)) {
+                        alert('Hora inválida. Use o formato HH:MM');
+                        this.value = ''; // Resetar o campo para evitar loop
+                        this.focus();
+                    } else if (this.value) {
+                        // Calcular total de horas e aplicar validações
+                        const registro = this.closest('[data-contador]');
+                        if (registro) {
+                            const contador = registro.getAttribute('data-contador');
+                            calcularTotalHoras(contador);
+                        }
+                    }
+                });
+                
+                input.setAttribute('data-listeners-applied', 'true');
             });
         });
     </script>

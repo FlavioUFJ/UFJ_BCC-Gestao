@@ -118,6 +118,13 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0"><i class="fas fa-table me-2"></i>Campos de Estágio</h6>
                         <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="filtroTipoPessoa" style="width: 150px;">
+                                <option value="tudo">Tudo</option>
+                                <option value="estagiario">Por Estagiário</option>
+                                <option value="orientador">Por Orientador</option>
+                                <option value="supervisor">Por Supervisor</option>
+                                <option value="concedente">Por Concedente</option>
+                            </select>
                             <input type="text" class="form-control form-control-sm" id="buscaPessoa" placeholder="Buscar por nome..." style="width: 200px;">
                         </div>
                     </div>
@@ -192,6 +199,7 @@
                                     <th>Data Final</th>
                                     <th>Carga Horária</th>
                                     <th>Atividades</th>
+                                    <th>Anexo SEI</th>
                                     <th>Última Atualização</th>
                                     <th width="100">Ações</th>
                                 </tr>
@@ -215,8 +223,10 @@
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Frequências</h6>
-                    <small class="text-light">Selecione um plano de atividade para visualizar as frequências</small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Frequências</h6>
+                        <span id="totalHorasFrequencias" class="text-light" style="display: none;">Total de Horas: <strong id="valorTotalHoras">0</strong></span>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -228,13 +238,12 @@
                                     <th>Aprovado Estagiário</th>
                                     <th>Aprovado Orientador</th>
                                     <th>Aprovado Supervisor</th>
-                                    <th>Status</th>
                                     <th width="100">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="corpoTabelaFrequencias">
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         <i class="fas fa-arrow-up me-2"></i>Selecione um plano de atividade acima
                                     </td>
                                 </tr>
@@ -262,6 +271,10 @@ const DashboardAdmin = {
     setupEventListeners() {
         // Filtros da tabela de campos
         document.getElementById('buscaPessoa').addEventListener('input', () => {
+            this.filtrarCamposEstagio();
+        });
+        
+        document.getElementById('filtroTipoPessoa').addEventListener('change', () => {
             this.filtrarCamposEstagio();
         });
         
@@ -341,6 +354,19 @@ const DashboardAdmin = {
         }
     },
     
+    getSituacaoClass(situacao) {
+        switch (situacao) {
+            case 'Em Edição':
+                return 'bg-warning text-dark'; // Manter cor atual (amarelo)
+            case 'Concluído':
+                return 'bg-primary text-white'; // Azul
+            case 'Finalizado':
+                return 'bg-success text-white'; // Verde escuro
+            default:
+                return 'bg-secondary text-white'; // Cinza para casos não definidos
+        }
+    },
+    
     renderizarTabelaCampos(campos) {
         const tbody = document.getElementById('corpoTabelaCampos');
         tbody.innerHTML = '';
@@ -372,7 +398,7 @@ const DashboardAdmin = {
                 <td>${campo.nome_supervisor || 'N/A'}</td>
                 <td>${campo.nome_concedente || 'N/A'}</td>
                 <td>
-                    <span class="badge bg-warning text-dark">${campo.situacao || 'N/A'}</span>
+                    <span class="badge ${this.getSituacaoClass(campo.situacao)}">${campo.situacao || 'N/A'}</span>
                 </td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarCampo(${campo.id_campo_estagio})">
@@ -458,7 +484,16 @@ const DashboardAdmin = {
                         ${plano.atividades || 'N/A'}
                     </span>
                 </td>
-                <td>${plano.dataultimaatualizacao || 'N/A'}</td>
+                <td>
+                    <span class="anexo-sei-toggle" 
+                          data-plano-id="${plano.id_planoatividade}" 
+                          style="cursor: pointer; font-weight: bold; color: ${plano.plano_anexado_sei === 'Sim' ? '#006400' : '#8B0000'};"
+                          title="Clique para mudar de valor"
+                          onclick="DashboardAdmin.toggleAnexoSei(${plano.id_planoatividade}, this)">
+                        ${plano.plano_anexado_sei || 'Não'}
+                    </span>
+                </td>
+                <td>${DashboardAdmin.formatarData(plano.dataultimaatualizacao)}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarPlano(${plano.id_planoatividade})">
                         <i class="fas fa-edit"></i>
@@ -518,11 +553,13 @@ const DashboardAdmin = {
         if (frequencias.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="fas fa-inbox me-2"></i>Nenhuma frequência encontrada
                     </td>
                 </tr>
             `;
+            // Ocultar total de horas
+            document.getElementById('totalHorasFrequencias').style.display = 'none';
             return;
         }
         
@@ -548,7 +585,7 @@ const DashboardAdmin = {
                     </span>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarFrequencia(${freq.id_frequencia || 0})">
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarFrequencia(${freq.id_campo_estagio_frequencia || 0})">
                         <i class="fas fa-edit"></i>
                     </button>
                 </td>
@@ -556,21 +593,33 @@ const DashboardAdmin = {
             
             tbody.appendChild(tr);
         });
+        
+        // Calcular e exibir total de horas
+        const totalHoras = frequencias.reduce((total, freq) => {
+            const horas = parseFloat(freq.total_hora_mesreferencia) || 0;
+            return total + horas;
+        }, 0);
+        
+        document.getElementById('valorTotalHoras').textContent = totalHoras.toFixed(0);
+        document.getElementById('totalHorasFrequencias').style.display = 'block';
     },
     
     limparTabelaFrequencias() {
         const tbody = document.getElementById('corpoTabelaFrequencias');
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center text-muted py-4">
+                <td colspan="6" class="text-center text-muted py-4">
                     <i class="fas fa-arrow-up me-2"></i>Selecione um plano de atividade acima
                 </td>
             </tr>
         `;
+        // Ocultar total de horas
+        document.getElementById('totalHorasFrequencias').style.display = 'none';
     },
     
     filtrarCamposEstagio() {
         const busca = document.getElementById('buscaPessoa').value.toLowerCase();
+        const tipoPessoa = document.getElementById('filtroTipoPessoa').value;
         const filtroEmEdicao = document.getElementById('filtroEmEdicao').checked;
         const filtroConcluido = document.getElementById('filtroConcluido').checked;
         const filtroFinalizado = document.getElementById('filtroFinalizado').checked;
@@ -589,10 +638,30 @@ const DashboardAdmin = {
             
             let mostrar = true;
             
-            // Filtro por busca
+            // Filtro por busca e tipo de pessoa
             if (busca) {
-                const textoCompleto = `${estagiario} ${orientador} ${supervisor} ${concedente}`;
-                mostrar = textoCompleto.includes(busca);
+                let textoParaBusca = '';
+                
+                switch (tipoPessoa) {
+                    case 'estagiario':
+                        textoParaBusca = estagiario;
+                        break;
+                    case 'orientador':
+                        textoParaBusca = orientador;
+                        break;
+                    case 'supervisor':
+                        textoParaBusca = supervisor;
+                        break;
+                    case 'concedente':
+                        textoParaBusca = concedente;
+                        break;
+                    case 'tudo':
+                    default:
+                        textoParaBusca = `${estagiario} ${orientador} ${supervisor} ${concedente}`;
+                        break;
+                }
+                
+                mostrar = textoParaBusca.includes(busca);
             }
             
             // Filtro por situação
@@ -618,13 +687,61 @@ const DashboardAdmin = {
     },
     
     editarPlano(planoId) {
-        // Redirecionar para o formulário de lançamento de frequência
-        window.location.href = `/frequencias/novo?planoAtividadeId=${planoId}&referrer=dashboard-administrativo`;
+        // Redirecionar para o formulário de edição de plano de atividade
+        window.location.href = `/planos-atividade/${planoId}/edit`;
     },
     
     editarFrequencia(frequenciaId) {
-        // Implementar redirecionamento para edição de frequência
-        console.log('Editar frequência:', frequenciaId);
+        // Redirecionar para o formulário de edição de frequência
+        window.location.href = `/frequencias/${frequenciaId}/editar?referrer=dashboard-administrativo`;
+    },
+    
+    formatarData(dataString) {
+        if (!dataString || dataString === 'N/A') return 'N/A';
+        
+        try {
+            const data = new Date(dataString);
+            if (isNaN(data.getTime())) return 'N/A';
+            
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = String(data.getFullYear()).slice(-2);
+            const horas = String(data.getHours()).padStart(2, '0');
+            const minutos = String(data.getMinutes()).padStart(2, '0');
+            
+            return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
+        } catch (error) {
+            return 'N/A';
+        }
+    },
+    
+    async toggleAnexoSei(planoId, elemento) {
+        try {
+            const valorAtual = elemento.textContent.trim();
+            const novoValor = valorAtual === 'Sim' ? 'Não' : 'Sim';
+            
+            // Fazer requisição para atualizar no banco de dados
+            const response = await fetch(`/planos-atividade/${planoId}/anexo-sei`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ plano_anexado_sei: novoValor })
+            });
+            
+            const resultado = await response.json();
+            
+            if (resultado.success) {
+                // Atualizar o elemento na interface
+                elemento.textContent = novoValor;
+                elemento.style.color = novoValor === 'Sim' ? '#006400' : '#8B0000';
+            } else {
+                alert('Erro ao atualizar anexo SEI: ' + (resultado.message || 'Erro desconhecido'));
+            }
+        } catch (error) {
+            console.error('Erro ao alternar anexo SEI:', error);
+            alert('Erro ao atualizar anexo SEI. Tente novamente.');
+        }
     }
 };
 

@@ -54,6 +54,9 @@ router.get('/:id/download-assinado', (req, res) => planoAtividadeController.down
 // DELETE /planos-atividade/:id/remover-assinado - Remover documento assinado (apenas administradores)
 router.delete('/:id/remover-assinado', requirePermissions(['Administrador']), (req, res) => planoAtividadeController.removerDocumentoAssinado(req, res));
 
+// PATCH /planos-atividade/:id/anexo-sei - Atualizar status do anexo SEI
+router.patch('/:id/anexo-sei', (req, res) => planoAtividadeController.updateAnexoSei(req, res));
+
 // GET /planos-atividade/:id/categoria-usuario - Buscar categoria do usuário no plano
 router.get('/:id/categoria-usuario', (req, res) => planoAtividadeController.buscarCategoriaUsuario(req, res));
 

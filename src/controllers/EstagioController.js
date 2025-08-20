@@ -12,6 +12,7 @@ const Pessoa = require('../models/Pessoa');
 const Parametro = require('../models/Parametro');
 const { messages, enums, pagination } = require('../config');
 const databaseConfig = require('../config/database');
+const SQLOptimizer = require('../utils/sql-optimizer');
 
 class EstagioController {
     constructor() {
@@ -56,10 +57,8 @@ class EstagioController {
 
             // Filtrar por usuário se não for administrador
             if (user.nivelacesso !== 'Administrador') {
-                // Buscar a categoria do usuário
-                const usuarioSql = 'SELECT categoria FROM pessoa WHERE id_pessoa = ?';
-                const usuario = await databaseConfig.get(usuarioSql, [user.id_pessoa]);
-                const categoriaUsuario = usuario?.categoria;
+                // Buscar a categoria do usuário com cache (otimizado)
+                const categoriaUsuario = await SQLOptimizer.getUserCategoryWithCache(user.id_pessoa, databaseConfig);
                 
                 // Aplicar filtros baseados na categoria
                 switch (categoriaUsuario) {

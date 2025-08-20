@@ -195,6 +195,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Situação</th>
+                                    <th>Anexo</th>
                                     <th>Data Inicial</th>
                                     <th>Data Final</th>
                                     <th>Carga Horária</th>
@@ -206,10 +207,10 @@
                             </thead>
                             <tbody id="corpoTabelaPlanos">
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
-                                        <i class="fas fa-arrow-up me-2"></i>Selecione um campo de estágio acima
-                                    </td>
-                                </tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="fas fa-arrow-up me-2"></i>Selecione um campo de estágio acima
+                    </td>
+                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -455,7 +456,7 @@ const DashboardAdmin = {
         if (planos.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         <i class="fas fa-inbox me-2"></i>Nenhum plano de atividade encontrado
                     </td>
                 </tr>
@@ -468,9 +469,21 @@ const DashboardAdmin = {
             tr.style.cursor = 'pointer';
             tr.dataset.planoId = plano.id_planoatividade;
             
+            // Verificar se deve mostrar link de download
+            const situacao = plano.situacao || 'N/A';
+            const temAnexo = situacao === 'Aprovado com Anexo' && plano.url_planoassinado;
+            
             tr.innerHTML = `
                 <td>
-                    <span class="badge bg-info">${plano.situacao || 'N/A'}</span>
+                    <span class="badge bg-info">${situacao}</span>
+                </td>
+                <td class="text-center">
+                    ${temAnexo ? 
+                        `<a href="${plano.url_planoassinado}" target="_blank" class="btn btn-sm btn-success" title="Baixar Plano de Atividade">
+                            <i class="fas fa-download"></i> Baixar
+                        </a>` : 
+                        '<span class="text-muted">-</span>'
+                    }
                 </td>
                 <td>${plano.data_inicial ? new Date(plano.data_inicial).toLocaleDateString('pt-BR') : 'N/A'}</td>
                 <td>${plano.data_final ? new Date(plano.data_final).toLocaleDateString('pt-BR') : 'N/A'}</td>

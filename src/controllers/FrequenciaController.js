@@ -783,11 +783,110 @@ class FrequenciaController {
      */
     async excluir(req, res) {
         try {
-            // TODO: Implementar exclusão de frequência
-            return res.status(501).json({ success: false, message: 'Método não implementado ainda' });
+            const { id } = req.params;
+            const userId = req.session.user?.id_pessoa;
+            const userCategoria = req.session.user?.categoria;
+
+            // Validação básica
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'ID da frequência é obrigatório'
+                });
+            }
+
+            if (!userId) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Usuário não autenticado'
+                });
+            }
+
+            // Verificar se a frequência existe e buscar informações para validação de permissão
+            const frequenciaExistente = await databaseConfig.get(`
+                SELECT 
+                    cef.*,
+                    ce.id_pessoa_estagiario,
+                    ce.id_pessoa_orientador,
+                    ce.id_pessoa_supervisor
+                FROM campo_estagio_frequencia cef
+                INNER JOIN campo_estagio_planoatividade pa ON cef.id_planoatividade = pa.id_planoatividade
+                INNER JOIN campo_estagio ce ON pa.id_campo_estagio = ce.id_campo_estagio
+                WHERE cef.id_campo_estagio_frequencia = ?
+            `, [id]);
+
+            if (!frequenciaExistente) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Frequência não encontrada'
+                });
+            }
+
+            // Verificar permissões de exclusão
+            // Permitir exclusão para:
+            // 1. Coordenadores (categoria 1)
+            // 2. Professores/Orientadores (categoria 2) - apenas suas próprias frequências
+            // 3. Supervisores (categoria 5) - apenas suas próprias frequências
+            // 4. Estagiários (categoria 3) - apenas suas próprias frequências e se não aprovada
+            
+            const categoriasArray = userCategoria ? userCategoria.split(',').map(cat => cat.trim()) : [];
+            let temPermissao = false;
+            let motivoNegacao = '';
+
+            if (categoriasArray.includes('1')) {
+                // Coordenadores podem excluir qualquer frequência
+                temPermissao = true;
+            } else if (categoriasArray.includes('2') && frequenciaExistente.id_pessoa_orientador === userId) {
+                // Orientadores podem excluir suas próprias frequências
+                temPermissao = true;
+            } else if (categoriasArray.includes('5') && frequenciaExistente.id_pessoa_supervisor === userId) {
+                // Supervisores podem excluir suas próprias frequências
+                temPermissao = true;
+            } else if (categoriasArray.includes('3') && frequenciaExistente.id_pessoa_estagiario === userId) {
+                // Estagiários podem excluir apenas se não houver aprovações
+                if (frequenciaExistente.aprovado_estagiario || frequenciaExistente.aprovado_orientador || frequenciaExistente.aprovado_supervisor) {
+                    motivoNegacao = 'Não é possível excluir uma frequência que já foi aprovada';
+                } else {
+                    temPermissao = true;
+                }
+            } else {
+                motivoNegacao = 'Você não tem permissão para excluir esta frequência';
+            }
+
+            if (!temPermissao) {
+                return res.status(403).json({
+                    success: false,
+                    message: motivoNegacao || 'Acesso negado'
+                });
+            }
+
+            // Log de auditoria
+            console.log(`[FREQUENCIA] Usuário ${userId} (${userCategoria}) iniciando exclusão da frequência ${id}`);
+
+            // Executar exclusão usando o service
+            const frequenciaService = new (require('../services/FrequenciaService'))();
+            const sucesso = await frequenciaService.excluirFrequencia(id);
+
+            if (sucesso) {
+                console.log(`[FREQUENCIA] Frequência ${id} excluída com sucesso pelo usuário ${userId}`);
+                return res.json({
+                    success: true,
+                    message: 'Frequência excluída com sucesso'
+                });
+            } else {
+                console.error(`[FREQUENCIA] Falha ao excluir frequência ${id} - nenhuma linha afetada`);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Erro ao excluir frequência - nenhum registro foi removido'
+                });
+            }
+
         } catch (error) {
             console.error('[FREQUENCIA] Erro ao excluir frequência:', error);
-            return res.status(500).json({ success: false, message: 'Erro interno do servidor' });
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Erro interno do servidor ao excluir frequência' 
+            });
         }
     }
 

@@ -85,8 +85,18 @@ router.post('/criar', requireAdmin, (req, res) => pessoaController.store(req, re
 // GET /buscar - Buscar pessoas via rota segura
 router.get('/buscar', async (req, res) => {
     try {
-        const { termo, categoria, pagina = 1, limite = 25 } = req.query;
+        let { termo, categoria, pagina = 1, limite = 25 } = req.query;
         const databaseConfig = require('../config/database');
+        
+        // Decodificar o termo de busca para garantir que acentos sejam tratados corretamente
+        if (termo) {
+            try {
+                termo = decodeURIComponent(termo);
+            } catch (e) {
+                // Se falhar na decodificação, usar o termo original
+                console.warn('Erro ao decodificar termo de busca:', e.message);
+            }
+        }
         
         // Construir query SQL dinamicamente
         const filters = [];

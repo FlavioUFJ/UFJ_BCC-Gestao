@@ -1401,6 +1401,12 @@
         const GerenciadorModulos = {
             moduloAtual: null,
             
+            // Função para normalizar texto removendo acentos
+            normalizarTexto(texto) {
+                if (!texto) return '';
+                return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            },
+            
             init() {
                 this.bindEvents();
                 // Só carregar módulos se a aba estiver ativa
@@ -1616,6 +1622,7 @@
             
             filtrarModulos() {
                 const busca = document.getElementById('buscaModulo')?.value.toLowerCase() || '';
+                const buscaNormalizada = this.normalizarTexto(busca);
                 const status = document.getElementById('filtroStatusModulo')?.value || '';
                 
                 if (!this.modulos) return;
@@ -1623,10 +1630,15 @@
                 let modulosFiltrados = this.modulos;
                 
                 if (busca) {
-                    modulosFiltrados = modulosFiltrados.filter(modulo => 
-                        modulo.nome.toLowerCase().includes(busca) ||
-                        (modulo.descricao && modulo.descricao.toLowerCase().includes(busca))
-                    );
+                    modulosFiltrados = modulosFiltrados.filter(modulo => {
+                        const nomeNormal = modulo.nome.toLowerCase();
+                        const nomeNormalizado = this.normalizarTexto(modulo.nome);
+                        const descricaoNormal = modulo.descricao ? modulo.descricao.toLowerCase() : '';
+                        const descricaoNormalizada = this.normalizarTexto(modulo.descricao || '');
+                        
+                        return nomeNormal.includes(busca) || nomeNormalizado.includes(buscaNormalizada) ||
+                               descricaoNormal.includes(busca) || descricaoNormalizada.includes(buscaNormalizada);
+                    });
                 }
                 
                 if (status !== '') {

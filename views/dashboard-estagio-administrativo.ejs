@@ -617,8 +617,15 @@ const DashboardAdmin = {
         document.getElementById('totalHorasFrequencias').style.display = 'none';
     },
     
+    // Função para normalizar texto removendo acentos
+    normalizarTexto(texto) {
+        if (!texto) return '';
+        return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    },
+    
     filtrarCamposEstagio() {
         const busca = document.getElementById('buscaPessoa').value.toLowerCase();
+        const buscaNormalizada = this.normalizarTexto(busca);
         const tipoPessoa = document.getElementById('filtroTipoPessoa').value;
         const filtroEmEdicao = document.getElementById('filtroEmEdicao').checked;
         const filtroConcluido = document.getElementById('filtroConcluido').checked;
@@ -641,27 +648,34 @@ const DashboardAdmin = {
             // Filtro por busca e tipo de pessoa
             if (busca) {
                 let textoParaBusca = '';
+                let textoParaBuscaNormalizado = '';
                 
                 switch (tipoPessoa) {
                     case 'estagiario':
                         textoParaBusca = estagiario;
+                        textoParaBuscaNormalizado = this.normalizarTexto(linha.children[0].textContent);
                         break;
                     case 'orientador':
                         textoParaBusca = orientador;
+                        textoParaBuscaNormalizado = this.normalizarTexto(linha.children[1].textContent);
                         break;
                     case 'supervisor':
                         textoParaBusca = supervisor;
+                        textoParaBuscaNormalizado = this.normalizarTexto(linha.children[2].textContent);
                         break;
                     case 'concedente':
                         textoParaBusca = concedente;
+                        textoParaBuscaNormalizado = this.normalizarTexto(linha.children[3].textContent);
                         break;
                     case 'tudo':
                     default:
                         textoParaBusca = `${estagiario} ${orientador} ${supervisor} ${concedente}`;
+                        textoParaBuscaNormalizado = `${this.normalizarTexto(linha.children[0].textContent)} ${this.normalizarTexto(linha.children[1].textContent)} ${this.normalizarTexto(linha.children[2].textContent)} ${this.normalizarTexto(linha.children[3].textContent)}`;
                         break;
                 }
                 
-                mostrar = textoParaBusca.includes(busca);
+                // Busca normal ou normalizada
+                mostrar = textoParaBusca.includes(busca) || textoParaBuscaNormalizado.includes(buscaNormalizada);
             }
             
             // Filtro por situação

@@ -861,6 +861,7 @@
         // Aplicar filtros na tabela
         aplicarFiltros() {
             const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const searchTermNormalized = this.normalizarTexto(searchTerm);
             const filtroPlano = document.getElementById('filtroPlano')?.value || '';
 
             const filtroStatus = document.getElementById('filtroStatus')?.value || '';
@@ -877,7 +878,8 @@
                 // Filtro de busca geral
                 if (searchTerm) {
                     const text = row.textContent.toLowerCase();
-                    if (!text.includes(searchTerm)) {
+                    const textNormalized = this.normalizarTexto(row.textContent);
+                    if (!text.includes(searchTerm) && !textNormalized.includes(searchTermNormalized)) {
                         mostrarLinha = false;
                     }
                 }
@@ -2072,21 +2074,40 @@
         AdminDashboard.carregarPlanosAtividade(campoSelecionadoId, true);
     }
     
+    // Função para normalizar texto removendo acentos
+    function normalizarTexto(texto) {
+        if (!texto) return '';
+        return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+    
     // Função para filtrar registros
     function campEstFiltrar() {
         const termo = document.getElementById('campEstBusca').value.toLowerCase().trim();
+        const termoNormalizado = normalizarTexto(termo);
         
         if (termo === '') {
             registrosFiltrados = [...registrosOriginais];
         } else {
             registrosFiltrados = registrosOriginais.filter(registro => {
-                return (
+                // Busca normal (mantém compatibilidade)
+                const buscaNormal = (
                     (registro.nome_estagiario && registro.nome_estagiario.toLowerCase().includes(termo)) ||
                     (registro.nome_orientador && registro.nome_orientador.toLowerCase().includes(termo)) ||
                     (registro.nome_supervisor && registro.nome_supervisor.toLowerCase().includes(termo)) ||
                     (registro.nome_concedente && registro.nome_concedente.toLowerCase().includes(termo)) ||
                     (registro.situacao && registro.situacao.toLowerCase().includes(termo))
                 );
+                
+                // Busca normalizada (sem acentos)
+                const buscaNormalizada = (
+                    (registro.nome_estagiario && normalizarTexto(registro.nome_estagiario).includes(termoNormalizado)) ||
+                    (registro.nome_orientador && normalizarTexto(registro.nome_orientador).includes(termoNormalizado)) ||
+                    (registro.nome_supervisor && normalizarTexto(registro.nome_supervisor).includes(termoNormalizado)) ||
+                    (registro.nome_concedente && normalizarTexto(registro.nome_concedente).includes(termoNormalizado)) ||
+                    (registro.situacao && normalizarTexto(registro.situacao).includes(termoNormalizado))
+                );
+                
+                return buscaNormal || buscaNormalizada;
             });
         }
         
@@ -2263,16 +2284,27 @@
     // Função para filtrar frequências
     function frequenciaFiltrar() {
         const termo = document.getElementById('freqAtiBusca').value.toLowerCase().trim();
+        const termoNormalizado = normalizarTexto(termo);
         
         if (termo === '') {
             frequenciasFiltradas = [];
         } else {
             frequenciasFiltradas = frequencias.filter(frequencia => {
-                return (
+                // Busca normal (mantém compatibilidade)
+                const buscaNormal = (
                     (frequencia.nome_estagiario && frequencia.nome_estagiario.toLowerCase().includes(termo)) ||
                     (frequencia.mesdereferencia && frequencia.mesdereferencia.toLowerCase().includes(termo)) ||
                     (frequencia.resumo_atividades && frequencia.resumo_atividades.toLowerCase().includes(termo))
                 );
+                
+                // Busca normalizada (sem acentos)
+                const buscaNormalizada = (
+                    (frequencia.nome_estagiario && normalizarTexto(frequencia.nome_estagiario).includes(termoNormalizado)) ||
+                    (frequencia.mesdereferencia && normalizarTexto(frequencia.mesdereferencia).includes(termoNormalizado)) ||
+                    (frequencia.resumo_atividades && normalizarTexto(frequencia.resumo_atividades).includes(termoNormalizado))
+                );
+                
+                return buscaNormal || buscaNormalizada;
             });
         }
         

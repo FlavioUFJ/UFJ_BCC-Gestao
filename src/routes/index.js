@@ -378,8 +378,18 @@ router.post('/api/pessoas/importar', requireAuth, async (req, res) => {
 // Rota API para buscar pessoas
 router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
     try {
-        const { termo, categoria, pagina = 1, limite = 25 } = req.query;
+        let { termo, categoria, pagina = 1, limite = 25 } = req.query;
         const databaseConfig = require('../config/database');
+        
+        // Decodificar o termo de busca para garantir que acentos sejam tratados corretamente
+        if (termo) {
+            try {
+                termo = decodeURIComponent(termo);
+            } catch (e) {
+                // Se falhar na decodificação, usar o termo original
+                console.warn('Erro ao decodificar termo de busca:', e.message);
+            }
+        }
         
         // Construir query SQL dinamicamente
         const filters = [];

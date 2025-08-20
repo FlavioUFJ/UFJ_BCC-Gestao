@@ -1431,11 +1431,13 @@
     function verificarPermissaoBotaoNovo() {
         // Verificar se usuário é categoria 3 (Aluno/Estagiário)
         const userCategoria = '<%= user.categoria %>';
+        // Processar múltiplas categorias (formato: 1,2,5)
+        const categoriasArray = userCategoria ? userCategoria.toString().split(',').map(cat => cat.trim()) : [];
         const totalRegistros = <%= camposEstagio ? camposEstagio.length : 0 %>;
         
-        console.log('Verificando permissão botão Novo:', { categoria: userCategoria, registros: totalRegistros });
+        console.log('Verificando permissão botão Novo:', { categoria: userCategoria, categorias: categoriasArray, registros: totalRegistros });
         
-        if (userCategoria === '3' && totalRegistros >= 1) {
+        if (categoriasArray.includes('3') && totalRegistros >= 1) {
             const btnNovo = document.getElementById('btnNovoCampoEstagio');
             if (btnNovo) {
                 btnNovo.disabled = true;
@@ -2219,7 +2221,9 @@
         
         // Verificar categoria do usuário para edição
         const userCategoria = '<%= user.categoria %>';
-        const podeEditarPorCategoria = userCategoria === '1' || userCategoria === '2' || userCategoria === '5'; // Coordenador, Professor/Orientador ou Supervisor
+        // Processar múltiplas categorias (formato: 1,2,5)
+        const categoriasArray = userCategoria ? userCategoria.toString().split(',').map(cat => cat.trim()) : [];
+        const podeEditarPorCategoria = categoriasArray.some(cat => cat === '1' || cat === '2' || cat === '5'); // Coordenador, Professor/Orientador ou Supervisor
         
         // Controlar botões Editar e Lançar Dia baseado nas aprovações e categoria
         const btnEditar = document.getElementById('btnFreqAtiEditar');

@@ -125,15 +125,34 @@ class SQLOptimizer {
 
     /**
      * Otimiza consultas com CASE WHEN para usar índices
-     * @param {string} field - Campo a ser verificado
-     * @param {Object} cases - Objeto com os casos {valor: resultado}
+     * @param {string|Array} field - Campo a ser verificado ou array de condições
+     * @param {Object} cases - Objeto com os casos {valor: resultado} (opcional se field for array)
      * @param {string} defaultValue - Valor padrão
      * @returns {string} Expressão CASE otimizada
      */
-    static buildOptimizedCase(field, cases, defaultValue = '0') {
-        const caseStatements = Object.entries(cases)
-            .map(([value, result]) => `WHEN ${field} = '${value}' THEN ${result}`)
-            .join(' ');
+    static buildOptimizedCase(field, cases = null, defaultValue = '0') {
+        let caseStatements = '';
+        
+        // Se field é um array de condições (novo formato)
+        if (Array.isArray(field)) {
+            caseStatements = field
+                .map(item => `WHEN ${item.condition} THEN 1`)
+                .join(' ');
+            
+            // Construir múltiplas colunas para cada condição
+            const columns = field
+                .map(item => `SUM(CASE WHEN ${item.condition} THEN 1 ELSE 0 END) as ${item.alias}`)
+                .join(', ');
+            
+            return columns;
+        }
+        
+        // Formato original (compatibilidade)
+        if (cases && typeof cases === 'object') {
+            caseStatements = Object.entries(cases)
+                .map(([value, result]) => `WHEN ${field} = '${value}' THEN ${result}`)
+                .join(' ');
+        }
 
         return `CASE ${caseStatements} ELSE ${defaultValue} END`;
     }

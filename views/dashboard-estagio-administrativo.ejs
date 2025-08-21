@@ -110,146 +110,382 @@
         </div>
     </div>
 
-    <!-- Tabela Principal: Campos de Estágio -->
+    <!-- Sistema de Abas -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0"><i class="fas fa-table me-2"></i>Campos de Estágio</h6>
-                        <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm" id="filtroTipoPessoa" style="width: 150px;">
-                                <option value="tudo">Tudo</option>
-                                <option value="estagiario">Por Estagiário</option>
-                                <option value="orientador">Por Orientador</option>
-                                <option value="supervisor">Por Supervisor</option>
-                                <option value="concedente">Por Concedente</option>
-                            </select>
-                            <input type="text" class="form-control form-control-sm" id="buscaPessoa" placeholder="Buscar por nome..." style="width: 200px;">
-                        </div>
-                    </div>
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <div class="d-flex flex-wrap gap-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtroEmEdicao" checked>
-                                    <label class="form-check-label" for="filtroEmEdicao">
-                                        Em Edição
-                                    </label>
+                <div class="card-header bg-dark text-white p-0">
+                    <style>
+                        .nav-tabs-custom .nav-link {
+                            color: white !important;
+                            background-color: transparent;
+                            border: none;
+                            border-bottom: 3px solid transparent;
+                        }
+                        .nav-tabs-custom .nav-link:hover {
+                            color: #f8f9fa !important;
+                            background-color: rgba(255,255,255,0.1);
+                        }
+                        .nav-tabs-custom .nav-link.active {
+                            color: white !important;
+                            border-bottom: 3px solid transparent;
+                        }
+                        .nav-tabs-custom .nav-link.active#campos-tab {
+                            background-color: #0d6efd;
+                        }
+                        .nav-tabs-custom .nav-link.active#planos-tab {
+                            background-color: #198754;
+                        }
+                        .nav-tabs-custom .nav-link.active#frequencias-tab {
+                            background-color: #0dcaf0;
+                        }
+                    </style>
+                    <ul class="nav nav-tabs nav-tabs-custom" id="dashboardTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="campos-tab" data-bs-toggle="tab" data-bs-target="#campos" type="button" role="tab" aria-controls="campos" aria-selected="true">
+                                <i class="fas fa-building me-2"></i>Campos de Estágio
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="planos-tab" data-bs-toggle="tab" data-bs-target="#planos" type="button" role="tab" aria-controls="planos" aria-selected="false">
+                                <i class="fas fa-tasks me-2"></i>Planos de Atividade
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="frequencias-tab" data-bs-toggle="tab" data-bs-target="#frequencias" type="button" role="tab" aria-controls="frequencias" aria-selected="false">
+                                <i class="fas fa-calendar-check me-2"></i>Frequências
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content" id="dashboardTabContent">
+                        <!-- Aba Campos de Estágio -->
+                        <div class="tab-pane fade show active" id="campos" role="tabpanel" aria-labelledby="campos-tab">
+                            <div class="card border-0">
+                                <div class="card-header bg-primary text-white">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0 text-white"><i class="fas fa-table me-2"></i>Campos de Estágio</h6>
+                                        <div class="d-flex gap-2">
+                                            <select class="form-select form-select-sm" id="filtroTipoPessoa" style="width: 150px;">
+                                                <option value="tudo">Tudo</option>
+                                                <option value="estagiario">Por Estagiário</option>
+                                                <option value="orientador">Por Orientador</option>
+                                                <option value="supervisor">Por Supervisor</option>
+                                                <option value="concedente">Por Concedente</option>
+                                            </select>
+                                            <input type="text" class="form-control form-control-sm" id="buscaPessoa" placeholder="Buscar por nome..." style="width: 200px;">
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex flex-wrap gap-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroEmEdicao" checked>
+                                                    <label class="form-check-label text-white" for="filtroEmEdicao">
+                                                        Em Edição
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroConcluido" checked>
+                                                    <label class="form-check-label text-white" for="filtroConcluido">
+                                                        Concluído
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroFinalizado" checked>
+                                                    <label class="form-check-label text-white" for="filtroFinalizado">
+                                                        Finalizado
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <small class="text-white-50">
+                                                <span id="contadorRegistros">0</span> registros encontrados (máx. 50)
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtroConcluido" checked>
-                                    <label class="form-check-label" for="filtroConcluido">
-                                        Concluído
-                                    </label>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0" id="tabelaCamposEstagio">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>Estagiário</th>
+                                                    <th>Orientador</th>
+                                                    <th>Supervisor</th>
+                                                    <th>Concedente</th>
+                                                    <th>Situação</th>
+                                                    <th width="100">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="corpoTabelaCampos">
+                                                <!-- Dados carregados dinamicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="filtroFinalizado" checked>
-                                    <label class="form-check-label" for="filtroFinalizado">
-                                        Finalizado
-                                    </label>
+                            </div>
+                            
+                            <!-- Tabelas dependentes (Planos e Frequências) -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h6 class="mb-0"><i class="fas fa-list-alt me-2"></i>Planos de Atividade</h6>
+                                            <small class="text-light">Selecione um campo de estágio para visualizar os planos</small>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover mb-0" id="tabelaPlanosAtividade">
+                                                    <thead class="table-dark">
+                                                        <tr>
+                                                            <th>Situação</th>
+                                                            <th>Anexo</th>
+                                                            <th>Data Inicial</th>
+                                                            <th>Data Final</th>
+                                                            <th>Carga Horária</th>
+                                                            <th>Atividades</th>
+                                                            <th>Anexo SEI</th>
+                                                            <th>Última Atualização</th>
+                                                            <th width="100">Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="corpoTabelaPlanos">
+                                                        <tr>
+                                                            <td colspan="9" class="text-center text-muted py-4">
+                                                                <i class="fas fa-arrow-up me-2"></i>Selecione um campo de estágio acima
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm border-0">
+                                        <div class="card-header bg-info text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Frequências</h6>
+                                                <span id="totalHorasFrequencias" class="text-light" style="display: none;">Total de Horas: <strong id="valorTotalHoras">0</strong></span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover mb-0" id="tabelaFrequencias">
+                                                    <thead class="table-dark">
+                                                        <tr>
+                                                            <th>Mês de Referência</th>
+                                                            <th>Total de Horas</th>
+                                                            <th>Aprovado Estagiário</th>
+                                                            <th>Aprovado Orientador</th>
+                                                            <th>Aprovado Supervisor</th>
+                                                            <th width="100">Ações</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="corpoTabelaFrequencias">
+                                                        <tr>
+                                                            <td colspan="6" class="text-center text-muted py-4">
+                                                                <i class="fas fa-arrow-up me-2"></i>Selecione um plano de atividade acima
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <small class="text-muted">
-                                <span id="contadorRegistros">0</span> registros encontrados (máx. 50)
-                            </small>
+                        
+                        <!-- Aba Planos de Atividade -->
+                        <div class="tab-pane fade" id="planos" role="tabpanel" aria-labelledby="planos-tab">
+                            <div class="card border-0">
+                                <div class="card-header bg-success text-white">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <h6 class="mb-0 text-white"><i class="fas fa-tasks me-2"></i>Planos de Atividade</h6>
+                                            <small class="text-white-50">
+                                                <span id="contadorRegistrosPlanos">0</span> registros
+                                            </small>
+                                        </div>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <select class="form-select form-select-sm" id="filtroCategoriaPessoa" style="width: 150px;">
+                                                <option value="">Todas as Categorias</option>
+                                                <option value="Estagiário">Estagiário</option>
+                                                <option value="Professor">Professor</option>
+                                                <option value="Supervisor">Supervisor</option>
+                                            </select>
+                                            <input type="text" class="form-control form-control-sm" id="filtroNomePessoa" placeholder="Digite o nome para pesquisar..." style="width: 200px; display: none;">
+                                            <div class="d-flex gap-2 ms-3">
+                                                <label class="text-white me-2">Anexado SEI:</label>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAnexadoSEISim" checked>
+                                                    <label class="form-check-label text-white" for="filtroAnexadoSEISim">
+                                                        Sim
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAnexadoSEINao" checked>
+                                                    <label class="form-check-label text-white" for="filtroAnexadoSEINao">
+                                                        Não
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex flex-wrap gap-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroSituacaoEmEdicao" checked>
+                                                    <label class="form-check-label text-white" for="filtroSituacaoEmEdicao">
+                                                        Em Edição
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroSituacaoEmAprovacao" checked>
+                                                    <label class="form-check-label text-white" for="filtroSituacaoEmAprovacao">
+                                                        Em Aprovação
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroSituacaoAprovadoSemAnexo" checked>
+                                                    <label class="form-check-label text-white" for="filtroSituacaoAprovadoSemAnexo">
+                                                        Aprovado sem Anexo
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroSituacaoAprovadoComAnexo" checked>
+                                                    <label class="form-check-label text-white" for="filtroSituacaoAprovadoComAnexo">
+                                                        Aprovado com Anexo
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0" id="tabelaPlanosIndependente">
+                                            <thead class="table-success">
+                                                <tr>
+                                                    <th>Estagiário</th>
+                                                    <th>Supervisor</th>
+                                                    <th>Orientador</th>
+                                                    <th>Situação</th>
+                                                    <th>CH</th>
+                                                    <th>Anexo</th>
+                                                    <th>Anexado SEI</th>
+                                                    <th width="100">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="corpoTabelaPlanosIndependente">
+                                                <!-- Dados carregados dinamicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="tabelaCamposEstagio">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Estagiário</th>
-                                    <th>Orientador</th>
-                                    <th>Supervisor</th>
-                                    <th>Concedente</th>
-                                    <th>Situação</th>
-                                    <th width="100">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoTabelaCampos">
-                                <!-- Dados carregados dinamicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabela Secundária: Planos de Atividade -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0"><i class="fas fa-list-alt me-2"></i>Planos de Atividade</h6>
-                    <small class="text-light">Selecione um campo de estágio para visualizar os planos</small>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="tabelaPlanosAtividade">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Situação</th>
-                                    <th>Anexo</th>
-                                    <th>Data Inicial</th>
-                                    <th>Data Final</th>
-                                    <th>Carga Horária</th>
-                                    <th>Atividades</th>
-                                    <th>Anexo SEI</th>
-                                    <th>Última Atualização</th>
-                                    <th width="100">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoTabelaPlanos">
-                                <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
-                        <i class="fas fa-arrow-up me-2"></i>Selecione um campo de estágio acima
-                    </td>
-                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabela Terciária: Frequências -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Frequências</h6>
-                        <span id="totalHorasFrequencias" class="text-light" style="display: none;">Total de Horas: <strong id="valorTotalHoras">0</strong></span>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="tabelaFrequencias">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Mês de Referência</th>
-                                    <th>Total de Horas</th>
-                                    <th>Aprovado Estagiário</th>
-                                    <th>Aprovado Orientador</th>
-                                    <th>Aprovado Supervisor</th>
-                                    <th width="100">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoTabelaFrequencias">
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        <i class="fas fa-arrow-up me-2"></i>Selecione um plano de atividade acima
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        
+                        <!-- Aba Frequências -->
+                        <div class="tab-pane fade" id="frequencias" role="tabpanel" aria-labelledby="frequencias-tab">
+                            <div class="card border-0">
+                                <div class="card-header bg-info text-white">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <h6 class="mb-0 text-white"><i class="fas fa-calendar-check me-2"></i>Frequências</h6>
+                                            <small class="text-white-50">
+                                                <span id="contadorRegistrosFrequencias">0</span> registros
+                                            </small>
+                                        </div>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <select class="form-select form-select-sm" id="filtroCategoriaFreq" style="width: 150px;">
+                                                <option value="">Todas as Categorias</option>
+                                                <option value="Estagiário">Estagiário</option>
+                                                <option value="Professor">Professor</option>
+                                                <option value="Supervisor">Supervisor</option>
+                                            </select>
+                                            <input type="text" class="form-control form-control-sm" id="filtroNomeFreq" placeholder="Digite o nome para pesquisar..." style="width: 200px; display: none;">
+                                            <div class="d-flex gap-2 ms-3">
+                                                <label class="text-white me-2">Anexado SEI:</label>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAnexadoSEISimFreq" checked>
+                                                    <label class="form-check-label text-white" for="filtroAnexadoSEISimFreq">
+                                                        Sim
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAnexadoSEINaoFreq" checked>
+                                                    <label class="form-check-label text-white" for="filtroAnexadoSEINaoFreq">
+                                                        Não
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex flex-wrap gap-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAprovadoEstagiario" checked>
+                                                    <label class="form-check-label text-white" for="filtroAprovadoEstagiario">
+                                                        Aprovado Estagiário
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAprovadoOrientador" checked>
+                                                    <label class="form-check-label text-white" for="filtroAprovadoOrientador">
+                                                        Aprovado Orientador
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroAprovadoSupervisor" checked>
+                                                    <label class="form-check-label text-white" for="filtroAprovadoSupervisor">
+                                                        Aprovado Supervisor
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="filtroPendentes" checked>
+                                                    <label class="form-check-label text-white" for="filtroPendentes">
+                                                        Pendentes
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0" id="tabelaFrequenciasIndependente">
+                                            <thead class="table-info">
+                                                <tr>
+                                                    <th>Estagiário</th>
+                                                    <th>Supervisor</th>
+                                                    <th>Orientador</th>
+                                                    <th>Mês Referência</th>
+                                                    <th>Total Horas</th>
+                                                    <th>Aprovado Estagiário</th>
+                                                    <th>Aprovado Orientador</th>
+                                                    <th>Aprovado Supervisor</th>
+                                                    <th>Anexado SEI</th>
+                                                    <th width="100">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="corpoTabelaFrequenciasIndependente">
+                                                <!-- Dados carregados dinamicamente -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,6 +504,59 @@ const DashboardAdmin = {
         this.carregarCamposEstagio();
         this.setupEventListeners();
         this.restaurarFiltros();
+        
+        // Configurar event listeners para as abas
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', (event) => {
+                const targetTab = event.target.getAttribute('data-bs-target');
+                
+                if (targetTab === '#planos') {
+                    this.carregarPlanosIndependente();
+                } else if (targetTab === '#frequencias') {
+                    this.carregarFrequenciasIndependente();
+                }
+            });
+        });
+        
+        // Event listeners para filtros de Planos de Atividade
+        const filtrosPlanos = ['filtroSituacaoEmEdicao', 'filtroSituacaoEmAprovacao', 'filtroSituacaoAprovadoSemAnexo', 'filtroSituacaoAprovadoComAnexo', 'filtroCategoriaPessoa', 'filtroAnexadoSEISim', 'filtroAnexadoSEINao'];
+        filtrosPlanos.forEach(filtroId => {
+            const elemento = document.getElementById(filtroId);
+            if (elemento) {
+                elemento.addEventListener('change', () => {
+                    if (filtroId === 'filtroCategoriaPessoa') {
+                        this.toggleCaixaPesquisaNome();
+                    }
+                    this.filtrarPlanosIndependente();
+                });
+            }
+        });
+        
+        // Event listener para o campo de pesquisa por nome
+        const filtroNome = document.getElementById('filtroNomePessoa');
+        if (filtroNome) {
+            filtroNome.addEventListener('input', () => this.filtrarPlanosIndependente());
+        }
+        
+        // Event listeners para filtros de Frequências
+        const filtrosFreq = ['filtroAprovadoEstagiario', 'filtroAprovadoOrientador', 'filtroAprovadoSupervisor', 'filtroPendentes', 'filtroCategoriaFreq', 'filtroAnexadoSEISimFreq', 'filtroAnexadoSEINaoFreq'];
+        filtrosFreq.forEach(filtroId => {
+            const elemento = document.getElementById(filtroId);
+            if (elemento) {
+                elemento.addEventListener('change', () => {
+                    if (filtroId === 'filtroCategoriaFreq') {
+                        this.toggleCaixaPesquisaNomeFreq();
+                    }
+                    this.filtrarFrequenciasIndependente();
+                });
+            }
+        });
+        
+        // Event listener para o campo de pesquisa por nome na aba Frequências
+        const filtroNomeFreq = document.getElementById('filtroNomeFreq');
+        if (filtroNomeFreq) {
+            filtroNomeFreq.addEventListener('input', () => this.filtrarFrequenciasIndependente());
+        }
     },
     
     // Salvar filtros no localStorage
@@ -312,6 +601,46 @@ const DashboardAdmin = {
                 }, 100);
             } catch (error) {
                 console.error('Erro ao restaurar filtros:', error);
+            }
+        }
+    },
+    
+    // Controlar visibilidade da caixa de pesquisa por nome
+    toggleCaixaPesquisaNome() {
+        const selectCategoria = document.getElementById('filtroCategoriaPessoa');
+        const inputNome = document.getElementById('filtroNomePessoa');
+        
+        if (selectCategoria && inputNome) {
+            const categoriaSelecionada = selectCategoria.value;
+            
+            if (categoriaSelecionada && categoriaSelecionada !== '') {
+                // Mostrar caixa de texto quando uma categoria específica é selecionada
+                inputNome.style.display = 'block';
+                inputNome.focus();
+            } else {
+                // Esconder caixa de texto quando "Todas as Categorias" é selecionada
+                inputNome.style.display = 'none';
+                inputNome.value = ''; // Limpar o campo
+            }
+        }
+    },
+    
+    // Controlar visibilidade da caixa de pesquisa por nome na aba Frequências
+    toggleCaixaPesquisaNomeFreq() {
+        const selectCategoria = document.getElementById('filtroCategoriaFreq');
+        const inputNome = document.getElementById('filtroNomeFreq');
+        
+        if (selectCategoria && inputNome) {
+            const categoriaSelecionada = selectCategoria.value;
+            
+            if (categoriaSelecionada && categoriaSelecionada !== '') {
+                // Mostrar caixa de texto quando uma categoria específica é selecionada
+                inputNome.style.display = 'block';
+                inputNome.focus();
+            } else {
+                // Esconder caixa de texto quando "Todas as Categorias" é selecionada
+                inputNome.style.display = 'none';
+                inputNome.value = ''; // Limpar o campo
             }
         }
     },
@@ -820,6 +1149,367 @@ const DashboardAdmin = {
         } catch (error) {
             console.error('Erro ao alternar anexo SEI:', error);
             alert('Erro ao atualizar anexo SEI. Tente novamente.');
+        }
+    },
+
+    // Novas funcionalidades para abas independentes
+    async carregarPlanosIndependente() {
+        console.log('[DEBUG] Função carregarPlanosIndependente chamada');
+        try {
+            console.log('[DEBUG] Fazendo fetch para planos independente');
+            const response = await fetch('/secure/estagios/dashboard-administrativo/planos-independente');
+            const dados = await response.json();
+            
+            if (dados.success) {
+                this.renderizarTabelaPlanosIndependente(dados.data);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar planos independentes:', error);
+        }
+    },
+
+    renderizarTabelaPlanosIndependente(planos) {
+        const tbody = document.getElementById('corpoTabelaPlanosIndependente');
+        tbody.innerHTML = '';
+        
+        if (planos.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox me-2"></i>Nenhum plano de atividade encontrado
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        planos.forEach(plano => {
+            const tr = document.createElement('tr');
+            tr.dataset.situacao = plano.pa_situacao;
+            tr.dataset.categoria = plano.estagiario_categoria;
+            tr.dataset.anexadoSei = plano.pa_plano_anexado_sei || 'Não';
+            
+            const temAnexo = plano.pa_url_planoassinado && plano.pa_url_planoassinado.trim() !== '';
+            
+            tr.innerHTML = `
+                <td>${plano.estagiario_nome || 'N/A'}</td>
+                <td>${plano.supervisor_nome || 'N/A'}</td>
+                <td>${plano.orientador_nome || 'N/A'}</td>
+                <td>
+                    <span class="badge ${this.getSituacaoBadgeClass(plano.pa_situacao)}">${plano.pa_situacao || 'N/A'}</span>
+                </td>
+                <td>
+                    <span class="badge bg-primary">
+                        ${plano.pa_cargahoraria || 'N/A'}h
+                    </span>
+                </td>
+                <td class="text-center">
+                    ${temAnexo ? 
+                        `<a href="${plano.pa_url_planoassinado}" target="_blank" class="btn btn-sm btn-success" title="Baixar Plano de Atividade">
+                            <i class="fas fa-download"></i> Baixar
+                        </a>` : 
+                        '<span class="text-muted">-</span>'
+                    }
+                </td>
+                <td>
+                    <span class="anexo-sei-toggle" 
+                          data-plano-id="${plano.pa_id_planoatividade}" 
+                          style="cursor: pointer; font-weight: bold; color: ${plano.pa_plano_anexado_sei === 'Sim' ? '#006400' : '#8B0000'};"
+                          title="Clique para mudar de valor"
+                          onclick="DashboardAdmin.toggleAnexoSei(${plano.pa_id_planoatividade}, this)">
+                        ${plano.pa_plano_anexado_sei || 'Não'}
+                    </span>
+                </td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+        
+        // Aplicar filtros após renderizar
+        this.filtrarPlanosIndependente();
+    },
+
+    getSituacaoBadgeClass(situacao) {
+        switch(situacao) {
+            case 'Em Edição':
+                return 'bg-warning text-dark';
+            case 'Em Aprovação':
+                return 'bg-info';
+            case 'Aprovado sem Anexo':
+                return 'bg-success';
+            case 'Aprovado com Anexo':
+                return 'bg-primary';
+            default:
+                return 'bg-secondary';
+        }
+    },
+
+    async carregarFrequenciasIndependente() {
+        console.log('[DEBUG] Carregando frequências independentes...');
+        try {
+            console.log('[DEBUG] Fazendo fetch para /secure/estagios/dashboard-administrativo/frequencias-independente');
+            const response = await fetch('/secure/estagios/dashboard-administrativo/frequencias-independente');
+            const dados = await response.json();
+            
+            if (dados.success) {
+                console.log('[DEBUG] Frequências carregadas com sucesso:', dados.data.length, 'registros');
+                this.renderizarTabelaFrequenciasIndependente(dados.data);
+            } else {
+                console.error('[DEBUG] Erro na resposta:', dados.message);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar frequências independentes:', error);
+        }
+    },
+
+    renderizarTabelaFrequenciasIndependente(frequencias) {
+        const tbody = document.getElementById('corpoTabelaFrequenciasIndependente');
+        tbody.innerHTML = '';
+        
+        if (frequencias.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox me-2"></i>Nenhuma frequência encontrada
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        frequencias.forEach(freq => {
+            const tr = document.createElement('tr');
+            tr.dataset.aprovadoEstagiario = freq.caf_aprovado_estagiario;
+            tr.dataset.aprovadoOrientador = freq.caf_aprovado_orientador;
+            tr.dataset.aprovadoSupervisor = freq.caf_aprovado_supervisor;
+            tr.dataset.categoria = freq.estagiario_categoria;
+            tr.dataset.anexadoSei = freq.caf_frenquencia_anexado_sei || 'Não';
+            
+            // Determinar se está pendente
+            const isPendente = freq.caf_aprovado_estagiario !== 'Sim' || 
+                              freq.caf_aprovado_orientador !== 'Sim' || 
+                              freq.caf_aprovado_supervisor !== 'Sim';
+            tr.dataset.pendente = isPendente ? 'sim' : 'nao';
+            
+            tr.innerHTML = `
+                <td>${freq.estagiario_nome || 'N/A'}</td>
+                <td>${freq.supervisor_nome || 'N/A'}</td>
+                <td>${freq.orientador_nome || 'N/A'}</td>
+                <td>${freq.caf_mesdereferencia || 'N/A'}</td>
+                <td>${freq.caf_total_hora_mesreferencia || '0'}h</td>
+                <td>
+                    <span class="badge ${freq.caf_aprovado_estagiario === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.caf_aprovado_estagiario || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${freq.caf_aprovado_orientador === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.caf_aprovado_orientador || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${freq.caf_aprovado_supervisor === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.caf_aprovado_supervisor || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${freq.caf_frenquencia_anexado_sei === 'Sim' ? 'bg-success' : 'bg-secondary'}">
+                        ${freq.caf_frenquencia_anexado_sei || 'Não'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarFrequencia(${freq.caf_id_campo_estagio_frequencia || 0})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+        
+        // Aplicar filtros após renderizar
+        this.filtrarFrequenciasIndependente();
+    },
+
+    filtrarPlanosIndependente() {
+        const situacaoEmEdicao = document.getElementById('filtroSituacaoEmEdicao')?.checked || false;
+        const situacaoEmAprovacao = document.getElementById('filtroSituacaoEmAprovacao')?.checked || false;
+        const situacaoAprovadoSemAnexo = document.getElementById('filtroSituacaoAprovadoSemAnexo')?.checked || false;
+        const situacaoAprovadoComAnexo = document.getElementById('filtroSituacaoAprovadoComAnexo')?.checked || false;
+        const categoria = document.getElementById('filtroCategoriaPessoa')?.value || '';
+        const nomePesquisa = document.getElementById('filtroNomePessoa')?.value.toLowerCase().trim() || '';
+        
+        const linhas = document.querySelectorAll('#tabelaPlanosIndependente tbody tr');
+        let registrosVisiveis = 0;
+        
+        linhas.forEach(linha => {
+            if (linha.children.length === 1) return; // Pular linha de "nenhum resultado"
+            
+            const situacao = linha.dataset.situacao;
+            const categoriaLinha = linha.dataset.categoria;
+            
+            let mostrar = true;
+            
+            // Filtro por situação
+            const situacaoValida = 
+                (situacaoEmEdicao && situacao === 'Em Edição') ||
+                (situacaoEmAprovacao && situacao === 'Em Aprovação') ||
+                (situacaoAprovadoSemAnexo && situacao === 'Aprovado sem Anexo') ||
+                (situacaoAprovadoComAnexo && situacao === 'Aprovado com Anexo');
+            
+            if (!situacaoValida) mostrar = false;
+            
+            // Filtro por categoria - corrigido para funcionar com valores específicos
+            if (mostrar && categoria && categoria !== '') {
+                // Mapear categorias do select para os valores do dataset
+                let categoriaComparacao = '';
+                if (categoria === 'Estagiário' && categoriaLinha === '3') categoriaComparacao = categoria;
+                else if (categoria === 'Professor' && (categoriaLinha === '2' || categoriaLinha === '2,5')) categoriaComparacao = categoria;
+                else if (categoria === 'Supervisor' && categoriaLinha === '5') categoriaComparacao = categoria;
+                
+                mostrar = categoriaComparacao === categoria;
+                
+                // Filtro por nome quando categoria específica está selecionada
+                if (mostrar && nomePesquisa) {
+                    let nomeParaComparar = '';
+                    
+                    // Obter o nome da pessoa baseado na categoria selecionada
+                    if (categoria === 'Estagiário') {
+                        nomeParaComparar = linha.children[0]?.textContent.toLowerCase() || ''; // Coluna Estagiário
+                    } else if (categoria === 'Professor') {
+                        nomeParaComparar = linha.children[2]?.textContent.toLowerCase() || ''; // Coluna Orientador
+                    } else if (categoria === 'Supervisor') {
+                        nomeParaComparar = linha.children[1]?.textContent.toLowerCase() || ''; // Coluna Supervisor
+                    }
+                    
+                    mostrar = nomeParaComparar.includes(nomePesquisa);
+                }
+            }
+            
+            // Filtro por Anexado SEI
+            if (mostrar) {
+                const anexadoSEISim = document.getElementById('filtroAnexadoSEISim')?.checked || false;
+                const anexadoSEINao = document.getElementById('filtroAnexadoSEINao')?.checked || false;
+                
+                if (!anexadoSEISim && !anexadoSEINao) {
+                    mostrar = false; // Se nenhum filtro SEI estiver marcado, não mostrar nada
+                } else {
+                    const anexadoSEI = linha.dataset.anexadoSei; // Assumindo que existe este dataset
+                    const isSim = anexadoSEI === 'Sim';
+                    const isNao = anexadoSEI === 'Não';
+                    
+                    mostrar = (anexadoSEISim && isSim) || (anexadoSEINao && isNao);
+                }
+            }
+            
+            // Filtro por Anexado SEI
+            if (mostrar) {
+                const anexadoSEISimFreq = document.getElementById('filtroAnexadoSEISimFreq')?.checked || false;
+                const anexadoSEINaoFreq = document.getElementById('filtroAnexadoSEINaoFreq')?.checked || false;
+                
+                if (!anexadoSEISimFreq && !anexadoSEINaoFreq) {
+                    mostrar = false; // Se nenhum filtro SEI estiver marcado, não mostrar nada
+                } else {
+                    const anexadoSEI = linha.dataset.anexadoSei; // Assumindo que existe este dataset
+                    const isSim = anexadoSEI === 'Sim';
+                    const isNao = anexadoSEI === 'Não';
+                    
+                    mostrar = (anexadoSEISimFreq && isSim) || (anexadoSEINaoFreq && isNao);
+                }
+            }
+            
+            linha.style.display = mostrar ? '' : 'none';
+            if (mostrar) registrosVisiveis++;
+        });
+        
+        // Atualizar contador
+        document.getElementById('contadorRegistrosPlanos').textContent = registrosVisiveis;
+    },
+
+    filtrarFrequenciasIndependente() {
+        const aprovadoEstagiario = document.getElementById('filtroAprovadoEstagiario').checked;
+        const aprovadoOrientador = document.getElementById('filtroAprovadoOrientador').checked;
+        const aprovadoSupervisor = document.getElementById('filtroAprovadoSupervisor').checked;
+        const pendentes = document.getElementById('filtroPendentes').checked;
+        const categoria = document.getElementById('filtroCategoriaFreq').value;
+        const anexadoSEISimFreq = document.getElementById('filtroAnexadoSEISimFreq')?.checked || false;
+        const anexadoSEINaoFreq = document.getElementById('filtroAnexadoSEINaoFreq')?.checked || false;
+        
+        const linhas = document.querySelectorAll('#tabelaFrequenciasIndependente tbody tr');
+        let registrosVisiveis = 0;
+        
+        linhas.forEach(linha => {
+            if (linha.children.length === 1) return; // Pular linha de "nenhum resultado"
+            
+            const aprovEstagiario = linha.dataset.aprovadoEstagiario;
+            const aprovOrientador = linha.dataset.aprovadoOrientador;
+            const aprovSupervisor = linha.dataset.aprovadoSupervisor;
+            const isPendente = linha.dataset.pendente === 'sim';
+            const categoriaLinha = linha.dataset.categoria;
+            
+            let mostrar = false;
+            
+            // Filtro por status de aprovação
+            if (aprovadoEstagiario && aprovEstagiario === 'Sim') mostrar = true;
+            if (aprovadoOrientador && aprovOrientador === 'Sim') mostrar = true;
+            if (aprovadoSupervisor && aprovSupervisor === 'Sim') mostrar = true;
+            if (pendentes && isPendente) mostrar = true;
+            
+            // Se nenhum filtro de status estiver marcado, não mostrar nada
+            if (!aprovadoEstagiario && !aprovadoOrientador && !aprovadoSupervisor && !pendentes) {
+                mostrar = false;
+            }
+            
+            // Filtro por categoria
+            if (mostrar && categoria && categoria !== '') {
+                // Mapear categorias para comparação
+                let categoriaComparacao = '';
+                if (categoria === 'Estagiário' && categoriaLinha === '3') categoriaComparacao = categoria;
+                else if (categoria === 'Professor' && (categoriaLinha === '2' || categoriaLinha === '2,5')) categoriaComparacao = categoria;
+                else if (categoria === 'Supervisor' && categoriaLinha === '5') categoriaComparacao = categoria;
+                
+                mostrar = categoriaComparacao === categoria;
+            }
+            
+            // Filtro por nome (quando uma categoria específica está selecionada)
+            if (mostrar && categoria && categoria !== '') {
+                const termoPesquisa = document.getElementById('filtroNomeFreq').value.toLowerCase().trim();
+                if (termoPesquisa) {
+                    // Determinar qual coluna de nome verificar baseado na categoria
+                    let colunaIndice = -1;
+                    if (categoria === 'Estagiário') colunaIndice = 0; // Nome do estagiário
+                    else if (categoria === 'Supervisor') colunaIndice = 1; // Nome do supervisor
+                    else if (categoria === 'Professor') colunaIndice = 2; // Nome do professor
+                    
+                    if (colunaIndice >= 0 && linha.children[colunaIndice]) {
+                        const nomeColuna = linha.children[colunaIndice].textContent.toLowerCase();
+                        mostrar = nomeColuna.includes(termoPesquisa);
+                    }
+                }
+            }
+            
+            // Filtro "Anexado SEI"
+            if (mostrar && (anexadoSEISimFreq || anexadoSEINaoFreq)) {
+                const anexadoSEI = linha.dataset.anexadoSei;
+                const isSim = anexadoSEI === 'Sim';
+                const isNao = anexadoSEI === 'Não';
+                
+                mostrar = (anexadoSEISimFreq && isSim) || (anexadoSEINaoFreq && isNao);
+            }
+            
+            linha.style.display = mostrar ? '' : 'none';
+            if (mostrar) registrosVisiveis++;
+        });
+        
+        // Atualizar contador
+        document.getElementById('contadorRegistrosFrequencias').textContent = registrosVisiveis;
+    },
+
+    editarFrequencia(frequenciaId) {
+        if (frequenciaId && frequenciaId > 0) {
+            window.open(`/frequencias/form/${frequenciaId}`, '_blank');
+        } else {
+            alert('ID da frequência inválido');
         }
     }
 };

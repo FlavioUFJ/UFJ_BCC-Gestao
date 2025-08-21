@@ -1379,7 +1379,8 @@ router.get('/estagios/dashboard-administrativo/planos/:campoId', requireAuth, as
                 ce.cargahoraria, 
                 ce.atividades, 
                 ce.dataultimaatualizacao, 
-                ce.url_planoassinado
+                ce.url_planoassinado,
+                ce.plano_anexado_sei
             FROM 
                 campo_estagio_planoatividade AS ce 
             WHERE 
@@ -1443,6 +1444,133 @@ router.get('/estagios/dashboard-administrativo/frequencias/:planoId', requireAut
     } catch (error) {
         console.error('Erro ao buscar frequências:', error);
         res.json({ success: false, message: 'Erro ao buscar frequências' });
+    }
+});
+
+/**
+ * API para dados independentes da tabela de planos de atividade
+ */
+router.get('/estagios/dashboard-administrativo/planos-independente', requireAuth, async (req, res) => {
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user || user.nivelacesso !== 'Administrador') {
+            return res.json({ success: false, message: 'Acesso negado' });
+        }
+        
+        const db = databaseConfig;
+        
+        const query = `
+            SELECT 
+                estagiario.id_pessoa AS estagiario_id_pessoa, 
+                estagiario.nome AS estagiario_nome, 
+                estagiario.categoria AS estagiario_categoria, 
+                supervisor.id_pessoa AS supervisor_id_pessoa, 
+                supervisor.nome AS supervisor_nome, 
+                supervisor.categoria AS supervisor_categoria, 
+                orientador.id_pessoa AS orientador_id_pessoa, 
+                orientador.nome AS orientador_nome, 
+                orientador.categoria AS orientador_categoria, 
+                ce.id_campo_estagio AS ce_id_campo_estagio, 
+                ce.semestre_ano AS ce_semestre_ano, 
+                pa.id_planoatividade AS pa_id_planoatividade, 
+                pa.situacao AS pa_situacao, 
+                pa.data_inicial AS pa_data_inicial, 
+                pa.data_final AS pa_data_final, 
+                pa.cargahoraria AS pa_cargahoraria, 
+                pa.url_planoassinado AS pa_url_planoassinado, 
+                pa.plano_anexado_sei AS pa_plano_anexado_sei 
+            FROM 
+                campo_estagio_planoatividade AS pa 
+                LEFT OUTER JOIN campo_estagio AS ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                LEFT OUTER JOIN pessoa AS estagiario ON ce.id_pessoa_estagiario = estagiario.id_pessoa 
+                LEFT OUTER JOIN pessoa AS supervisor ON ce.id_pessoa_supervisor = supervisor.id_pessoa 
+                LEFT OUTER JOIN pessoa AS orientador ON ce.id_pessoa_orientador = orientador.id_pessoa 
+            ORDER BY pa.id_planoatividade DESC
+        `;
+        
+        console.log('[DEBUG] Executando query para planos independentes:', query);
+        const planos = await db.all(query);
+        console.log('[DEBUG] Resultado da query:', planos);
+        console.log('[DEBUG] Número de registros encontrados:', planos.length);
+        
+        res.json({ success: true, data: planos });
+        
+    } catch (error) {
+        console.error('Erro ao buscar planos independentes:', error);
+        res.json({ success: false, message: 'Erro ao buscar planos independentes' });
+    }
+});
+
+/**
+ * API para dados independentes da tabela de frequências
+ */
+router.get('/estagios/dashboard-administrativo/frequencias-independente', requireAuth, async (req, res) => {
+    console.log('[DEBUG] Função carregarFrequenciasIndependente chamada');
+    console.log('[DEBUG] Headers da requisição:', req.headers);
+    console.log('==================')
+    
+    try {
+        const user = getUserFromSession(req);
+        
+        if (!user || user.nivelacesso !== 'Administrador') {
+            return res.json({ success: false, message: 'Acesso negado' });
+        }
+        
+        const db = databaseConfig;
+        
+        console.log('[DEBUG] Executando query para frequências independentes:');
+        
+        const query = `
+            SELECT 
+                estagiario.id_pessoa AS estagiario_id_pessoa, 
+                estagiario.nome AS estagiario_nome, 
+                estagiario.categoria AS estagiario_categoria, 
+                supervisor.id_pessoa AS supervisor_id_pessoa, 
+                supervisor.nome AS supervisor_nome, 
+                supervisor.categoria AS supervisor_categoria, 
+                orientador.id_pessoa AS orientador_id_pessoa, 
+                orientador.nome AS orientador_nome, 
+                orientador.categoria AS orientador_categoria, 
+                ce.id_campo_estagio AS ce_id_campo_estagio, 
+                ce.semestre_ano AS ce_semestre_ano, 
+                pa.id_planoatividade AS pa_id_planoatividade, 
+                pa.situacao AS pa_situacao, 
+                pa.data_inicial AS pa_data_inicial, 
+                pa.data_final AS pa_data_final, 
+                pa.cargahoraria AS pa_cargahoraria, 
+                pa.url_planoassinado AS pa_url_planoassinado, 
+                pa.plano_anexado_sei AS pa_plano_anexado_sei, 
+                caf.id_campo_estagio_frequencia as caf_id_campo_estagio_frequencia, 
+                caf.data_abertura as caf_data_abertura, 
+                caf.mesdereferencia as caf_mesdereferencia, 
+                caf.total_hora_mesreferencia as caf_total_hora_mesreferencia, 
+                caf.aprovado_estagiario as caf_aprovado_estagiario, 
+                caf.aprovado_orientador as caf_aprovado_orientador, 
+                caf.aprovado_supervisor as caf_aprovado_supervisor, 
+                caf.frenquencia_anexado_sei as caf_frenquencia_anexado_sei 
+            FROM 
+                campo_estagio_planoatividade AS pa 
+                LEFT OUTER JOIN campo_estagio AS ce ON pa.id_campo_estagio = ce.id_campo_estagio 
+                LEFT OUTER JOIN pessoa AS estagiario ON ce.id_pessoa_estagiario = estagiario.id_pessoa 
+                LEFT OUTER JOIN pessoa AS supervisor ON ce.id_pessoa_supervisor = supervisor.id_pessoa 
+                LEFT OUTER JOIN pessoa AS orientador ON ce.id_pessoa_orientador = orientador.id_pessoa 
+                INNER JOIN campo_estagio_frequencia AS caf ON caf.id_planoatividade = pa.id_planoatividade
+            ORDER BY caf.mesdereferencia DESC, pa.id_planoatividade DESC
+        `;
+        
+        console.log(query);
+        
+        const frequencias = await db.all(query);
+        
+        console.log('[DEBUG] Resultado da query:', frequencias);
+        console.log('[DEBUG] Número de registros encontrados:', frequencias.length);
+        
+        res.json({ success: true, data: frequencias });
+        
+    } catch (error) {
+        console.error('Erro ao buscar frequências independentes:', error);
+        res.json({ success: false, message: 'Erro ao buscar frequências independentes' });
     }
 });
 

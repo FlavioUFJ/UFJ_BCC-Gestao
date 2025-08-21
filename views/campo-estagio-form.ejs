@@ -905,7 +905,7 @@
                 } else {
                     mostrarAlerta('Campo de estágio salvo, mas houve erro ao enviar e-mails: ' + (result.message || 'Erro desconhecido'), 'warning');
                     setTimeout(() => {
-                        window.location.href = '/estagios/dashboard';
+                        voltarPaginaAnterior();
                     }, 3000);
                 }
             })
@@ -914,7 +914,7 @@
                 ocultarTelaCarregamento();
                 mostrarAlerta('Campo de estágio salvo, mas houve erro ao enviar e-mails de notificação', 'warning');
                 setTimeout(() => {
-                    window.location.href = '/estagios/dashboard';
+                    voltarPaginaAnterior();
                 }, 3000);
             });
         }
@@ -961,8 +961,8 @@
             if (overlay) {
                 overlay.remove();
             }
-            // Redirecionar para o dashboard
-            window.location.href = '/estagios/dashboard';
+            // Usar a função voltarPaginaAnterior para respeitar o referrer
+            voltarPaginaAnterior();
         }
 
         function validarDatas() {
@@ -1095,7 +1095,7 @@
                 if (result.success) {
                     mostrarAlerta('Campo de estágio salvo com sucesso!', 'success');
                     setTimeout(() => {
-                        window.location.href = '/estagios/dashboard';
+                        voltarPaginaAnterior();
                     }, 1500);
                 } else {
                     mostrarAlerta('Erro ao cadastrar campo de estágio: ' + result.message, 'error');

@@ -592,7 +592,7 @@ class PessoaController {
     async manageLogin(req, res) {
         try {
             const { id } = req.params;
-            const { action, usuario, senha, ativo } = req.body;
+            const { action, senha, nivelacesso, status } = req.body;
 
             // Verificar se é administrador
             if (req.session.user.nivelacesso !== enums.nivelAcesso.ADMINISTRADOR) {
@@ -610,6 +610,13 @@ class PessoaController {
                 });
             }
 
+            // Verificar se já existe login para esta pessoa
+            const databaseConfig = require('../config/database');
+            const existingLogin = await databaseConfig.get(
+                'SELECT id_pessoa, status, nivelacesso FROM pessoa_login WHERE id_pessoa = ?',
+                [id]
+            );
+
             let message = '';
 
             switch (action) {
@@ -617,7 +624,10 @@ class PessoaController {
                     if (!senha) {
                         throw new Error('Senha é obrigatória');
                     }
-                    await this.pessoaModel.createLogin(id, { senha });
+                    if (existingLogin) {
+                        throw new Error('Já existe um login para esta pessoa');
+                    }
+                    await this.pessoaModel.createLogin(id, { senha, nivelacesso });
                     message = 'Login criado com sucesso';
                     break;
 
@@ -625,12 +635,30 @@ class PessoaController {
                     if (!senha) {
                         throw new Error('Nova senha é obrigatória');
                     }
+                    if (!existingLogin) {
+                        throw new Error('Não existe login para esta pessoa. Use a ação "create" primeiro.');
+                    }
                     await this.pessoaModel.updatePassword(id, senha);
-                    message = 'Senha atualizada com sucesso';
+                    
+                    // Atualizar também nível de acesso e status se fornecidos
+                    if (nivelacesso || status) {
+                        const updateQuery = `
+                            UPDATE pessoa_login 
+                            SET nivelacesso = COALESCE(?, nivelacesso), 
+                                status = COALESCE(?, status),
+                                dataultimaatualizacao = NOW()
+                            WHERE id_pessoa = ?
+                        `;
+                        await databaseConfig.run(updateQuery, [nivelacesso, status, id]);
+                    }
+                    message = 'Dados de login atualizados com sucesso';
                     break;
 
                 case 'toggle_status':
-                    await this.pessoaModel.toggleLoginStatus(id, ativo === true || ativo === 'true');
+                    if (!existingLogin) {
+                        throw new Error('Não existe login para esta pessoa');
+                    }
+                    await this.pessoaModel.toggleLoginStatus(id, status === 'ativo');
                     message = 'Status do login atualizado com sucesso';
                     break;
 

@@ -200,6 +200,10 @@ class App {
         this.app.use('/public', express.static(path.join(__dirname, 'public'), {
             maxAge: this.environment === 'production' ? '1d' : '0'
         }));
+        // Servir arquivos estáticos também diretamente da raiz
+        this.app.use(express.static(path.join(__dirname, 'public'), {
+            maxAge: this.environment === 'production' ? '1d' : '0'
+        }));
         this.app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
             maxAge: '1h'
         }));

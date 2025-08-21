@@ -423,8 +423,10 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
         // Buscar pessoas com paginação
         const offset = (parseInt(pagina) - 1) * parseInt(limite);
         const query = `
-            SELECT p.id_pessoa, p.nome, p.email, p.telefone, p.categoria, p.cnpj_cpf
+            SELECT p.id_pessoa, p.nome, p.email, p.telefone, p.categoria, p.cnpj_cpf,
+                   pl.id_pessoa as login_id, pl.status as login_status, pl.nivelacesso
             FROM pessoa p 
+            LEFT JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
             ${whereClause}
             ORDER BY p.nome
             LIMIT ? OFFSET ?
@@ -432,6 +434,15 @@ router.get('/api/pessoas/buscar', requireAuth, async (req, res) => {
         params.push(parseInt(limite), offset);
         
         const pessoas = await databaseConfig.all(query, params);
+        
+        // Para cada pessoa, buscar os módulos vinculados
+        for (let pessoa of pessoas) {
+            const modulosVinculados = await databaseConfig.all(
+                'SELECT id_modulo FROM pessoa_modulos WHERE id_pessoa = ? AND ativo = 1',
+                [pessoa.id_pessoa]
+            );
+            pessoa.modulos = modulosVinculados.map(m => m.id_modulo);
+        }
         
         res.json({
             success: true,
@@ -456,8 +467,10 @@ router.get('/api/pessoas/:id', requireAuth, async (req, res) => {
         const databaseConfig = require('../config/database');
         
         const query = `
-            SELECT p.id_pessoa, p.nome, p.email, p.telefone, p.categoria, p.cnpj_cpf, p.tipo
+            SELECT p.id_pessoa, p.nome, p.email, p.telefone, p.categoria, p.cnpj_cpf, p.tipo,
+                   pl.id_pessoa as login_id, pl.status as login_status, pl.nivelacesso
             FROM pessoa p 
+            LEFT JOIN pessoa_login pl ON p.id_pessoa = pl.id_pessoa
             WHERE p.id_pessoa = ?
         `;
         
@@ -470,9 +483,29 @@ router.get('/api/pessoas/:id', requireAuth, async (req, res) => {
             });
         }
         
+        // Estruturar os dados corretamente
+        const pessoaFormatted = {
+            id_pessoa: pessoa.id_pessoa,
+            nome: pessoa.nome,
+            email: pessoa.email,
+            telefone: pessoa.telefone,
+            categoria: pessoa.categoria,
+            cnpj_cpf: pessoa.cnpj_cpf,
+            tipo: pessoa.tipo,
+            dataCadastro: pessoa.dataCadastro
+        };
+        
+        // Adicionar dados de login se existirem
+        if (pessoa.login_id) {
+            pessoaFormatted.login = {
+                status: pessoa.login_status,
+                nivelacesso: pessoa.nivelacesso
+            };
+        }
+        
         res.json({
             success: true,
-            pessoa: pessoa
+            pessoa: pessoaFormatted
         });
     } catch (error) {
         console.error('Erro ao buscar pessoa:', error);

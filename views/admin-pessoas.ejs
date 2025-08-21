@@ -130,8 +130,8 @@
                                         <input type="text" class="form-control" id="buscaPessoa" placeholder="Nome, email ou CPF/CNPJ...">
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="categoriaPessoa" class="form-label">Categoria:</label>
-                                        <select class="form-select" id="categoriaPessoa">
+                                        <label for="categoriaBusca" class="form-label">Categoria:</label>
+                                        <select class="form-select" id="categoriaBusca">
                                             <option value="">Todas as categorias</option>
                                             <option value="1">Coordenador</option>
                                             <option value="2">Professor/Orientador</option>
@@ -238,13 +238,14 @@
                                                 <th>Nome</th>
                                                 <th>Email</th>
                                                 <th>Categoria</th>
-                                                <th>Status Login</th>
+                                                <th>Nível</th>
+                                                <th>Status</th>
                                                 <th width="120">Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody id="corpoTabelaPessoasLogin">
                                             <tr>
-                                                <td colspan="5" class="text-center text-muted py-4">
+                                                <td colspan="6" class="text-center text-muted py-4">
                                                     <i class="fas fa-search fa-2x mb-2"></i><br>
                                                     Use os filtros acima para buscar pessoas
                                                 </td>
@@ -536,7 +537,7 @@
             // Métodos da aba Pessoas
             async loadPessoas() {
                 const busca = document.getElementById('buscaPessoa').value;
-                const categoria = document.getElementById('categoriaPessoa').value;
+                const categoria = document.getElementById('categoriaBusca').value;
                 
                 try {
                     const params = new URLSearchParams({
@@ -749,7 +750,7 @@
                 if (!pessoas || pessoas.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="6" class="text-center text-muted py-4">
                                 <i class="fas fa-users fa-2x mb-2"></i><br>
                                 Nenhuma pessoa encontrada
                             </td>
@@ -760,18 +761,39 @@
                 
                 let html = '';
                 pessoas.forEach(pessoa => {
-                    const statusLogin = pessoa.login ? 
-                        `<span class="badge bg-success">Ativo</span>` : 
-                        `<span class="badge bg-secondary">Sem Login</span>`;
+                    // Definir nível de acesso com valores padrão
+                    let nivelAcesso = 'Visitante'; // valor padrão
+                    if (pessoa.nivelacesso) {
+                        if (pessoa.nivelacesso === 'Administrador' || pessoa.nivelacesso === 'Operador' || pessoa.nivelacesso === 'Visitante') {
+                            nivelAcesso = pessoa.nivelacesso;
+                        }
+                    }
+                    
+                    // Definir status com valores padrão
+                    let statusLogin;
+                    if (pessoa.login_id) {
+                        if (pessoa.login_status === 'Ativo') {
+                statusLogin = `<span class="badge bg-success">Ativo</span>`;
+            } else if (pessoa.login_status === 'Inativo') {
+                statusLogin = `<span class="badge bg-warning">Inativo</span>`;
+            } else if (pessoa.login_status === 'Bloqueado') {
+                statusLogin = `<span class="badge bg-danger">Bloqueado</span>`;
+            } else {
+                statusLogin = `<span class="badge bg-warning">Inativo</span>`; // valor padrão
+            }
+                    } else {
+                        statusLogin = `<span class="badge bg-secondary">Sem Login</span>`;
+                    }
                     
                     html += `
                         <tr>
                             <td>${pessoa.nome || ''}</td>
                             <td>${pessoa.email || ''}</td>
                             <td>${this.formatCategoria(pessoa.categoria)}</td>
+                            <td>${nivelAcesso}</td>
                             <td>${statusLogin}</td>
                             <td>
-                                <button class="btn btn-sm btn-primary me-1" onclick="AdminPessoas.gerenciarLogin(${pessoa.id_pessoa})">
+                                <button class="btn btn-sm btn-primary me-1" onclick="AdminPessoas.gerenciarLogin(${pessoa.id_pessoa})" title="Alterar Senha, Status ou Nível de Acesso">
                                     <i class="fas fa-key"></i>
                                 </button>
                             </td>
@@ -782,11 +804,44 @@
                 tbody.innerHTML = html;
             },
             
-            gerenciarLogin(id) {
-                 // Implementar gerenciamento de login
-                 console.log('Gerenciar login para pessoa:', id);
-                 this.showNotification('Funcionalidade em desenvolvimento', 'info');
-             },
+            async gerenciarLogin(id) {
+                try {
+                    // Buscar dados da pessoa
+                    const response = await fetch(`/api/pessoas/${id}`);
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        this.showError('Erro ao carregar dados da pessoa');
+                        return;
+                    }
+                    
+                    const pessoa = data.pessoa;
+                    
+                    // Preencher formulário de login
+                    document.getElementById('pessoaLoginId').value = id;
+                    document.getElementById('nomeCompleto').value = pessoa.nome || '';
+                    document.getElementById('emailPessoa').value = pessoa.email || '';
+                    document.getElementById('nivelAcesso').value = pessoa.nivelacesso || 'Visitante';
+                    document.getElementById('statusLogin').value = pessoa.login_status || 'ativo';
+                    document.getElementById('senhaLogin').value = '';
+                    
+                    // Preencher informações da pessoa
+                    document.getElementById('infosPessoa').innerHTML = `
+                        <p><strong>Nome:</strong> ${pessoa.nome || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${pessoa.email || 'N/A'}</p>
+                        <p><strong>Categoria:</strong> ${this.formatCategoria(pessoa.categoria)}</p>
+                        <p><strong>CPF/CNPJ:</strong> ${pessoa.cnpj_cpf || 'N/A'}</p>
+                        <p><strong>Telefone:</strong> ${pessoa.telefone || 'N/A'}</p>
+                    `;
+                    
+                    // Mostrar formulário
+                    document.getElementById('formLogin').style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Erro:', error);
+                    this.showError('Erro ao carregar dados para gerenciar login');
+                }
+            },
             
             async searchPessoaLogin(termo) {
                 if (termo.length < 2) {
@@ -824,6 +879,9 @@
                     if (data.success) {
                         const pessoa = data.pessoa;
                         
+                        // Armazenar dados da pessoa para uso posterior
+                        this.currentPessoaData = pessoa;
+                        
                         // Preencher dados da pessoa
                         document.getElementById('nomeCompleto').value = pessoa.nome;
                         document.getElementById('emailPessoa').value = pessoa.email;
@@ -832,6 +890,10 @@
                         if (pessoa.login) {
                             document.getElementById('nivelAcesso').value = pessoa.login.nivelacesso;
                             document.getElementById('statusLogin').value = pessoa.login.status;
+                        } else {
+                            // Limpar campos se não houver login
+                            document.getElementById('nivelAcesso').value = '';
+                            document.getElementById('statusLogin').value = '';
                         }
                         
                         // Mostrar informações da pessoa
@@ -861,25 +923,39 @@
                     return;
                 }
                 
+                if (!senha) {
+                    this.showError('Senha é obrigatória');
+                    return;
+                }
+                
                 try {
-                    const response = await fetch(`/admin/criar-login`, {
+                    // Determinar a ação baseada na existência de login
+                    // Verificar se existe login através dos dados carregados
+                    const hasLogin = this.currentPessoaData && this.currentPessoaData.login;
+                    const action = hasLogin ? 'update_password' : 'create';
+                    
+                    const response = await fetch(`/pessoas/${pessoaId}/login`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            id_pessoa: pessoaId,
+                            action: action,
+                            senha: senha,
                             nivelacesso: nivelAcesso,
-                            status: status,
-                            senha: senha
+                            status: status
                         })
                     });
                     
                     const data = await response.json();
                     
                     if (data.success) {
-                        this.showSuccess('Dados de login salvos com sucesso!');
+                        this.showSuccess(data.message || 'Dados de login salvos com sucesso!');
                         document.getElementById('senhaLogin').value = '';
+                        document.getElementById('formLogin').style.display = 'none';
+                        
+                        // Recarregar a lista de pessoas
+                        this.loadPessoasLogin();
                     } else {
                         this.showError('Erro ao salvar dados: ' + data.message);
                     }

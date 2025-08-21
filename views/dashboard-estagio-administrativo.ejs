@@ -1507,7 +1507,7 @@ const DashboardAdmin = {
 
     editarFrequencia(frequenciaId) {
         if (frequenciaId && frequenciaId > 0) {
-            window.open(`/frequencias/form/${frequenciaId}`, '_blank');
+            window.open(`/frequencias/${frequenciaId}/editar`, '_blank');
         } else {
             alert('ID da frequência inválido');
         }

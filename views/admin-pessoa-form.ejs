@@ -10,51 +10,8 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer">
     
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .form-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: 2rem;
-        }
-        
-        .form-header {
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .form-header h2 {
-            color: #007bff;
-            margin: 0;
-        }
-        
-        .btn-group-actions {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #dee2e6;
-        }
-        
-        .required {
-            color: #dc3545;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .alert {
-            border-radius: 8px;
-        }
-    </style>
+    <!-- CSS Externo -->
+    <link href="/css/admin-pessoa-form.css" rel="stylesheet">
 </head>
 <body>
     <!-- Navbar -->
@@ -85,7 +42,7 @@
             </div>
             
             <!-- Alertas -->
-            <div id="alertContainer"></div>
+            <div id="alertContainer" aria-live="polite" aria-atomic="true"></div>
             
             <form id="pessoaForm">
                 <input type="hidden" id="pessoaId" value="<%= pessoa ? pessoa.id_pessoa : '' %>">
@@ -93,73 +50,87 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="tipo" class="form-label">Tipo <span class="required">*</span></label>
-                            <select class="form-select" id="tipo" name="tipo" required>
+                            <label for="tipo" class="form-label">Tipo <span class="required" aria-label="campo obrigatório">*</span></label>
+                            <select class="form-select" id="tipo" name="tipo" required aria-describedby="tipo-help">
                                 <option value="">Selecione...</option>
                                 <option value="F" <%= pessoa && pessoa.tipo === 'F' ? 'selected' : '' %>>Pessoa Física</option>
                                 <option value="J" <%= pessoa && pessoa.tipo === 'J' ? 'selected' : '' %>>Pessoa Jurídica</option>
                                 <option value="N" <%= pessoa && pessoa.tipo === 'N' ? 'selected' : '' %>>Não Informada</option>
                             </select>
+                            <div id="tipo-help" class="form-text visually-hidden">Selecione se é pessoa física ou jurídica</div>
                         </div>
                     </div>
                     
                     <div class="col-md-8">
                         <div class="mb-3">
-                            <label for="nome" class="form-label">Nome <span class="required">*</span></label>
+                            <label for="nome" class="form-label">Nome <span class="required" aria-label="campo obrigatório">*</span></label>
                             <input type="text" class="form-control" id="nome" name="nome" 
-                                   value="<%= pessoa ? pessoa.nome : '' %>" required>
+                                   value="<%= pessoa ? pessoa.nome.replace(/"/g, '&quot;') : '' %>" required aria-describedby="nome-help">
+                            <div id="nome-help" class="form-text visually-hidden">Digite o nome completo da pessoa</div>
                         </div>
                     </div>
                     
                     <div class="col-12">
                         <div class="mb-3">
-                            <label class="form-label">Categorias <span class="required">*</span></label>
-                            <div class="border rounded p-2">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Coordenador" id="catCoordenador"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Coordenador') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catCoordenador">Coordenador</label>
+                            <fieldset>
+                                <legend class="form-label" id="categorias-legend">Categorias <span class="required" aria-label="campo obrigatório">*</span></legend>
+                                <div class="border rounded p-2" role="group" aria-labelledby="categorias-legend" aria-describedby="categorias-help">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <% 
+                                                 const categorias = pessoa && pessoa.categoria ? pessoa.categoria : [];
+                                                 const categoriasConfig = [
+                                                     { id: 'catCoordenador', value: 'Coordenador', label: 'Coordenador', desc: 'Pessoa responsável pela coordenação' },
+                                                     { id: 'catProfessor', value: 'Professor', label: 'Professor/Orientador', desc: 'Pessoa que atua como professor ou orientador' }
+                                                 ];
+                                             %>
+                                             <% categoriasConfig.forEach(cat => { %>
+                                             <div class="form-check">
+                                                 <input class="form-check-input categoria-checkbox" type="checkbox" value="<%= cat.value %>" id="<%= cat.id %>"
+                                                        <%= categorias.includes(cat.value) ? 'checked' : '' %> aria-describedby="<%= cat.id %>-desc">
+                                                 <label class="form-check-label" for="<%= cat.id %>"><%= cat.label %></label>
+                                                 <div id="<%= cat.id %>-desc" class="visually-hidden"><%= cat.desc %></div>
+                                             </div>
+                                             <% }); %>
                                         </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Professor" id="catProfessor"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Professor') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catProfessor">Professor/Orientador</label>
+                                        <div class="col-md-4">
+                                            <% 
+                                                 const categoriasCol2 = [
+                                                     { id: 'catAluno', value: 'Aluno', label: 'Aluno/Estagiário', desc: 'Pessoa que atua como aluno ou estagiário' },
+                                                     { id: 'catConcedente', value: 'Concedente', label: 'Concedente', desc: 'Pessoa ou empresa que concede estágio' }
+                                                 ];
+                                             %>
+                                             <% categoriasCol2.forEach(cat => { %>
+                                             <div class="form-check">
+                                                 <input class="form-check-input categoria-checkbox" type="checkbox" value="<%= cat.value %>" id="<%= cat.id %>"
+                                                        <%= categorias.includes(cat.value) ? 'checked' : '' %> aria-describedby="<%= cat.id %>-desc">
+                                                 <label class="form-check-label" for="<%= cat.id %>"><%= cat.label %></label>
+                                                 <div id="<%= cat.id %>-desc" class="visually-hidden"><%= cat.desc %></div>
+                                             </div>
+                                             <% }); %>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <% 
+                                                 const categoriasCol3 = [
+                                                     { id: 'catSupervisor', value: 'Supervisor', label: 'Supervisor', desc: 'Pessoa que supervisiona estágios' },
+                                                     { id: 'catInstituicao', value: 'Instituição', label: 'Instituição/Curso', desc: 'Representa uma instituição ou curso' },
+                                                     { id: 'catUsuarioGeral', value: 'Usuário Geral', label: 'Usuário Geral', desc: 'Usuário com acesso geral ao sistema' }
+                                                 ];
+                                             %>
+                                             <% categoriasCol3.forEach(cat => { %>
+                                             <div class="form-check">
+                                                 <input class="form-check-input categoria-checkbox" type="checkbox" value="<%= cat.value %>" id="<%= cat.id %>"
+                                                        <%= categorias.includes(cat.value) ? 'checked' : '' %> aria-describedby="<%= cat.id %>-desc">
+                                                 <label class="form-check-label" for="<%= cat.id %>"><%= cat.label %></label>
+                                                 <div id="<%= cat.id %>-desc" class="visually-hidden"><%= cat.desc %></div>
+                                             </div>
+                                             <% }); %>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Aluno" id="catAluno"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Aluno') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catAluno">Aluno/Estagiário</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Concedente" id="catConcedente"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Concedente') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catConcedente">Concedente</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Supervisor" id="catSupervisor"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Supervisor') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catSupervisor">Supervisor</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Instituição" id="catInstituicao"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Instituição') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catInstituicao">Instituição/Curso</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input categoria-checkbox" type="checkbox" value="Usuário Geral" id="catUsuarioGeral"
-                                                   <%= pessoa && pessoa.categoria && pessoa.categoria.includes('Usuário Geral') ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="catUsuarioGeral">Usuário Geral</label>
-                                        </div>
-                                    </div>
+                                    <div id="categorias-help" class="form-text mt-2">Selecione pelo menos uma categoria. Algumas categorias são incompatíveis entre si.</div>
                                 </div>
-                            </div>
-                            <input type="hidden" id="categoria" name="categoria">
+                            </fieldset>
+                            <input type="hidden" id="categoria" name="categoria" aria-label="Categorias selecionadas">
                         </div>
                     </div>
                 </div>
@@ -167,17 +138,19 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="email" class="form-label">E-mail <span class="required">*</span></label>
+                            <label for="email" class="form-label">E-mail <span class="required" aria-label="campo obrigatório">*</span></label>
                             <input type="email" class="form-control" id="email" name="email" 
-                                   value="<%= pessoa ? pessoa.email : '' %>" required>
+                                   value="<%= pessoa ? pessoa.email.replace(/"/g, '&quot;') : '' %>" required aria-describedby="email-help">
+                            <div id="email-help" class="form-text visually-hidden">Digite um endereço de email válido</div>
                         </div>
                     </div>
                     
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="cpfCnpj" class="form-label">CPF/CNPJ</label>
-                            <input type="text" class="form-control" id="cpfCnpj" name="cpfCnpj" 
-                                   value="<%= pessoa ? pessoa.cnpj_cpf : '' %>">
+                            <label for="cnpj_cpf" class="form-label">CPF/CNPJ</label>
+                            <input type="text" class="form-control" id="cnpj_cpf" name="cnpj_cpf" 
+                                   value="<%= pessoa ? pessoa.cnpj_cpf : '' %>" aria-describedby="cnpj_cpf-help">
+                            <div id="cnpj_cpf-help" class="form-text visually-hidden">Digite o CPF ou CNPJ da pessoa (opcional)</div>
                         </div>
                     </div>
                 </div>
@@ -186,12 +159,11 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="telefone" class="form-label">Telefone</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone" 
-                                   value="<%= pessoa ? pessoa.telefone : '' %>">
+                            <input type="tel" class="form-control" id="telefone" name="telefone" 
+                                   value="<%= pessoa ? pessoa.telefone : '' %>" aria-describedby="telefone-help">
+                            <div id="telefone-help" class="form-text visually-hidden">Digite o número de telefone (opcional)</div>
                         </div>
                     </div>
-                    
-
                 </div>
                 
                 <!-- Seção de Dados de Login -->
@@ -200,25 +172,30 @@
                         <h5 class="mb-0"><i class="fas fa-key me-2"></i>Dados de Login</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="nivelAcesso" class="form-label">Nível de Acesso <span class="text-danger">*</span></label>
-                                <select class="form-select" id="nivelAcesso" name="nivelAcesso" required>
-                                    <option value="">Selecione o nível de acesso</option>
-                                    <option value="Administrador">Administrador</option>
-                                    <option value="Operador">Operador</option>
-                                    <option value="Visitante">Visitante</option>
-                                </select>
+                        <fieldset>
+                            <legend class="visually-hidden" id="login-legend">Configurações de acesso ao sistema</legend>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="nivelAcesso" class="form-label">Nível de Acesso <span class="required" aria-label="campo obrigatório">*</span></label>
+                                    <select class="form-select" id="nivelAcesso" name="nivelAcesso" required aria-describedby="nivelAcesso-help">
+                                        <option value="">Selecione o nível de acesso</option>
+                                        <option value="Administrador">Administrador</option>
+                                        <option value="Operador">Operador</option>
+                                        <option value="Visitante">Visitante</option>
+                                    </select>
+                                    <div id="nivelAcesso-help" class="form-text">Define o nível de permissões no sistema</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="statusLogin" class="form-label">Status <span class="required" aria-label="campo obrigatório">*</span></label>
+                                    <select class="form-select" id="statusLogin" name="statusLogin" required aria-describedby="statusLogin-help">
+                                        <option value="Ativo" selected>Ativo</option>
+                                        <option value="Inativo">Inativo</option>
+                                        <option value="Bloqueado">Bloqueado</option>
+                                    </select>
+                                    <div id="statusLogin-help" class="form-text">Define se o usuário pode acessar o sistema</div>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="statusLogin" class="form-label">Status <span class="text-danger">*</span></label>
-                                <select class="form-select" id="statusLogin" name="statusLogin" required>
-                                    <option value="Ativo" selected>Ativo</option>
-                                    <option value="Inativo">Inativo</option>
-                                    <option value="Bloqueado">Bloqueado</option>
-                                </select>
-                            </div>
-                        </div>
+                        </fieldset>
                     </div>
                 </div>
 
@@ -228,50 +205,55 @@
                         <h5 class="mb-0"><i class="fas fa-cubes me-2"></i>Módulos do Sistema</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <label for="moduloSelect" class="form-label">Selecionar Módulo:</label>
-                                <select id="moduloSelect" class="form-select">
-                                    <option value="">Carregando módulos...</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-end">
-                                <button type="button" id="btnAdicionarModulo" class="btn btn-success" onclick="PessoaForm.adicionarModulo()">
-                                    <i class="fas fa-plus me-1"></i>Adicionar
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-12">
-                                <label class="form-label">Módulos Selecionados:</label>
-                                <div class="table-responsive">
-                                    <table id="tabelaModulos" class="table table-striped table-hover">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th width="60">Ícone</th>
-                                                <th>Nome</th>
-                                                <th>Descrição</th>
-                                                <th width="100">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tabelaModulosBody">
-                                            <tr id="semModulos">
-                                                <td colspan="4" class="text-center text-muted py-3">
-                                                    <i class="fas fa-info-circle me-2"></i>Nenhum módulo selecionado
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                        <fieldset>
+                            <legend class="visually-hidden" id="modulos-legend">Gerenciamento de módulos do sistema</legend>
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="moduloSelect" class="form-label">Selecionar Módulo:</label>
+                                    <select id="moduloSelect" class="form-select" aria-describedby="moduloSelect-help">
+                                        <option value="">Carregando módulos...</option>
+                                    </select>
+                                    <div id="moduloSelect-help" class="form-text">Escolha um módulo para adicionar às permissões do usuário</div>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" id="btnAdicionarModulo" class="btn btn-success" aria-describedby="btnAdicionarModulo-help">
+                                        <i class="fas fa-plus me-1" aria-hidden="true"></i>Adicionar
+                                    </button>
+                                    <div id="btnAdicionarModulo-help" class="visually-hidden">Adiciona o módulo selecionado à lista de permissões</div>
                                 </div>
                             </div>
-                        </div>
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <label class="form-label" for="tabelaModulos">Módulos Selecionados:</label>
+                                    <div class="table-responsive">
+                                        <table id="tabelaModulos" class="table table-striped table-hover" role="table" aria-label="Lista de módulos selecionados">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th width="60" scope="col">Ícone</th>
+                                                    <th scope="col">Nome</th>
+                                                    <th scope="col">Descrição</th>
+                                                    <th width="100" scope="col">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tabelaModulosBody">
+                                                <tr id="semModulos">
+                                                    <td colspan="4" class="text-center text-muted py-3">
+                                                        <i class="fas fa-info-circle me-2" aria-hidden="true"></i>Nenhum módulo selecionado
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
                     </div>
                 </div>
                 
                 <div class="btn-group-actions d-flex justify-content-between">
                     <div>
-                        <button type="button" class="btn btn-secondary" onclick="PessoaForm.voltarPagina()">
+                        <button type="button" class="btn btn-secondary" id="btnVoltar">
                             <i class="fas fa-arrow-left me-1"></i>
                             Voltar
                         </button>
@@ -291,619 +273,33 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Dados para o JavaScript -->
     <script>
-        // Debug: Verificar dados da pessoa
+        // Configurações globais seguras
+        window.isEditMode = <%= typeof isEdit !== 'undefined' && isEdit ? 'true' : 'false' %>;
+        window.origemUrl = '<%= typeof origem !== 'undefined' ? origem : '/admin/pessoas' %>';
+        
         <% if (typeof pessoa !== 'undefined' && pessoa) { %>
-        console.log('Dados da pessoa:', <%- JSON.stringify(pessoa) %>);
-        <% } %>
-        
-        const PessoaForm = {
-            async init() {
-                console.log('[DEBUG] PessoaForm.init() chamado');
-                this.setupEventListeners();
-                this.setupFormValidation();
-                this.setupCategoriaHandling();
-                // Carregar módulos primeiro, depois preencher dados de edição
-                await this.loadModulos();
-                <% if (typeof isEdit !== 'undefined' && isEdit) { %>
-                console.log('[DEBUG] Chamando preencherDadosEdicao...');
-                this.preencherDadosEdicao();
-                <% } %>
-            },
-            
-            setupEventListeners() {
-                document.getElementById('pessoaForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.savePessoa();
-                });
-                
-                // Event listener para o botão de adicionar módulo
-                document.getElementById('btnAdicionarModulo').addEventListener('click', () => {
-                    this.adicionarModulo();
-                });
-            },
-            
-            setupCategoriaHandling() {
-                const checkboxes = document.querySelectorAll('.categoria-checkbox');
-                
-                // Adicionar event listeners aos checkboxes
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', () => {
-                        this.updateCategoriaField();
-                        this.aplicarRegrasIncompatibilidade();
-                    });
-                });
-                
-                // Configurar regras de incompatibilidade
-                this.configurarIncompatibilidadeCategorias();
-                
-                // Inicializar o campo hidden com valores já selecionados
-                this.updateCategoriaField();
-                
-                // Aplicar regras iniciais se houver categorias pré-selecionadas
-                this.aplicarRegrasIncompatibilidade();
-            },
-            
-            async preencherDadosEdicao() {
-                console.log('[DEBUG] Função preencherDadosEdicao chamada');
-                <%
-        let isEditValue = (typeof isEdit !== 'undefined') ? JSON.stringify(isEdit) : 'undefined';
-        let pessoaValue = (typeof pessoa !== 'undefined' && pessoa) ? JSON.stringify(pessoa) : 'undefined';
-        %>
-        console.log('[DEBUG] isEdit:', <%- isEditValue %>);
-        console.log('[DEBUG] pessoa:', <%- pessoaValue %>);
-                <% if (typeof isEdit !== 'undefined' && isEdit && typeof pessoa !== 'undefined' && pessoa) { %>
-                // Preencher checkboxes de categoria baseado nos dados da pessoa
-                if (<%- JSON.stringify(pessoa.categoria) %>) {
-                    const categorias = '<%- pessoa.categoria %>'.split(',');
-                    console.log('Categorias da pessoa:', categorias);
-                    
-                    // Mapear valores do banco para valores dos checkboxes
-                    const categoriaMap = {
-                        '1': 'Coordenador',
-                        '2': 'Professor',
-                        '3': 'Aluno',
-                        '4': 'Concedente',
-                        '5': 'Supervisor',
-                        '6': 'Instituição',
-                        '99': 'Usuário Geral'
-                    };
-                    
-                    categorias.forEach(catId => {
-                        const catValue = categoriaMap[catId.trim()];
-                        if (catValue) {
-                            const checkbox = document.querySelector(`input[value="${catValue}"]`);
-                            if (checkbox) {
-                                checkbox.checked = true;
-                                console.log('Checkbox marcado:', catValue);
-                            }
-                        }
-                    });
-                    
-                    // Atualizar campo oculto
-                    this.updateCategoriaField();
-                }
-                
-                // Preencher dados de login
-                console.log('[DEBUG] Iniciando preenchimento de dados de login');
-                <% if (pessoa.nivelAcesso) { %>
-                const nivelAcessoSelect = document.getElementById('nivelAcesso');
-                console.log('[DEBUG] Elemento nivelAcesso encontrado:', nivelAcessoSelect);
-                console.log('[DEBUG] Valor a ser definido para nivelAcesso:', '<%- pessoa.nivelAcesso %>');
-                if (nivelAcessoSelect) {
-                    nivelAcessoSelect.value = '<%- pessoa.nivelAcesso %>';
-                    console.log('[DEBUG] Nível de acesso preenchido:', '<%- pessoa.nivelAcesso %>');
-                    console.log('[DEBUG] Valor atual do select nivelAcesso:', nivelAcessoSelect.value);
-                } else {
-                    console.log('[DEBUG] Elemento nivelAcesso não encontrado!');
-                }
-                <% } else { %>
-                console.log('[DEBUG] pessoa.nivelAcesso não existe');
-                <% } %>
-                
-                <% if (pessoa.statusLogin) { %>
-                const statusLoginSelect = document.getElementById('statusLogin');
-                console.log('[DEBUG] Elemento statusLogin encontrado:', statusLoginSelect);
-                console.log('[DEBUG] Valor a ser definido para statusLogin:', '<%- pessoa.statusLogin %>');
-                if (statusLoginSelect) {
-                    statusLoginSelect.value = '<%- pessoa.statusLogin %>';
-                    console.log('[DEBUG] Status login preenchido:', '<%- pessoa.statusLogin %>');
-                    console.log('[DEBUG] Valor atual do select statusLogin:', statusLoginSelect.value);
-                } else {
-                    console.log('[DEBUG] Elemento statusLogin não encontrado!');
-                }
-                <% } else { %>
-                console.log('[DEBUG] pessoa.statusLogin não existe');
-                <% } %>
-                
-                // Carregar módulos da pessoa
-                await this.carregarModulosPessoa();
-                <% } %>
-            },
-            
-            updateCategoriaField() {
-                const checkboxes = document.querySelectorAll('.categoria-checkbox');
-                const hiddenInput = document.getElementById('categoria');
-                const selectedCategories = [];
-                
-                // Mapeamento de nomes para números (conforme banco de dados)
-                const categoriaToNumber = {
-                    'Coordenador': '1',
-                    'Professor': '2',
-                    'Aluno': '3',
-                    'Concedente': '4',
-                    'Supervisor': '5',
-                    'Instituição': '6',
-                    'Usuário Geral': '99'
-                };
-                
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        const numeroCategoria = categoriaToNumber[checkbox.value];
-                        if (numeroCategoria) {
-                            selectedCategories.push(numeroCategoria);
-                        }
-                    }
-                });
-                
-                hiddenInput.value = selectedCategories.join(',');
-            },
-            
-            configurarIncompatibilidadeCategorias() {
-                // Definir regras de incompatibilidade
-                this.incompatibilidades = {
-                    'Coordenador': ['Aluno', 'Concedente', 'Instituição', 'Usuário Geral'],
-                    'Professor': ['Aluno', 'Concedente', 'Instituição', 'Usuário Geral'],
-                    'Aluno': ['Coordenador', 'Professor', 'Concedente', 'Supervisor', 'Instituição', 'Usuário Geral'],
-                    'Concedente': ['Coordenador', 'Aluno', 'Professor'],
-                    'Supervisor': ['Coordenador', 'Aluno', 'Professor', 'Instituição'],
-                    'Instituição': ['Coordenador', 'Professor', 'Aluno', 'Supervisor', 'Usuário Geral'],
-                    'Usuário Geral': ['Coordenador', 'Professor', 'Aluno', 'Concedente', 'Supervisor', 'Instituição']
-                };
-            },
-            
-            aplicarRegrasIncompatibilidade() {
-                const checkboxes = document.querySelectorAll('.categoria-checkbox');
-                
-                // Primeiro, limpar todas as regras
-                this.limparRegrasIncompatibilidade();
-                
-                // Verificar quais categorias estão selecionadas
-                const categoriasAtivas = [];
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
-                        categoriasAtivas.push(checkbox.value);
-                    }
-                });
-                
-                // Aplicar regras de incompatibilidade
-                categoriasAtivas.forEach(categoriaAtiva => {
-                    if (this.incompatibilidades[categoriaAtiva]) {
-                        this.incompatibilidades[categoriaAtiva].forEach(categoriaIncompativel => {
-                            const checkbox = document.querySelector(`.categoria-checkbox[value="${categoriaIncompativel}"]`);
-                            if (checkbox && !checkbox.checked) {
-                                checkbox.disabled = true;
-                                checkbox.parentElement.style.opacity = '0.5';
-                            }
-                        });
-                    }
-                });
-            },
-            
-            limparRegrasIncompatibilidade() {
-                const checkboxes = document.querySelectorAll('.categoria-checkbox');
-                checkboxes.forEach(checkbox => {
-                    checkbox.disabled = false;
-                    checkbox.parentElement.style.opacity = '1';
-                });
-            },
-            
-            setupFormValidation() {
-                // Função para aplicar máscara de CPF/CNPJ
-                const aplicarMascaraCpfCnpj = (input) => {
-                    let value = input.value.replace(/\D/g, '');
-                    
-                    if (value.length <= 11) {
-                        // CPF: 000.000.000-00
-                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                    } else {
-                        // CNPJ: 00.000.000/0000-00
-                        value = value.replace(/(\d{2})(\d)/, '$1.$2');
-                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                        value = value.replace(/(\d{3})(\d)/, '$1/$2');
-                        value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
-                    }
-                    
-                    input.value = value;
-                };
-                
-                // Função para aplicar máscara de telefone
-                const aplicarMascaraTelefone = (input) => {
-                    let value = input.value.replace(/\D/g, '');
-                    
-                    if (value.length <= 10) {
-                        // Telefone fixo: (00) 0000-0000
-                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
-                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
-                    } else {
-                        // Celular: (00) 00000-0000
-                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
-                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                    }
-                    
-                    input.value = value;
-                };
-                
-                // Máscara para CPF/CNPJ
-                const cpfCnpjInput = document.getElementById('cpfCnpj');
-                if (cpfCnpjInput) {
-                    // Aplicar máscara ao valor já existente
-                    if (cpfCnpjInput.value) {
-                        aplicarMascaraCpfCnpj(cpfCnpjInput);
-                    }
-                    
-                    // Aplicar máscara durante a digitação
-                    cpfCnpjInput.addEventListener('input', (e) => {
-                        aplicarMascaraCpfCnpj(e.target);
-                    });
-                }
-                
-                // Máscara para telefone
-                const telefoneInput = document.getElementById('telefone');
-                if (telefoneInput) {
-                    // Aplicar máscara ao valor já existente
-                    if (telefoneInput.value) {
-                        aplicarMascaraTelefone(telefoneInput);
-                    }
-                    
-                    // Aplicar máscara durante a digitação
-                    telefoneInput.addEventListener('input', (e) => {
-                        aplicarMascaraTelefone(e.target);
-                    });
-                }
-            },
-            
-            // Método para carregar módulos disponíveis
-            modulosDisponiveis: [],
-            modulosSelecionados: [],
-            
-            async loadModulos() {
-                try {
-                    const response = await fetch('/admin/modulos');
-                    const modulos = await response.json();
-                    
-                    this.modulosDisponiveis = modulos;
-                    const select = document.getElementById('moduloSelect');
-                    
-                    if (modulos.length === 0) {
-                        select.innerHTML = '<option value="">Nenhum módulo cadastrado</option>';
-                        document.getElementById('btnAdicionarModulo').disabled = true;
-                        return;
-                    }
-                    
-                    select.innerHTML = '<option value="">Selecione um módulo...</option>' + 
-                        modulos.map(modulo => `
-                            <option value="${modulo.id_modulo}" data-icone="${modulo.icone || 'fas fa-cube'}" 
-                                    data-cor="${modulo.cor || '#6c757d'}" data-descricao="${modulo.descricao || ''}">
-                                ${modulo.nome}
-                            </option>
-                        `).join('');
-                    
-                } catch (error) {
-                    console.error('Erro ao carregar módulos:', error);
-                    const select = document.getElementById('moduloSelect');
-                    select.innerHTML = '<option value="">Erro ao carregar módulos</option>';
-                    document.getElementById('btnAdicionarModulo').disabled = true;
-                }
-            },
-            
-            adicionarModulo() {
-                const select = document.getElementById('moduloSelect');
-                const selectedOption = select.options[select.selectedIndex];
-                
-                if (!selectedOption.value) {
-                    this.showAlert('Selecione um módulo para adicionar.', 'warning');
-                    return;
-                }
-                
-                const moduloId = selectedOption.value;
-                
-                // Verificar se o módulo já foi adicionado
-                if (this.modulosSelecionados.find(m => m.id_modulo == moduloId)) {
-                    this.showAlert('Este módulo já foi adicionado.', 'warning');
-                    return;
-                }
-                
-                // Encontrar dados completos do módulo
-                const modulo = this.modulosDisponiveis.find(m => m.id_modulo == moduloId);
-                if (!modulo) {
-                    this.showAlert('Erro ao encontrar dados do módulo.', 'error');
-                    return;
-                }
-                
-                // Adicionar à lista de selecionados
-                this.modulosSelecionados.push(modulo);
-                
-                // Atualizar tabela
-                this.atualizarTabelaModulos();
-                
-                // Resetar select
-                select.selectedIndex = 0;
-            },
-            
-            removerModulo(moduloId) {
-                this.modulosSelecionados = this.modulosSelecionados.filter(m => m.id_modulo != moduloId);
-                this.atualizarTabelaModulos();
-            },
-            
-            atualizarTabelaModulos() {
-                const tbody = document.getElementById('tabelaModulosBody');
-                const semModulos = document.getElementById('semModulos');
-                
-                if (this.modulosSelecionados.length === 0) {
-                    if (semModulos) {
-                        semModulos.style.display = '';
-                    }
-                    // Remover outras linhas
-                    const linhas = tbody.querySelectorAll('tr:not(#semModulos)');
-                    linhas.forEach(linha => linha.remove());
-                    return;
-                }
-                
-                // Ocultar mensagem "sem módulos"
-                if (semModulos) {
-                    semModulos.style.display = 'none';
-                }
-                
-                // Limpar tabela (exceto a linha "sem módulos")
-                const linhas = tbody.querySelectorAll('tr:not(#semModulos)');
-                linhas.forEach(linha => linha.remove());
-                
-                // Adicionar linhas dos módulos selecionados
-                this.modulosSelecionados.forEach(modulo => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="text-center">
-                            <i class="${modulo.icone || 'fas fa-cube'}" style="color: ${modulo.cor || '#6c757d'}; font-size: 1.2em;"></i>
-                        </td>
-                        <td class="fw-medium">${modulo.nome}</td>
-                        <td class="text-muted">${modulo.descricao || ''}</td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                    onclick="PessoaForm.removerModulo(${modulo.id_modulo})" title="Remover módulo">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-             },
-             
-             async carregarModulosPessoa() {
-                 <% if (typeof isEdit !== 'undefined' && isEdit && typeof pessoa !== 'undefined' && pessoa) { %>
-                 try {
-                     // Primeiro tentar usar os dados que já foram passados pelo controlador
-                     <% if (pessoa.modulos && pessoa.modulos.length > 0) { %>
-                     const modulosIds = <%- JSON.stringify(pessoa.modulos) %>;
-                     console.log('Módulos da pessoa (IDs do controlador):', modulosIds);
-                     
-                     // Para cada ID de módulo, encontrar os dados completos na lista de módulos disponíveis
-                     modulosIds.forEach(moduloId => {
-                         const modulo = this.modulosDisponiveis.find(m => m.id_modulo == moduloId);
-                         if (modulo && !this.modulosSelecionados.find(m => m.id_modulo == modulo.id_modulo)) {
-                             this.modulosSelecionados.push(modulo);
-                             console.log('Módulo adicionado:', modulo.nome);
-                         }
-                     });
-                     
-                     // Atualizar a tabela
-                     this.atualizarTabelaModulos();
-                     <% } else { %>
-                     // Se não há dados do controlador, buscar via API
-                     const pessoaId = document.getElementById('pessoaId').value;
-                     if (!pessoaId) return;
-                     
-                     const response = await fetch(`/pessoas/api/${pessoaId}/modulos`);
-                     if (response.ok) {
-                         const modulosPessoa = await response.json();
-                         console.log('Módulos da pessoa (API):', modulosPessoa);
-                         
-                         // Adicionar módulos já vinculados à lista de selecionados
-                         modulosPessoa.forEach(modulo => {
-                             if (!this.modulosSelecionados.find(m => m.id_modulo == modulo.id_modulo)) {
-                                 this.modulosSelecionados.push(modulo);
-                             }
-                         });
-                         
-                         // Atualizar a tabela
-                         this.atualizarTabelaModulos();
-                     }
-                     <% } %>
-                 } catch (error) {
-                     console.error('Erro ao carregar módulos da pessoa:', error);
-                 }
-                 <% } %>
-             },
- 
-             async savePessoa() {
-                const pessoaId = document.getElementById('pessoaId').value;
-                
-                // Validar se pelo menos uma categoria foi selecionada
-                const categoriaValue = document.getElementById('categoria').value;
-                if (!categoriaValue || categoriaValue.trim() === '') {
-                    this.showAlert('Por favor, selecione pelo menos uma categoria.', 'warning');
-                    return;
-                }
-                
-                // Validar dados de login obrigatórios
-                const nivelAcesso = document.getElementById('nivelAcesso').value;
-                const statusLogin = document.getElementById('statusLogin').value;
-                
-                if (!nivelAcesso) {
-                    this.showAlert('Por favor, selecione o nível de acesso.', 'danger');
-                    return;
-                }
-                
-                if (!statusLogin) {
-                    this.showAlert('Por favor, selecione o status do login.', 'danger');
-                    return;
-                }
-                
-                // Validar se pelo menos um módulo foi selecionado
-                if (this.modulosSelecionados.length === 0) {
-                    this.showAlert('Por favor, selecione pelo menos um módulo para a pessoa.', 'danger');
-                    return;
-                }
-                
-                // Limpar máscara do CPF/CNPJ (manter apenas números)
-                const cpfCnpjValue = document.getElementById('cpfCnpj').value;
-                const cpfCnpjLimpo = cpfCnpjValue ? cpfCnpjValue.replace(/\D/g, '') : '';
-                
-                const data = {
-                    tipo: document.getElementById('tipo').value,
-                    nome: document.getElementById('nome').value,
-                    email: document.getElementById('email').value,
-                    cnpj_cpf: cpfCnpjLimpo,
-                    categoria: categoriaValue,
-                    telefone: document.getElementById('telefone').value,
-                    // Dados de login
-                    nivelAcesso: document.getElementById('nivelAcesso').value,
-                    statusLogin: document.getElementById('statusLogin').value,
-                    // Módulos selecionados
-                    modulos: this.modulosSelecionados.map(m => m.id_modulo)
-                };
-                
-                try {
-                    const url = pessoaId ? `/pessoas/${pessoaId}` : '/pessoas';
-                    const method = pessoaId ? 'PUT' : 'POST';
-                    
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    // Verificar se a resposta é JSON
-                    const contentType = response.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) {
-                        throw new Error('Resposta não é JSON - possível redirecionamento');
-                    }
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        this.showAlert(pessoaId ? 'Pessoa, dados de login e módulos atualizados com sucesso!' : 'Pessoa, dados de login e módulos cadastrados com sucesso!', 'success');
-                        
-                        // Se for um novo cadastro, limpar o formulário para facilitar novo cadastro
-                        if (!pessoaId) {
-                            setTimeout(() => {
-                                this.limparFormulario();
-                            }, 2000);
-                        }
-                    } else {
-                        // Tratar especificamente erro de email duplicado
-                        if (result.message && result.message.includes('Email já está em uso')) {
-                            this.showAlert('⚠️ Este email já está cadastrado no sistema. Por favor, utilize um email diferente.', 'warning');
-                        } else {
-                            this.showAlert('Erro ao salvar: ' + (result.message || 'Erro desconhecido'), 'danger');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    this.showAlert('Erro ao salvar pessoa: ' + error.message, 'danger');
-                }
-            },
-            
-            voltarPagina() {
-                // Tentar voltar para a página anterior
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    // Se não há histórico, ir para a origem ou página padrão
-                    window.location.href = '<%= origem %>' || '/admin/pessoas';
-                }
-                
-                // Se a página foi aberta em uma nova aba, tentar fechá-la após um pequeno delay
-                setTimeout(() => {
-                    if (window.opener) {
-                        window.close();
-                    }
-                }, 100);
-            },
-            
-            limparFormulario() {
-                // Limpar campos do formulário
-                document.getElementById('pessoaForm').reset();
-                
-                // Limpar checkboxes de categoria
-                const checkboxes = document.querySelectorAll('.categoria-checkbox');
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-                
-                // Limpar campo hidden de categoria
-                document.getElementById('categoria').value = '';
-                
-                // Limpar módulos selecionados
-                this.modulosSelecionados = [];
-                this.atualizarTabelaModulos();
-                
-                // Resetar selects para primeira opção
-                const selects = document.querySelectorAll('select');
-                selects.forEach(select => {
-                    select.selectedIndex = 0;
-                });
-                
-                // Focar no primeiro campo
-                const primeiroCampo = document.getElementById('tipo');
-                if (primeiroCampo) {
-                    primeiroCampo.focus();
-                }
-            },
-            
-            showAlert(message, type) {
-                const alertContainer = document.getElementById('alertContainer');
-                
-                // Definir ícone baseado no tipo
-                let icon = 'exclamation-triangle';
-                if (type === 'success') {
-                    icon = 'check-circle';
-                } else if (type === 'warning') {
-                    icon = 'exclamation-triangle';
-                } else if (type === 'danger') {
-                    icon = 'times-circle';
-                }
-                
-                const alertHtml = `
-                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        <i class="fas fa-${icon} me-2"></i>
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
-                
-                alertContainer.innerHTML = alertHtml;
-                
-                // Auto-remover após 5 segundos
-                setTimeout(() => {
-                    const alert = alertContainer.querySelector('.alert');
-                    if (alert) {
-                        alert.remove();
-                    }
-                }, 5000);
-            }
+        // Dados da pessoa de forma segura
+        window.pessoaData = {
+            id_pessoa: '<%= pessoa.id_pessoa || '' %>',
+            tipo: '<%= pessoa.tipo || '' %>',
+            nome: '<%= (pessoa.nome || '').replace(/'/g, "\\'") %>',
+            email: '<%= (pessoa.email || '').replace(/'/g, "\\'") %>',
+            cnpj_cpf: '<%= pessoa.cnpj_cpf || '' %>',
+            categoria: '<%= pessoa.categoria || '' %>',
+            telefone: '<%= pessoa.telefone || '' %>',
+            nivelAcesso: '<%= pessoa.nivelAcesso || '' %>',
+            statusLogin: '<%= pessoa.statusLogin || '' %>',
+            modulos: <%= JSON.stringify(pessoa.modulos || []) %>
         };
-        
-        // Inicializar quando a página carregar
-        document.addEventListener('DOMContentLoaded', () => {
-            PessoaForm.init();
-        });
+        console.log('Dados da pessoa carregados:', window.pessoaData);
+        <% } else { %>
+        window.pessoaData = null;
+        <% } %>
     </script>
+    
+    <!-- JavaScript externo -->
+    <script src="/js/admin-pessoa-form.js"></script>
 </body>
 </html>

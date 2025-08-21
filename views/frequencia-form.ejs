@@ -505,9 +505,9 @@
             const btnLancarDia = document.getElementById('btnLancarDia');
             if (!btnLancarDia) return;
             
-            // Verificar se existe pelo menos um registro diário
-            const registrosDiarios = document.querySelectorAll('#registrosDiarios .registro-diario-row');
-            btnLancarDia.disabled = registrosDiarios.length === 0;
+            // Habilitar sempre que existir frequência selecionada (campo_estagio_frequencia)
+            const frequenciaId = <%= frequencia ? frequencia.id_campo_estagio_frequencia : 'null' %>;
+            btnLancarDia.disabled = !frequenciaId;
         }
         
         // Função para abrir o formulário de lançamento diário

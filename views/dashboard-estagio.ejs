@@ -2219,10 +2219,11 @@
                            frequencia.aprovado_orientador === 'Sim' || 
                            frequencia.aprovado_supervisor === 'Sim';
         
-        // Verificar categoria do usuário para edição
+        // Verificar categoria do usuário para lançamento de dias
         const userCategoria = '<%= user.categoria %>';
         // Processar múltiplas categorias (formato: 1,2,5)
         const categoriasArray = userCategoria ? userCategoria.toString().split(',').map(cat => cat.trim()) : [];
+        const podeLancarPorCategoria = categoriasArray.some(cat => cat === '3' || cat === '4'); // Apenas Alunos/Estagiários
         const podeEditarPorCategoria = categoriasArray.some(cat => cat === '1' || cat === '2' || cat === '5'); // Coordenador, Professor/Orientador ou Supervisor
         
         // Controlar botões Editar e Lançar Dia baseado nas aprovações e categoria
@@ -2239,18 +2240,33 @@
             btnEditar.classList.add('btn-outline-secondary');
             btnLancar.classList.remove('btn-warning');
             btnLancar.classList.add('btn-outline-secondary');
-        } else if (!podeEditarPorCategoria) {
-            // Desabilitar botões quando usuário não tem permissão por categoria
-            btnEditar.disabled = true;
-            btnLancar.disabled = true;
-            btnEditar.title = 'Apenas Coordenadores, Supervisores e Orientadores podem editar frequências';
-            btnLancar.title = 'Apenas Coordenadores, Supervisores e Orientadores podem lançar dias';
-            btnEditar.classList.remove('btn-outline-primary');
-            btnEditar.classList.add('btn-outline-secondary');
-            btnLancar.classList.remove('btn-warning');
-            btnLancar.classList.add('btn-outline-secondary');
+        } else if (!podeEditarPorCategoria || !podeLancarPorCategoria) {
+            // Controlar botões baseado nas permissões específicas
+            if (!podeEditarPorCategoria) {
+                btnEditar.disabled = true;
+                btnEditar.title = 'Apenas Coordenadores, Supervisores e Orientadores podem editar frequências';
+                btnEditar.classList.remove('btn-outline-primary');
+                btnEditar.classList.add('btn-outline-secondary');
+            } else {
+                btnEditar.disabled = false;
+                btnEditar.title = 'Editar frequência selecionada';
+                btnEditar.classList.remove('btn-outline-secondary');
+                btnEditar.classList.add('btn-outline-primary');
+            }
+            
+            if (!podeLancarPorCategoria) {
+                btnLancar.disabled = true;
+                btnLancar.title = 'Apenas Alunos/Estagiários podem lançar dias';
+                btnLancar.classList.remove('btn-warning');
+                btnLancar.classList.add('btn-outline-secondary');
+            } else {
+                btnLancar.disabled = false;
+                btnLancar.title = 'Lançar dia na frequência selecionada';
+                btnLancar.classList.remove('btn-outline-secondary');
+                btnLancar.classList.add('btn-warning');
+            }
         } else {
-            // Habilitar botões quando não há aprovação e usuário tem permissão
+            // Habilitar botões quando não há aprovação e usuário tem todas as permissões
             btnEditar.disabled = false;
             btnLancar.disabled = false;
             btnEditar.title = 'Editar frequência selecionada';

@@ -454,7 +454,7 @@ const DashboardAdmin = {
                     <span class="badge ${this.getSituacaoClass(campo.situacao)}">${campo.situacao || 'N/A'}</span>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="DashboardAdmin.editarCampo(${campo.id_campo_estagio})">
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); DashboardAdmin.editarCampo(${campo.id_campo_estagio})">
                         <i class="fas fa-edit"></i>
                     </button>
                 </td>

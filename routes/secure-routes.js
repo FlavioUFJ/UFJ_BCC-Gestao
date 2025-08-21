@@ -1511,7 +1511,7 @@ router.post('/estagios/campo/enviar-notificacao/:id', requireAuth, async (req, r
             
             <p>Reforçamos a importância do correto preenchimento dos documentos obrigatórios:</p> 
 			<p><b>Plano de Atividades, Controle de Frequência e Relatório Final de estágio</b>.</p>
-            <p>Esses documentos devem ser registrados exclusivamente no aplicativo, disponível em: https://coordenai.computacaoufj.online/</p>
+            <p>Esses documentos devem ser registrados exclusivamente no aplicativo, disponível em: https://coordenai.computacaoufj.online/ Observação: Para o primeiro acesso no APP, clicar no link <i>Esqueci minha senha</i> para criar a primeira senha.</p>
             <p>Desejamos a todos um excelente trabalho e uma parceria produtiva.</p>
             
             <p><b>Envolvidos no estágio:</b><br>

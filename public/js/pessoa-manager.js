@@ -157,7 +157,7 @@ class PessoaManager {
                                                 <input type="text" class="form-control" id="cnpj_cpf" name="cnpj_cpf">
                                             </div>
                                             <div class="col-md-6">
-                                                <label for="email" class="form-label">Email *</label>
+                                                <label for="email" class="form-label">E-mail *</label>
                                                 <input type="email" class="form-control" id="email" name="email" required>
                                             </div>
                                         </div>

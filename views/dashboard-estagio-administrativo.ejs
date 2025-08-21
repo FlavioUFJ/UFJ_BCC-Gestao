@@ -267,27 +267,79 @@ const DashboardAdmin = {
         this.carregarDashboards();
         this.carregarCamposEstagio();
         this.setupEventListeners();
+        this.restaurarFiltros();
+    },
+    
+    // Salvar filtros no localStorage
+    salvarFiltros() {
+        const filtros = {
+            buscaPessoa: document.getElementById('buscaPessoa').value,
+            filtroTipoPessoa: document.getElementById('filtroTipoPessoa').value,
+            filtroEmEdicao: document.getElementById('filtroEmEdicao').checked,
+            filtroConcluido: document.getElementById('filtroConcluido').checked,
+            filtroFinalizado: document.getElementById('filtroFinalizado').checked
+        };
+        localStorage.setItem('dashboardAdminFiltros', JSON.stringify(filtros));
+    },
+    
+    // Restaurar filtros do localStorage
+    restaurarFiltros() {
+        const filtrosSalvos = localStorage.getItem('dashboardAdminFiltros');
+        if (filtrosSalvos) {
+            try {
+                const filtros = JSON.parse(filtrosSalvos);
+                
+                // Restaurar valores dos filtros
+                if (filtros.buscaPessoa !== undefined) {
+                    document.getElementById('buscaPessoa').value = filtros.buscaPessoa;
+                }
+                if (filtros.filtroTipoPessoa !== undefined) {
+                    document.getElementById('filtroTipoPessoa').value = filtros.filtroTipoPessoa;
+                }
+                if (filtros.filtroEmEdicao !== undefined) {
+                    document.getElementById('filtroEmEdicao').checked = filtros.filtroEmEdicao;
+                }
+                if (filtros.filtroConcluido !== undefined) {
+                    document.getElementById('filtroConcluido').checked = filtros.filtroConcluido;
+                }
+                if (filtros.filtroFinalizado !== undefined) {
+                    document.getElementById('filtroFinalizado').checked = filtros.filtroFinalizado;
+                }
+                
+                // Aplicar filtros após restaurar
+                setTimeout(() => {
+                    this.filtrarCamposEstagio();
+                }, 100);
+            } catch (error) {
+                console.error('Erro ao restaurar filtros:', error);
+            }
+        }
     },
     
     setupEventListeners() {
         // Filtros da tabela de campos
         document.getElementById('buscaPessoa').addEventListener('input', () => {
             this.filtrarCamposEstagio();
+            this.salvarFiltros();
         });
         
         document.getElementById('filtroTipoPessoa').addEventListener('change', () => {
             this.filtrarCamposEstagio();
+            this.salvarFiltros();
         });
         
         // Event listeners para filtros de situação
         document.getElementById('filtroEmEdicao').addEventListener('change', () => {
             this.filtrarCamposEstagio();
+            this.salvarFiltros();
         });
         document.getElementById('filtroConcluido').addEventListener('change', () => {
             this.filtrarCamposEstagio();
+            this.salvarFiltros();
         });
         document.getElementById('filtroFinalizado').addEventListener('change', () => {
             this.filtrarCamposEstagio();
+            this.salvarFiltros();
         });
 
     },

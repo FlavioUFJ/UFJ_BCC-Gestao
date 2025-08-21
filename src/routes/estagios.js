@@ -69,4 +69,7 @@ router.get('/api/user/:userId/:userType', (req, res) => estagioController.getByU
 // GET /estagios/dashboard-administrativo/frequencias/:planoId - Buscar frequências por plano de atividade (dashboard administrativo)
 router.get('/dashboard-administrativo/frequencias/:planoId', (req, res) => estagioController.buscarFrequenciasPorPlano(req, res));
 
+// GET /estagios/dashboard-administrativo/planos/:campoId - Buscar planos de atividade por campo de estágio (dashboard administrativo)
+router.get('/dashboard-administrativo/planos/:campoId', (req, res) => estagioController.buscarPlanosPorCampo(req, res));
+
 module.exports = router;

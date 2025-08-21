@@ -142,6 +142,15 @@
                                             <option value="99">Usuário Geral</option>
                                         </select>
                                     </div>
+                                    <div class="col-md-2">
+                                        <label for="limitePessoas" class="form-label">Por página:</label>
+                                        <select class="form-select" id="limitePessoas">
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50" selected>50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
                                     <div class="col-md-3">
                                         <label class="form-label">&nbsp;</label>
                                         <div>
@@ -161,7 +170,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Nome</th>
-                                                <th>Email</th>
+                                                <th>E-mail</th>
                                                 <th>Telefone</th>
                                                 <th>Categoria</th>
                                                 <th>CPF/CNPJ</th>
@@ -180,11 +189,9 @@
                                 </div>
 
                                 <!-- Paginação -->
-                                <nav aria-label="Paginação de pessoas">
-                                    <ul class="pagination justify-content-center" id="paginacaoPessoas">
-                                        <!-- Paginação será inserida aqui -->
-                                    </ul>
-                                </nav>
+                                <div id="paginacao-pessoas">
+                                    <!-- Paginação será inserida aqui -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -215,6 +222,15 @@
                                             <option value="Usuário Geral">Usuário Geral</option>
                                         </select>
                                     </div>
+                                    <div class="col-md-2">
+                                        <label for="limiteLogin" class="form-label">Por página:</label>
+                                        <select class="form-select" id="limiteLogin">
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50" selected>50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
                                     <div class="col-md-3">
                                         <label class="form-label">&nbsp;</label>
                                         <div>
@@ -236,7 +252,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Nome</th>
-                                                <th>Email</th>
+                                                <th>E-mail</th>
                                                 <th>Categoria</th>
                                                 <th>Nível</th>
                                                 <th>Status</th>
@@ -255,11 +271,9 @@
                                 </div>
 
                                 <!-- Paginação -->
-                                <nav aria-label="Paginação de pessoas login">
-                                    <ul class="pagination justify-content-center" id="paginacaoPessoasLogin">
-                                        <!-- Paginação será inserida aqui -->
-                                    </ul>
-                                </nav>
+                                <div id="paginacao-login">
+                                    <!-- Paginação será inserida aqui -->
+                                </div>
 
                                 <!-- Formulário de Login -->
                                 <div id="formLogin" style="display: none;">
@@ -277,7 +291,7 @@
                                                             <input type="text" class="form-control" id="nomeCompleto" readonly>
                                                         </div>
                                                         <div class="mb-3">
-                                                            <label for="emailPessoa" class="form-label">Email:</label>
+                                                            <label for="emailPessoa" class="form-label">E-mail:</label>
                                                             <input type="email" class="form-control" id="emailPessoa" readonly>
                                                         </div>
                                                         <div class="mb-3">
@@ -354,6 +368,15 @@
                                             <option value="Usuário Geral">Usuário Geral</option>
                                         </select>
                                     </div>
+                                    <div class="col-md-2">
+                                        <label for="limiteModulos" class="form-label">Por página:</label>
+                                        <select class="form-select" id="limiteModulos">
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50" selected>50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
                                     <div class="col-md-3">
                                         <label class="form-label">&nbsp;</label>
                                         <div>
@@ -370,7 +393,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Nome</th>
-                                                <th>Email</th>
+                                                <th>E-mail</th>
                                                 <th>Categoria</th>
                                                 <th>Módulos Vinculados</th>
                                                 <th width="120">Ações</th>
@@ -388,11 +411,9 @@
                                 </div>
 
                                 <!-- Paginação -->
-                                <nav aria-label="Paginação de pessoas módulo">
-                                    <ul class="pagination justify-content-center" id="paginacaoPessoasModulo">
-                                        <!-- Paginação será inserida aqui -->
-                                    </ul>
-                                </nav>
+                                <div id="paginacao-modulos">
+                                    <!-- Paginação será inserida aqui -->
+                                </div>
 
                                 <!-- Campos ocultos para controle -->
                                 <input type="hidden" id="pessoaModuloId" value="">
@@ -452,6 +473,12 @@
         const AdminPessoas = {
             currentTab: 'pessoas',
             selectedPerson: null,
+            // Controles de paginação
+            paginacao: {
+                pessoas: { pagina: 1, limite: 50, total: 0, totalPaginas: 0 },
+                login: { pagina: 1, limite: 50, total: 0, totalPaginas: 0 },
+                modulos: { pagina: 1, limite: 50, total: 0, totalPaginas: 0 }
+            },
             
             init() {
                 this.bindEvents();
@@ -469,13 +496,20 @@
                 
                 // Eventos da aba Pessoas
                 document.getElementById('btnBuscarPessoa').addEventListener('click', () => {
+                    this.paginacao.pessoas.pagina = 1; // Reset para primeira página
                     this.loadPessoas();
                 });
                 
                 document.getElementById('buscaPessoa').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
+                        this.paginacao.pessoas.pagina = 1; // Reset para primeira página
                         this.loadPessoas();
                     }
+                });
+                
+                document.getElementById('limitePessoas').addEventListener('change', () => {
+                    this.paginacao.pessoas.pagina = 1; // Reset para primeira página
+                    this.loadPessoas();
                 });
                 
                 document.getElementById('btnNovaPessoa').addEventListener('click', () => {
@@ -484,16 +518,24 @@
                 
                 // Eventos da aba Login
                 document.getElementById('btnBuscarPessoaLogin').addEventListener('click', () => {
+                    this.paginacao.login.pagina = 1; // Reset para primeira página
                     this.loadPessoasLogin();
                 });
                 
                 document.getElementById('buscaPessoaLogin').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
+                        this.paginacao.login.pagina = 1; // Reset para primeira página
                         this.loadPessoasLogin();
                     }
                 });
                 
                 document.getElementById('categoriaPessoaLogin').addEventListener('change', () => {
+                    this.paginacao.login.pagina = 1; // Reset para primeira página
+                    this.loadPessoasLogin();
+                });
+                
+                document.getElementById('limiteLogin').addEventListener('change', () => {
+                    this.paginacao.login.pagina = 1; // Reset para primeira página
                     this.loadPessoasLogin();
                 });
                 
@@ -504,16 +546,24 @@
                 
                 // Eventos da aba Módulos
                 document.getElementById('btnBuscarPessoaModulo').addEventListener('click', () => {
+                    this.paginacao.modulos.pagina = 1; // Reset para primeira página
                     this.loadPessoasModulo();
                 });
                 
                 document.getElementById('buscaPessoaModulo').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
+                        this.paginacao.modulos.pagina = 1; // Reset para primeira página
                         this.loadPessoasModulo();
                     }
                 });
                 
                 document.getElementById('categoriaPessoaModulo').addEventListener('change', () => {
+                    this.paginacao.modulos.pagina = 1; // Reset para primeira página
+                    this.loadPessoasModulo();
+                });
+                
+                document.getElementById('limiteModulos').addEventListener('change', () => {
+                    this.paginacao.modulos.pagina = 1; // Reset para primeira página
                     this.loadPessoasModulo();
                 });
             },
@@ -535,23 +585,32 @@
             },
             
             // Métodos da aba Pessoas
-            async loadPessoas() {
+            async loadPessoas(pagina = 1) {
                 const busca = document.getElementById('buscaPessoa').value;
                 const categoria = document.getElementById('categoriaBusca').value;
+                const limite = parseInt(document.getElementById('limitePessoas').value) || 50;
+                
+                this.paginacao.pessoas.pagina = pagina;
+                this.paginacao.pessoas.limite = limite;
                 
                 try {
                     const params = new URLSearchParams({
                         termo: busca,
                         categoria: categoria,
-                        limite: 20
+                        pagina: this.paginacao.pessoas.pagina,
+                        limite: this.paginacao.pessoas.limite
                     });
                     
                     const response = await fetch(`/api/pessoas/buscar?${params}`);
                     const data = await response.json();
                     
                     if (data.success) {
+                        this.paginacao.pessoas.total = data.total || 0;
+                        this.paginacao.pessoas.totalPaginas = data.totalPaginas || 0;
+                        
                         this.renderPessoasTable(data.pessoas);
-                        this.updateContadorPessoas(data.pessoas ? data.pessoas.length : 0);
+                        this.updateContadorPessoas(data.total || 0);
+                        this.renderPaginacao('pessoas');
                     } else {
                         this.showError('Erro ao carregar pessoas: ' + data.message);
                         this.updateContadorPessoas(0);
@@ -719,22 +778,31 @@
             },
             
             // Métodos da aba Login
-            async loadPessoasLogin() {
+            async loadPessoasLogin(pagina = 1) {
                 const busca = document.getElementById('buscaPessoaLogin').value;
                 const categoria = document.getElementById('categoriaPessoaLogin').value;
+                const limite = parseInt(document.getElementById('limiteLogin').value) || 50;
+                
+                this.paginacao.login.pagina = pagina;
+                this.paginacao.login.limite = limite;
                 
                 try {
                     const params = new URLSearchParams({
                         termo: busca,
                         categoria: categoria,
-                        limite: 20
+                        pagina: this.paginacao.login.pagina,
+                        limite: this.paginacao.login.limite
                     });
                     
                     const response = await fetch(`/api/pessoas/buscar?${params}`);
                     const data = await response.json();
                     
                     if (data.success) {
+                        this.paginacao.login.total = data.total || 0;
+                        this.paginacao.login.totalPaginas = data.totalPaginas || 0;
+                        
                         this.renderPessoasLoginTable(data.pessoas);
+                        this.renderPaginacao('login');
                     } else {
                         this.showError('Erro ao carregar pessoas: ' + data.message);
                     }
@@ -973,22 +1041,31 @@
             },
             
             // Métodos da aba Módulos
-            async loadPessoasModulo() {
+            async loadPessoasModulo(pagina = 1) {
                 const busca = document.getElementById('buscaPessoaModulo').value;
                 const categoria = document.getElementById('categoriaPessoaModulo').value;
+                const limite = parseInt(document.getElementById('limiteModulos').value) || 50;
+                
+                this.paginacao.modulos.pagina = pagina;
+                this.paginacao.modulos.limite = limite;
                 
                 try {
                     const params = new URLSearchParams({
                         termo: busca,
                         categoria: categoria,
-                        limite: 20
+                        pagina: this.paginacao.modulos.pagina,
+                        limite: this.paginacao.modulos.limite
                     });
                     
                     const response = await fetch(`/api/pessoas/buscar?${params}`);
                     const data = await response.json();
                     
                     if (data.success) {
+                        this.paginacao.modulos.total = data.total || 0;
+                        this.paginacao.modulos.totalPaginas = data.totalPaginas || 0;
+                        
                         this.renderPessoasModuloTable(data.pessoas);
+                        this.renderPaginacao('modulos');
                     } else {
                         this.showError('Erro ao carregar pessoas: ' + data.message);
                     }
@@ -1171,6 +1248,47 @@
             
             showError(message) {
                 this.showNotification(message, 'error');
+            },
+            
+            // Função para renderizar controles de paginação
+            renderPaginacao(aba) {
+                const pag = this.paginacao[aba];
+                const containerId = `paginacao-${aba}`;
+                const container = document.getElementById(containerId);
+                
+                if (!container || pag.totalPaginas <= 1) {
+                    if (container) container.innerHTML = '';
+                    return;
+                }
+                
+                let html = '<div class="pagination-controls d-flex justify-content-center align-items-center gap-2 mt-3">';
+                
+                // Botão Anterior
+                if (pag.pagina > 1) {
+                    const funcao = aba === 'pessoas' ? 'loadPessoas' : aba === 'login' ? 'loadPessoasLogin' : 'loadPessoasModulo';
+                    html += `<button class="btn btn-sm btn-outline-primary" onclick="AdminPessoas.${funcao}(${pag.pagina - 1})">&laquo; Anterior</button>`;
+                }
+                
+                // Números das páginas
+                const inicio = Math.max(1, pag.pagina - 2);
+                const fim = Math.min(pag.totalPaginas, pag.pagina + 2);
+                
+                for (let i = inicio; i <= fim; i++) {
+                    const ativo = i === pag.pagina ? 'btn-primary' : 'btn-outline-primary';
+                    const funcao = aba === 'pessoas' ? 'loadPessoas' : aba === 'login' ? 'loadPessoasLogin' : 'loadPessoasModulo';
+                    html += `<button class="btn btn-sm ${ativo}" onclick="AdminPessoas.${funcao}(${i})">${i}</button>`;
+                }
+                
+                // Botão Próximo
+                if (pag.pagina < pag.totalPaginas) {
+                    const funcao = aba === 'pessoas' ? 'loadPessoas' : aba === 'login' ? 'loadPessoasLogin' : 'loadPessoasModulo';
+                    html += `<button class="btn btn-sm btn-outline-primary" onclick="AdminPessoas.${funcao}(${pag.pagina + 1})">Próximo &raquo;</button>`;
+                }
+                
+                html += '</div>';
+                html += `<div class="pagination-info text-center mt-2"><small class="text-muted">Página ${pag.pagina} de ${pag.totalPaginas} (${pag.total} registros)</small></div>`;
+                
+                container.innerHTML = html;
             },
             
             showNotification(message, type = 'info') {

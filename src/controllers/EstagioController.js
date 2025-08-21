@@ -781,6 +781,42 @@ class EstagioController {
             });
         }
     }
+
+    /**
+     * Buscar planos de atividade por campo de estágio (dashboard administrativo)
+     * @param {Object} req - Request object
+     * @param {Object} res - Response object
+     */
+    async buscarPlanosPorCampo(req, res) {
+        try {
+            const { campoId } = req.params;
+            const user = req.session.user;
+
+            // Verificar se o usuário tem permissão (apenas administradores)
+            if (user.nivelacesso !== 'Administrador') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.'
+                });
+            }
+
+            // Buscar planos de atividade do campo de estágio
+            const planos = await this.planoAtividadeService.buscarPlanosPorCampoEstagio(campoId);
+
+            // Retornar dados em formato JSON
+            res.json({
+                success: true,
+                data: planos
+            });
+
+        } catch (error) {
+            console.error('Erro ao buscar planos por campo:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erro interno do servidor'
+            });
+        }
+    }
 }
 
 module.exports = EstagioController;

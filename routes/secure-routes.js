@@ -56,14 +56,6 @@ function getUserFromSession(req) {
 
 // Middleware de autenticação
 function requireAuth(req, res, next) {
-    console.log('=== DEBUG SESSÃO ===');
-    console.log('Session ID:', req.sessionID);
-    console.log('Session exists:', !!req.session);
-    console.log('Session user:', req.session ? req.session.user : 'No session');
-    console.log('Cookies:', req.headers.cookie);
-    console.log('Headers:', req.headers);
-    console.log('==================');
-    
     if (!req.session.user) {
         // Verificar se é uma requisição AJAX/JSON
         if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1) || req.headers['content-type'] === 'application/json') {

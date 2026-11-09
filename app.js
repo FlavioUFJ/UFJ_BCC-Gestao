@@ -196,6 +196,12 @@ class App {
             }
         }));
 
+        // Arquivos enviados (uploads) não são públicos: contêm documentos pessoais
+        // e só devem sair pelas rotas autenticadas de download.
+        this.app.use(['/uploads', '/public/uploads'], (req, res) => {
+            res.status(404).json({ success: false, message: 'Arquivo não encontrado' });
+        });
+
         // Arquivos estáticos
         this.app.use('/public', express.static(path.join(__dirname, 'public'), {
             maxAge: this.environment === 'production' ? '1d' : '0'

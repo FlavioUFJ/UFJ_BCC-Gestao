@@ -111,6 +111,11 @@ router.get('/files/:type/:filename', requireAuth, (req, res) => {
         return res.status(404).json({ success: false, message: 'Tipo de arquivo não permitido' });
     }
     
+    // Aceitar apenas nome de arquivo simples: impede sair da pasta com "../"
+    if (filename !== path.basename(filename) || filename.includes('..')) {
+        return res.status(400).json({ success: false, message: 'Nome de arquivo inválido' });
+    }
+
     const filePath = path.join(__dirname, '../../public', type, filename);
     
     // Verificar se o arquivo existe
@@ -140,6 +145,11 @@ router.get('/reports/:filename', requireAuth, (req, res) => {
     const fs = require('fs');
     
     const { filename } = req.params;
+    // Aceitar apenas nome de arquivo simples: impede sair da pasta com "../"
+    if (filename !== path.basename(filename) || filename.includes('..')) {
+        return res.status(400).json({ success: false, message: 'Nome de arquivo inválido' });
+    }
+
     const filePath = path.join(__dirname, '../../public/reports', filename);
     
     // Verificar se o arquivo existe

@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+logs/
+backups/
+storage/
+ecosystem.config.js
+
+# O .gitignore da raiz do repositório ignora estes nomes; aqui eles são versionados
+!package-lock.json
+!src/config/database.js
+!src/config/puppeteer.js

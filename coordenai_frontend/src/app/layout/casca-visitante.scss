@@ -1,0 +1,78 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(320px, 5fr) 7fr;
+  min-height: 100dvh;
+}
+
+.marca {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 8px;
+  padding: 48px clamp(32px, 6vw, 88px);
+  background: var(--mat-sys-surface-container-low);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+
+  img {
+    width: min(236px, 70%);
+    height: auto;
+    margin-bottom: 16px;
+  }
+}
+
+.lema {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--mat-sys-primary);
+}
+
+.instituicao {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.5;
+}
+
+.formulario {
+  display: grid;
+  place-items: center;
+  padding: 32px 24px;
+}
+
+.cartao {
+  width: 100%;
+  max-width: 400px;
+}
+
+@media (max-width: 860px) {
+  :host {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .marca {
+    justify-items: center;
+    padding: 28px 24px 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    text-align: center;
+
+    img {
+      width: 150px;
+      margin-bottom: 4px;
+    }
+  }
+
+  .lema {
+    font-size: 1.125rem;
+  }
+
+  .instituicao {
+    display: none;
+  }
+
+  .formulario {
+    align-items: start;
+  }
+}

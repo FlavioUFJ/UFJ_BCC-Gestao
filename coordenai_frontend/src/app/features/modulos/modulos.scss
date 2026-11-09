@@ -1,0 +1,117 @@
+.cabecalho {
+  margin-bottom: 28px;
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.modulo {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 12px 16px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 16px;
+  background: var(--mat-sys-surface);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+a.modulo:hover {
+  border-color: var(--mat-sys-primary);
+  box-shadow: 0 4px 16px rgb(18 58 94 / 10%);
+}
+
+a.modulo:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.icone {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  color: var(--cor-modulo, var(--mat-sys-primary));
+  background: color-mix(in srgb, var(--cor-modulo, var(--mat-sys-primary)) 12%, transparent);
+  font-size: 1.375rem;
+}
+
+.texto {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+
+  strong {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--mat-sys-on-surface-variant);
+    line-height: 1.4;
+  }
+}
+
+.situacao {
+  grid-column: 2;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mat-sys-primary);
+
+  i {
+    font-size: 0.75rem;
+    margin-left: 4px;
+  }
+}
+
+.bloqueado {
+  background: var(--mat-sys-surface-container-low);
+
+  .icone {
+    color: var(--mat-sys-on-surface-variant);
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  .texto strong,
+  .situacao {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .situacao i {
+    margin: 0 4px 0 0;
+  }
+}
+
+.estado {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 40px 16px;
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: 16px;
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+}
+
+.nota {
+  margin: 20px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}

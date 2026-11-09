@@ -1,0 +1,45 @@
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" routerLink="/" aria-label="CoordenAI — página inicial">
+      <img src="logo-coordenai.png" alt="" width="84" height="40" />
+      <span class="marca-texto">Ciência da Computação · UFJ</span>
+    </a>
+
+    @if (usuario(); as u) {
+      <button class="conta" type="button" [matMenuTriggerFor]="menuConta" aria-label="Menu do usuário">
+        <span class="avatar" aria-hidden="true">{{ iniciais() }}</span>
+        <span class="conta-texto">
+          <strong>{{ u.nome }}</strong>
+          <span>{{ descricaoConta() }}</span>
+        </span>
+        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+      </button>
+
+      <mat-menu #menuConta="matMenu" xPosition="before">
+        @for (item of itens(); track item.rotulo) {
+          @if (item.destino.rota; as rota) {
+            <a mat-menu-item [routerLink]="rota">
+              <i [class]="item.icone + ' icone-menu'" aria-hidden="true"></i>{{ item.rotulo }}
+            </a>
+          } @else {
+            <a mat-menu-item [href]="item.destino.href">
+              <i [class]="item.icone + ' icone-menu'" aria-hidden="true"></i>{{ item.rotulo }}
+            </a>
+          }
+        }
+        <mat-divider />
+        <button mat-menu-item type="button" (click)="sair()">
+          <i class="fa-solid fa-right-from-bracket icone-menu" aria-hidden="true"></i>Sair
+        </button>
+      </mat-menu>
+    }
+  </div>
+</header>
+
+<main id="conteudo" class="conteudo" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="rodape">UFJ · Bacharelado em Ciência da Computação · CoordenAI {{ ano }}</footer>

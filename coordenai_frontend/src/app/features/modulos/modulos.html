@@ -1,0 +1,53 @@
+<header class="cabecalho">
+  <h1 class="titulo-pagina">Olá, {{ primeiroNome() }}</h1>
+  <p class="subtitulo-pagina">Escolha o módulo em que deseja trabalhar.</p>
+</header>
+
+@if (carregando()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando módulos" />
+} @else if (erro(); as mensagem) {
+  <div class="estado" role="alert">
+    <p>{{ mensagem }}</p>
+    <button matButton="outlined" type="button" (click)="carregar()">Tentar novamente</button>
+  </div>
+} @else if (cartoes().length === 0) {
+  <div class="estado">
+    <p>Nenhum módulo cadastrado. Entre em contato com a coordenação.</p>
+  </div>
+} @else {
+  <ul class="grade">
+    @for (cartao of cartoes(); track cartao.modulo.id_modulo) {
+      <li>
+        @if (!cartao.modulo.tem_acesso) {
+          <div class="modulo bloqueado" aria-disabled="true">
+            <ng-container *ngTemplateOutlet="conteudo; context: { $implicit: cartao.modulo }" />
+            <span class="situacao"><i class="fa-solid fa-lock" aria-hidden="true"></i> Sem acesso</span>
+          </div>
+        } @else if (cartao.destino.rota; as rota) {
+          <a class="modulo" [routerLink]="rota">
+            <ng-container *ngTemplateOutlet="conteudo; context: { $implicit: cartao.modulo }" />
+            <span class="situacao">Abrir <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+          </a>
+        } @else {
+          <a class="modulo" [href]="cartao.destino.href">
+            <ng-container *ngTemplateOutlet="conteudo; context: { $implicit: cartao.modulo }" />
+            <span class="situacao">Abrir <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+          </a>
+        }
+      </li>
+    }
+  </ul>
+  <p class="nota">Não encontrou um módulo, ou ele aparece sem acesso? Solicite a liberação à coordenação.</p>
+}
+
+<ng-template #conteudo let-modulo>
+  <span class="icone" [style.--cor-modulo]="modulo.cor || null">
+    <i [class]="modulo.icone || 'fa-solid fa-cube'" aria-hidden="true"></i>
+  </span>
+  <span class="texto">
+    <strong>{{ modulo.nome }}</strong>
+    @if (modulo.descricao) {
+      <span>{{ modulo.descricao }}</span>
+    }
+  </span>
+</ng-template>

@@ -3,6 +3,51 @@
 Acompanha a [auditoria](AUDITORIA-REFATORACAO-COORDENAI.md). Registra o que
 foi decidido, o que já está feito e o que falta.
 
+## Bloqueio: o repositório não corresponde ao sistema em homologação
+
+Ao carregar o backup do banco de homologação (`dev_coordenai`, 09/11/2026)
+para iniciar a fase 3, constatei que o código deste repositório não é o
+código que roda sobre esse banco:
+
+| | Repositório (`dev`, último commit em 21/08/2025) | Banco de homologação |
+|---|---|---|
+| Tabelas | 12 usadas pelo código | 166 |
+| Módulos | Estágio | Eventos, Estágio, TCC, Formulários, Administrativo (ativos); Extensão e Coordenação (inativos) |
+| Tabelas de estágio | `campo_estagio`, `campo_estagio_planoatividade`, `campo_estagio_frequencia`, `frequencia_registrodiario` | `estagio_campoatuacao`, `estagio_planoatividade`, `estagio_frequencia`, `estagio_frequenciadiaria` e outras seis |
+| Níveis de acesso | Administrador e os papéis de estágio | `Administrador`, `Operador`, `Visitante`, mais permissão por módulo |
+
+Das consultas SQL do repositório, 135 apontam para as quatro tabelas de
+estágio que não existem mais. Rodando o `coordenai_backend` contra o backup:
+
+- funcionam: login (administrador), sessão, página de módulos (7 módulos),
+  busca de pessoas, consulta de parâmetros;
+- falham: todas as rotas de estágio, planos de atividade e frequências
+  (`Table 'campo_estagio' doesn't exist` e equivalentes).
+
+Consequências:
+
+1. **A fase 3 não pode ser feita a partir deste repositório.** Migrar o
+   dashboard administrativo com base em código de 15 meses atrás reproduziria
+   regras e consultas que o sistema já abandonou.
+2. **A auditoria descreve o código do repositório, não o sistema atual.** Os
+   números de tamanho estão subestimados (o sistema tem pelo menos cinco
+   módulos ativos) e os achados de segurança precisam ser reconferidos no
+   código atual. O banco tem, por exemplo, `pessoa_login_tentativa` e
+   `pessoa_senha_recuperacao`, o que indica que limite de tentativas e token de
+   recuperação em banco já podem existir lá.
+3. **O `coordenai_backend` foi copiado de uma versão antiga.** A estrutura
+   (API sob `/api`, autenticação única, CSRF, adaptador, uploads) continua
+   válida, mas controllers, services e rotas precisam ser refeitos a partir do
+   código atual.
+4. **O `coordenai_frontend` não é afetado**: a base, o tema, as telas de
+   autenticação e os componentes compartilhados não dependem do esquema.
+   Falta confirmar no código atual as regras de exibição dos módulos (campos
+   `ativo` e `permissao`).
+
+Para prosseguir é preciso o código-fonte atual. Existe um repositório privado
+`bcc-ufj/coordenai`, atualizado em 09/11/2026, que provavelmente é a fonte;
+esta sessão não tem acesso a ele.
+
 ## Decisões
 
 | Tema | Decisão |
@@ -79,7 +124,7 @@ Quando a migração terminar, o frontend passa a ser servido na raiz
 | 0 | Registro das respostas atuais das rotas como referência de regressão | **Pendente** — exige uma cópia do banco real |
 | 1 | `coordenai_backend` | Feito |
 | 2 | `coordenai_frontend`: base, tema, login, senhas, módulos, tabela padrão | Feito |
-| 3 | Dashboard administrativo de estágio (piloto com usuários) | A fazer |
+| 3 | Dashboard administrativo de estágio (piloto com usuários) | **Bloqueada** — ver acima |
 | 4 | Pessoas (listagem, formulário, importação CSV, perfil) | A fazer |
 | 5 | Dashboard de estágio, campo de estágio, planos de atividade | A fazer |
 | 6 | Frequências | A fazer |

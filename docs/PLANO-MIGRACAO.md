@@ -44,9 +44,16 @@ Consequências:
    Falta confirmar no código atual as regras de exibição dos módulos (campos
    `ativo` e `permissao`).
 
-Para prosseguir é preciso o código-fonte atual. Existe um repositório privado
-`bcc-ufj/coordenai`, atualizado em 09/11/2026, que provavelmente é a fonte;
-esta sessão não tem acesso a ele.
+**Atualização (09/11/2026).** O código atual está no repositório privado
+`bcc-ufj/coordenai`. A reauditoria feita sobre ele foi entregue fora deste
+repositório, por tratar de código privado. Conclusões que afetam este plano:
+
+- o sistema atual tem cerca de vinte vezes o tamanho do que foi auditado aqui;
+- o `coordenai_backend` deste repositório partiu de código antigo e não deve
+  ser usado: o backend atual já funciona como API e não convém copiá-lo;
+- o `coordenai_frontend` continua aproveitável como base;
+- as fases 3 a 8 estão suspensas até a decisão sobre o escopo e sobre o
+  repositório em que o trabalho continua.
 
 ## Decisões
 

@@ -1,5 +1,12 @@
 # Plano de migração do CoordenAI
 
+> **Atualização (09/11/2026): este plano foi substituído.** O backend e o
+> frontend da migração foram unificados nos repositórios `bcc-ufj/coordenai_backend`
+> e `bcc-ufj/coordenai_frontend`, a partir do código atual do sistema. As pastas
+> `coordenai_backend/` e `coordenai_frontend/` que existiam aqui partiam de uma
+> versão antiga (agosto/2025) e foram removidas. O que segue é registro histórico.
+
+
 Acompanha a [auditoria](AUDITORIA-REFATORACAO-COORDENAI.md). Registra o que
 foi decidido, o que já está feito e o que falta.
 

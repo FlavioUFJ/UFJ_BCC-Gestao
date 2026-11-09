@@ -2,7 +2,7 @@
 
 Separação em `coordenai_backend` e `coordenai_frontend` (Angular) — novembro/2026
 
-Este documento é somente diagnóstico e plano. Nenhum arquivo do legado foi alterado e os dois novos projetos ainda **não** foram criados: há quatro decisões (seção 7) que mudam a forma como eles nascem.
+Este documento é o diagnóstico. As decisões tomadas, o andamento da implementação e os achados posteriores estão em [PLANO-MIGRACAO.md](PLANO-MIGRACAO.md).
 
 ---
 
@@ -130,10 +130,12 @@ O número de tags EJS é o indicador de dificuldade: telas com poucas tags (dash
 | 6 | Média | Segredos com valor padrão fixo no código se a variável de ambiente faltar. | `src/config/session.js:46`, `src/config/index.js:155` |
 | 7 | Média | Sem proteção CSRF além de `sameSite: lax`; `GET /logout` altera estado. | `app.js`, `src/routes/index.js:36` |
 | 8 | Média | Rotas de teste expostas sem autenticação: `/auth/test-form`, `/auth/test-login`, `/auth/simple-login`, `/test-root`, `/secure/test`. | `src/routes/auth.js:73-110`, `app.js:278` |
-| 9 | Baixa | `/parametro/buscar` e `/buscar-valor` ficam antes do `requireAuth`. Verificar se algum parâmetro sensível (ex.: senha de e-mail) pode ser lido sem login. | `src/routes/parametros.js:74-80` |
+| 9 | **Alta** | `/parametro/buscar` e `/buscar-valor` ficam antes do `requireAuth` e devolvem qualquer parâmetro. O servidor de e-mail é configurado no parâmetro `Conta e-mail`, que inclui o valor `Senha`: pela leitura do código, `GET /parametro/buscar?identificador=Conta e-mail` devolve a senha do e-mail **sem login**. Não testado contra o banco real. As listagens de parâmetros para usuários logados (`/parametro`, `/secure/parametros/buscar`) têm o mesmo vazamento para não administradores. | `src/routes/parametros.js:74-80`, `src/config/email.js:30-55` |
 | 10 | Baixa | 208 `console.log` no servidor, vários com corpo de requisição. | geral |
 
-Os itens 1, 2 e 3 valem correção no legado mesmo antes da migração, se for aceito abrir exceção à regra de não alterá-lo.
+| 11 | Baixa* | `POST /auth/register` é aberto a visitantes e aceita o nível de acesso enviado no formulário (inclusive Administrador). Hoje não funciona por um erro de código (`databaseConfig.beginTransaction` não existe), e é só isso que impede a criação de administradores por qualquer pessoa. | `src/controllers/AuthController.js:252-300`, `src/services/AuthService.js:122` |
+
+Os itens 1, 2 e 3 foram corrigidos no legado. O item 9 foi identificado depois e **continua aberto no legado**: a correção é mover o `router.use(requireAuth)` para antes das duas rotas em `src/routes/parametros.js` e, por precaução, trocar a senha da conta de e-mail. No novo backend estão tratados os itens 1 a 9 e 11; do item 10 foram removidos apenas os logs que expunham cookies e cabeçalhos.
 
 ### Higiene do repositório
 
@@ -193,13 +195,7 @@ Recomendo **manter sessão por cookie** (como hoje), acrescentando token CSRF. T
 
 ### Biblioteca de componentes
 
-| Opção | A favor | Contra |
-|---|---|---|
-| **PrimeNG** (recomendada) | Tabela completa pronta (filtro por coluna, ordenação, paginação no servidor, exportação, seleção), ~90 componentes, temas com aparência comercial | API extensa; atualizações de versão exigem atenção |
-| Angular Material | Mantida pelo time do Angular, muito estável | Tabela básica: filtros e exportação teriam de ser escritos |
-| Angular Material + AG Grid | Melhor grade de dados do mercado | Recursos avançados do AG Grid são pagos |
-
-Como a dor relatada são tabelas, botões e formatação, PrimeNG cobre mais com menos código próprio.
+A recomendação original desta seção era PrimeNG. Ela foi revista durante a implementação porque a versão 22 passou a exigir licença; o projeto usa Angular Material. Detalhes em [PLANO-MIGRACAO.md](PLANO-MIGRACAO.md).
 
 ---
 
@@ -228,11 +224,6 @@ Riscos principais:
 
 ---
 
-## 7. Decisões necessárias antes de criar os projetos
+## 7. Decisões
 
-1. **Biblioteca de UI:** PrimeNG (recomendada), Angular Material ou Material + AG Grid.
-2. **Autenticação:** manter sessão por cookie + CSRF (recomendado) ou migrar para JWT.
-3. **Estratégia:** incremental com convivência (recomendado) ou reescrita completa com virada única.
-4. **Escopo da limpeza no backend:** apenas o mínimo para virar API, ou também unificar rotas duplicadas e mover SQL das rotas para services (recomendado, pois o custo é baixo no momento da cópia).
-
-Pergunta adicional: os itens 1 a 3 da seção 4 podem ser corrigidos no legado, como exceção à regra de não alterá-lo?
+Registradas em [PLANO-MIGRACAO.md](PLANO-MIGRACAO.md).
